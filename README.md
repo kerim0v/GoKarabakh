@@ -27,7 +27,7 @@ We're also considering:
 
 Built by a team of 4 as a Holberton School final project:
 
-### Baghirzade Turkan — UI-UX / Frontend developer
+### [Baghirzade Turkan](https://github.com/prenses123) — UI-UX / Frontend developer
 ### [Nabiyeva Gulustan](https://github.com/gulustan1) — Project Manager / Frontend developer
 ### [Aliyev Abdulqadir](https://github.com/hbtn12749) — Backend developer
 ### [Kerimov Tamerlan](https://github.com/kerim0v) — Backend developer
