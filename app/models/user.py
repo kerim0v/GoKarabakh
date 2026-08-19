@@ -32,6 +32,6 @@ class User(ModelBase):
         return crypter.check_password_hash(self.pwd_hash, pwd)
 
     def to_dict(self):
-    d = super().to_dict()
-    d.pop("pwd_hash", None)
-    return d
+        d = super().to_dict()
+        d.pop("pwd_hash", None)
+        return d
