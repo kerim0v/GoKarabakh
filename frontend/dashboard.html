@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050807">
+  <title>GoKarabakh / Your basecamp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html"><span class="brand-mark">G</span><span>GOKARABAKH</span></a>
+      <nav class="nav" aria-label="Primary navigation"><a href="index.html">Explore</a><a class="active" href="dashboard.html">Stay</a><a href="community.html">Community</a></nav>
+      <div class="wallet"><span class="wallet-icon">◈</span><b>1,240</b><span class="mono">coins</span></div>
+    </header>
+    <main class="dashboard-main">
+      <section class="page-title reveal"><span class="eyebrow mono">Your basecamp / 02</span><h1>Make room<br>for wonder.</h1><p>Handpicked stays and local guides for an unhurried journey through the highlands.</p></section>
+      <section class="dashboard-grid">
+        <article class="booking-card featured glass reveal delay-1" data-tilt>
+          <div class="card-image"></div><div class="card-content"><div class="card-meta"><span class="eyebrow mono">Editor's route</span><span class="coin-badge"><i class="coin">G</i> +50 coins</span></div><h3>Stone &amp; Silence</h3><p>A timber cabin above the Karkijahan valley, where every window faces a different story.</p><button class="button button-primary" data-book type="button">View stay <span>↗</span></button></div>
+        </article>
+        <div class="small-cards">
+          <article class="booking-card glass reveal delay-2" data-tilt><div class="card-image hotel-image"></div><div class="card-content"><div class="card-meta"><span class="mono">Hotel / Shusha</span><span class="coin-badge"><i class="coin">G</i> +50</span></div><h3>Karvansaray</h3><p>From $118 / night</p><button class="button button-ghost" data-book type="button">Reserve</button></div></article>
+          <article class="booking-card glass reveal delay-3" data-tilt><div class="card-image guide-image"></div><div class="card-content"><div class="card-meta"><span class="mono">Guide / Lachin</span><span class="coin-badge"><i class="coin">G</i> +50</span></div><h3>Wild north</h3><p>From $42 / person</p><button class="button button-ghost" data-book type="button">Meet guide</button></div></article>
+        </div>
+      </section>
+      <section class="stats-row reveal delay-3"><div class="stat glass"><span class="mono">Saved routes</span><strong>07</strong><span>Across 3 regions</span></div><div class="stat glass"><span class="mono">Journey wallet</span><strong>1,240</strong><span>+180 this month</span></div><div class="stat glass"><span class="mono">Local impact</span><strong>94%</strong><span>Spent with locals</span></div></section>
+    </main>
+  </div>
+  <div class="modal-backdrop" id="booking-modal" aria-hidden="true"><div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-header"><span class="eyebrow mono">Request a place</span><button class="button button-icon" data-close type="button" aria-label="Close booking modal">×</button></div><h2 id="modal-title">Begin softly.</h2><p>Tell us when the mountains should expect you. We will confirm your handpicked stay within one day.</p><form><div class="modal-fields"><label>Arrival<input type="date" required></label><label>Guests<input type="number" min="1" value="2" required></label></div><button class="button button-primary" type="submit">Send request <span>↗</span></button></form></div></div>
+  <script src="https://cdn.jsdelivr.net/npm/vanilla-tilt@1.8.1/dist/vanilla-tilt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
