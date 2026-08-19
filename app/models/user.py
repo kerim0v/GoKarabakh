@@ -28,5 +28,10 @@ class User(ModelBase):
         self.pwd_hash = crypter.generate_password_hash(pwd).decode('utf-8')
 
     def check_pwd(self, pwd):
-        global crypter
+        from app.share import crypter
         return crypter.check_password_hash(self.pwd_hash, pwd)
+
+    def to_dict(self):
+    d = super().to_dict()
+    d.pop("pwd_hash", None)
+    return d

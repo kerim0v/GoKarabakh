@@ -9,8 +9,18 @@ class ModelBase:
         self.modification_date = datetime.datetime.now()
 
     def update(self, props: dict):
-        self_d = self.__dict__()
         for k, v in props.items():
-            if self_d[k] != v:
-                self_d[k] = v
+            if getattr(self, k, None) != v:
+                setattr(self, k, v)
                 self.modification_date = datetime.datetime.now()
+
+    def to_dict(self):
+        return dict(self.__dict__)
+
+#    def update(self, props: dict):
+#        self_d = self.__dict__()
+#        for k, v in props.items():
+#            if self_d[k] != v:
+#                self_d[k] = v
+#                self.modification_date = datetime.datetime.now()
+# self.__dict__() is calling a function, check if new version is better!
