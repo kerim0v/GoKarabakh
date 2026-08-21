@@ -1,45 +1,12 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#050807">
-  <title>GoKarabakh / Begin the journey</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body class="landing">
-  <main>
-    <div class="page-shell">
-      <header class="topbar">
-        <a class="brand" href="index.html"><span class="brand-mark">G</span><span>GOKARABAKH</span></a>
-        <nav class="nav" aria-label="Primary navigation">
-          <a class="active" href="index.html">Explore</a>
-          <a href="dashboard.html">Stay</a>
-          <a href="community.html">Community</a>
-        </nav>
-        <span class="mono">01 / 03</span>
-      </header>
-    </div>
-    <section class="globe-stage" aria-label="Interactive globe explorer">
-      <div id="globe"></div>
-      <div class="stage-copy reveal">
-        <span class="eyebrow mono">A new latitude</span>
-        <h1>Find the<br><span>untold.</span></h1>
-        <p>A living atlas of mountain air, ancient routes and the people who make Karabakh unforgettable.</p>
-      </div>
-      <div class="stage-control glass reveal delay-2">
-        <p class="mono">Mission / discover 01</p>
-        <p>Drag the earth, or follow the signal into Azerbaijan.</p>
-        <button class="button button-primary" id="enter-destination" type="button">Enter Karabakh <span>↗</span></button>
-      </div>
-      <span class="corner-note mono">40°08' N&nbsp;&nbsp; 47°34' E</span>
-    </section>
-    <div class="page-shell"><span class="mono corner-note">Scroll is optional / curiosity is not</span></div>
-  </main>
-  <div class="modal-backdrop" id="transition-curtain" aria-hidden="true"></div>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/globe.gl@2.36.0/dist/globe.gl.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GoKarabakh / Begin the journey</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
