@@ -219,3 +219,6 @@ __marimo__/
 
 # node.js
 node_modules/
+
+# DATABASE
+*.db

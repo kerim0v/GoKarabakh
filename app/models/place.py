@@ -1,13 +1,14 @@
+from app.database import db
 from app.models.base import ModelBase
 
 
 class Place(ModelBase):
-    def __init__(self, owner_user_id: str, name: str, is_tour: bool, cost: float, description: str, main_photo_url: str, tags: list[str]):
-        super().__init__()
-        self.owner_user_id = owner_user_id
-        self.is_tour = is_tour
-        self.cost = cost
-        self.name = name
-        self.description = description
-        self.main_photo_url = main_photo_url
-        self.tags = tags
+    __tablename__ = "places"
+
+    owner_user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
+    is_tour = db.Column(db.Boolean, default=False)
+    cost = db.Column(db.Float, nullable=False)
+    description = db.Column(db.Text)
+    main_photo_url = db.Column(db.String(500))
+    tags = db.Column(db.JSON, default=list)

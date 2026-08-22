@@ -18,11 +18,7 @@ def home():
 
 @app.route("/api/v1/users/get")
 def get_users_api():
-    users = []
-    for user in facade.get_users():
-        d: dict = dict(user.__dict__)
-        d.pop("pwd_hash", None)
-        users.append(d)
+    users = [user.to_dict() for user in facade.get_users()]
     return jsonify(users)
 
 @app.route("/api/v1/users/get_id")
@@ -35,9 +31,7 @@ def get_user():
     if not u:
         return jsonify({"status": "No user with specified id."}),404
         
-    d: dict = dict(u.__dict__)
-    d.pop("pwd_hash", None)   # Don't return password hash
-    return jsonify(d)
+    return jsonify(u.to_dict())
 
 @app.route("/api/v1/users/delete", methods=["POST"])
 @jwt_required()
@@ -74,7 +68,14 @@ def create_user():
     if not all([password, email, name, yob, mob, dob]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    user = User(0, name, [], yob, mob, dob, email)
+    user = User(
+        kx_count=0,
+        name=name,
+        year_of_birth=yob,
+        month_of_birth=mob,
+        day_of_birth=dob,
+        email=email,
+    )
     user.hash_pwd(password)
     facade.create_user(user)
     return jsonify({"status": "User created successfully"}), 200
@@ -135,7 +136,15 @@ def create_place():
     if not tags:
         tags = []    # default
     
-    place = Place(owner_id, name, is_tour, cost, desc, main_photo, tags)
+    place = Place(
+        owner_user_id=owner_id,
+        name=name,
+        is_tour=is_tour,
+        cost=cost,
+        description=desc,
+        main_photo_url=main_photo,
+        tags=tags,
+    )
     facade.create_place(place)
     return 200
 
@@ -165,9 +174,7 @@ def book_place():
         user.kx_count += cost * (config.PERCENTAGE_FEE / 100)
 
     user.bought_places.append(place)
-    # no facade update call needed MemoryRepository stores objects by
-    # reference, so mutating `user` here already updates the stored copy.
-    # update this if we use a REAL database
+    facade.commit()
 
     return jsonify({"status": "Booked", "amount_charged": real_cost}), 200
 
