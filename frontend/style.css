@@ -880,3 +880,148 @@ button { cursor: pointer; }
 .auth-form-enhanced input:focus { border-color: rgba(168, 85, 247, .6); box-shadow: 0 0 20px rgba(168, 85, 247, .2), inset 0 0 10px rgba(168, 85, 247, .05); }
 .button-auth-submit { background: linear-gradient(135deg, #c084fc 0%, #22c55e 100%); box-shadow: 0 8px 24px rgba(168, 85, 247, .25); }
 .button-auth-submit:hover { box-shadow: 0 12px 40px rgba(168, 85, 247, .35), 0 0 24px rgba(34, 197, 94, .2); }
+
+/* Inter Karabakh community: a light, handmade travel scrapbook. */
+.community-scrapbook-page { width: min(1400px, calc(100% - 48px)); color: #493b2d; }
+.community-scrapbook-page .topbar { color: #493b2d; }
+.community-scrapbook-page .nav { color: #8c755c; }
+.community-scrapbook-page .nav a:hover, .community-scrapbook-page .nav a.active { color: #493b2d; }
+.community-scrapbook-page .brand-mark { border-color: #b99968; color: #72542f; }
+.community-scrapbook-page .auth-trigger { border-color: #cbb18a; background: #fffaf0; }
+.community-scrapbook-main { position: relative; min-height: calc(100vh - 88px); padding: 34px 0 78px; overflow: hidden; }
+.community-scrapbook-main::before { position: absolute; inset: -90px -10vw 0; z-index: -2; content: ''; background: radial-gradient(circle at 15% 15%, rgba(255,255,255,.95), transparent 28%), radial-gradient(circle at 88% 12%, rgba(242,218,176,.7), transparent 30%), #eadcc1; }
+.community-scrapbook-main::after { position: absolute; inset: 0; z-index: -1; pointer-events: none; content: ''; opacity: .22; background-image: repeating-linear-gradient(0deg, transparent 0 5px, rgba(132,98,58,.17) 6px), repeating-linear-gradient(90deg, transparent 0 7px, rgba(255,255,255,.6) 8px); mix-blend-mode: multiply; }
+.community-scrapbook-intro { width: min(1060px, calc(100% - 44px)); margin: 0 auto 24px; text-align: center; }
+.community-scrapbook-kicker { color: #9e7343; }
+.community-scrapbook-kicker::before { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: #bc754e; content: ''; }
+.community-scrapbook-intro h1 { margin: 13px 0 10px; color: #3e3025; font-family: Georgia, serif; font-size: clamp(42px, 6vw, 76px); font-weight: 500; line-height: .88; letter-spacing: -.06em; }
+.community-scrapbook-intro h1 em { color: #a95d46; font-style: italic; }
+.community-scrapbook-intro p { max-width: 470px; margin: 0 auto; color: #705d49; line-height: 1.7; }
+.community-scrapbook { position: relative; display: grid; grid-template-columns: 1fr 1fr; width: min(1120px, calc(100% - 30px)); min-height: 620px; margin: 0 auto; padding: 24px 34px; overflow: hidden; border: 1px solid #c9af86; border-radius: 8px 14px 14px 8px; background: #fff9e9; box-shadow: 0 28px 55px rgba(90,61,31,.27), inset 0 0 45px rgba(133,93,48,.12); }
+.scrapbook-page { position: relative; min-height: 570px; background: repeating-linear-gradient(transparent 0 30px, rgba(142,178,196,.28) 31px 32px), linear-gradient(90deg, rgba(211,111,91,.18) 0 2px, transparent 2px) 40px 0 / auto auto, #fffdf4; }
+.scrapbook-page-left { border-radius: 5px 0 0 5px; box-shadow: inset -18px 0 25px rgba(82,56,30,.08); }
+.scrapbook-page-right { border-radius: 0 5px 5px 0; box-shadow: inset 18px 0 25px rgba(82,56,30,.08); }
+.scrapbook-spine { position: absolute; top: 0; bottom: 0; left: 50%; z-index: 1; width: 18px; border-right: 1px solid rgba(97,65,33,.16); border-left: 1px solid rgba(255,255,255,.9); background: linear-gradient(90deg, rgba(74,43,21,.13), transparent 46%, rgba(74,43,21,.12)); transform: translateX(-50%); }
+.scrapbook-page-number { position: absolute; right: 24px; bottom: 18px; color: #ab9375; font-size: 8px; }
+.scrapbook-page-left .scrapbook-page-number { right: auto; left: 24px; }
+.scrapbook-memory { position: absolute; z-index: 2; width: 205px; padding: 9px 9px 12px; border: 1px solid #d9c6a3; background: #fffdf5; box-shadow: 2px 4px 10px rgba(72,48,25,.24); transform: rotate(var(--card-rotate)); transition: transform .25s ease, box-shadow .25s ease; }
+.scrapbook-memory:hover { z-index: 4; box-shadow: 5px 10px 22px rgba(72,48,25,.3); transform: rotate(0deg) scale(1.04); }
+.scrapbook-memory.card-1 { top: 70px; left: 8%; }
+.scrapbook-memory.card-2 { top: 86px; left: 32%; }
+.scrapbook-memory.card-3 { top: 92px; right: 8%; }
+.scrapbook-memory.card-4 { bottom: 70px; left: 16%; }
+.scrapbook-memory.card-5 { right: 29%; bottom: 64px; }
+.scrapbook-memory.card-uploaded { top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-2deg); }
+.photo-tape { position: absolute; top: -8px; left: 50%; width: 72px; height: 21px; background: rgba(222,177,104,.55); transform: translateX(-50%) rotate(-3deg); }
+.scrapbook-photo { height: 145px; overflow: hidden; background: #d8cfbd; }
+.scrapbook-photo img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.9) contrast(1.03); }
+.scrapbook-card-meta { display: flex; justify-content: space-between; gap: 8px; padding: 9px 3px 4px; color: #68523d; font-size: 10px; }
+.scrapbook-memory .scrapbook-comment { position: static; width: auto; margin: 0 3px; color: #604c39; font-family: Georgia, serif; font-size: 13px; font-style: italic; line-height: 1.3; opacity: 1; text-shadow: none; transform: none; }
+.community-share-trigger { display: block; margin: 26px auto 0; border: 1px solid #af7845; border-radius: 4px; padding: 13px 20px; background: #a96249; color: #fff9eb; box-shadow: 0 5px 0 #7d4638; font-weight: 800; }
+.community-share-trigger:hover { background: #bd7254; transform: translateY(-2px); }
+.community-share-sheet { position: fixed; top: 50%; right: auto; bottom: auto; left: 50%; z-index: 25; width: min(430px, calc(100% - 36px)); padding: 28px; border: 1px solid #c8a87b; border-left: 1px solid #c8a87b; border-radius: 8px; background: repeating-linear-gradient(transparent 0 29px, rgba(137,174,193,.22) 30px 31px), #fffbed; box-shadow: 0 24px 80px rgba(38,26,15,.42); color: #493b2d; transform: translate(-50%, -50%); }
+.community-share-sheet::before { position: fixed; inset: 0; z-index: -1; content: ''; background: rgba(41,28,16,.38); backdrop-filter: blur(4px); }
+.community-share-sheet h2 { margin: 13px 0 7px; color: #493428; font-family: Georgia, serif; font-size: 29px; }
+.community-share-sheet p { color: #725f4d; }
+.community-share-sheet .community-upload { min-height: 58px; border-color: #caa874; color: #684e36; background: rgba(255,255,255,.34); }
+.community-share-sheet .community-camera-upload { margin-top: 8px; }
+.community-share-sheet input:not([type='file']) { border-color: #c7ad88; background: rgba(255,255,255,.72); color: #493b2d; }
+.community-share-sheet button { background: #a96249; color: #fff9eb; }
+.community-share-sheet button:disabled { cursor: not-allowed; opacity: .5; }
+@media (max-width: 800px) { .community-scrapbook-page { width: min(100% - 28px, 650px); } .community-scrapbook { min-height: 760px; padding: 16px; } .scrapbook-page { min-height: 725px; } .scrapbook-memory { width: 135px; } .scrapbook-photo { height: 95px; } .scrapbook-memory.card-1 { top: 70px; left: 3%; } .scrapbook-memory.card-2 { top: 160px; left: 28%; } .scrapbook-memory.card-3 { top: 80px; right: 3%; } .scrapbook-memory.card-4 { bottom: 80px; left: 4%; } .scrapbook-memory.card-5 { right: 9%; bottom: 90px; } .scrapbook-card-meta { display: block; } .scrapbook-card-meta span:last-child { display: block; margin-top: 3px; } }
+
+/* Isolated light-theme 3D memory book; it does not affect the globe scene. */
+.memory-book-page { min-height: 100vh; overflow: hidden; color: #4d3828; background: radial-gradient(circle at 12% 14%, #fffdf6, transparent 26%), radial-gradient(circle at 88% 6%, #f4dfb8, transparent 32%), #e9d6b5; font-family: var(--sans); }
+.memory-book-header { display: flex; align-items: center; justify-content: space-between; width: min(1320px, calc(100% - 56px)); margin: 0 auto; padding: 25px 0; }
+.memory-book-brand { color: #493426; font-size: 15px; font-weight: 800; letter-spacing: -.04em; }
+.memory-book-label { color: #a67549; font: 10px var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+.memory-book-account { border: 1px solid #c6a67e; border-radius: 4px; padding: 9px 12px; background: rgba(255,253,244,.72); color: #62452f; font-weight: 700; }
+.memory-book-main { width: min(1180px, calc(100% - 36px)); margin: 0 auto; padding: 22px 0 70px; text-align: center; }
+.memory-book-intro h1 { margin: 9px 0; color: #493426; font-family: Georgia, serif; font-size: clamp(43px, 6vw, 74px); font-weight: 500; line-height: .88; letter-spacing: -.07em; }
+.memory-book-intro h1 em { color: #ad694d; }
+.memory-book-intro p { max-width: 440px; margin: 0 auto 24px; color: #755c44; line-height: 1.65; }
+.memory-book { position: relative; padding: 13px 13px 26px; border: 9px solid #4c2d1b; border-radius: 13px 15px 18px 12px; background: linear-gradient(110deg, #5c3520, #9b6338 42%, #4b2c1b); box-shadow: inset 0 0 0 2px rgba(238,195,122,.27), 0 34px 62px rgba(63,37,18,.37); perspective: 1800px; }
+.memory-book-spread { position: relative; display: grid; grid-template-columns: 1fr 1fr; min-height: 510px; border-radius: 9px; transform-style: preserve-3d; box-shadow: 0 30px 55px rgba(75,48,25,.28); }
+.memory-book-spread.is-turning-forward { animation: memory-book-turn-forward .34s ease both; }
+.memory-book-spread.is-turning-back { animation: memory-book-turn-back .34s ease both; }
+@keyframes memory-book-turn-forward { 50% { transform: rotateY(-18deg) translateX(-22px); filter: brightness(.8); } }
+@keyframes memory-book-turn-back { 50% { transform: rotateY(18deg) translateX(22px); filter: brightness(.8); } }
+.memory-book-sheet { position: relative; min-height: 510px; overflow: hidden; padding: 44px; background: repeating-linear-gradient(transparent 0 30px, rgba(129,170,190,.22) 31px 32px), linear-gradient(90deg, transparent 52px, rgba(206,104,92,.2) 53px 55px, transparent 55px), #fffdf4; }
+.memory-book-sheet-0 { border-radius: 8px 0 0 8px; box-shadow: inset -20px 0 22px rgba(72,43,20,.1); }
+.memory-book-sheet-1 { border-radius: 0 8px 8px 0; box-shadow: inset 20px 0 22px rgba(72,43,20,.1); }
+.memory-book-spine { position: absolute; top: 0; bottom: 0; left: 50%; z-index: 4; width: 19px; background: linear-gradient(90deg, rgba(54,30,13,.18), rgba(255,255,255,.65), rgba(54,30,13,.16)); transform: translateX(-50%); }
+.memory-book-page-count { position: absolute; right: 24px; bottom: 19px; color: #b59a78; font: 10px var(--mono); }
+.memory-book-sheet-0 .memory-book-page-count { right: auto; left: 24px; }
+.memory-book-memory { position: relative; width: min(100%, 290px); margin: 18px auto; padding: 10px 10px 16px; background: #fffdf8; box-shadow: 3px 6px 14px rgba(68,45,24,.25); transform: rotate(-3deg); }
+.memory-book-memory::after { position: absolute; top: -13px; right: 22px; z-index: 2; width: 15px; height: 15px; border: 1px solid #794839; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff1d4 0 10%, #b85d4b 15% 46%, #6f322b 50%); box-shadow: 1px 2px 3px rgba(52,30,16,.45); content: ''; }
+.memory-book-sheet-1 .memory-book-memory { margin-top: 78px; transform: rotate(3deg); }
+.memory-book-tape { position: absolute; top: -10px; left: 50%; z-index: 1; width: 85px; height: 25px; opacity: .72; transform: translateX(-50%) rotate(-4deg); }
+.tape-rose .memory-book-tape { background: #dc9a94; }.tape-gold .memory-book-tape { background: #e0bd70; }.tape-sage .memory-book-tape { background: #a7bd93; }.tape-blue .memory-book-tape { background: #9fb9ca; }
+.memory-book-memory img { display: block; width: 100%; height: 255px; object-fit: cover; }
+.memory-book-meta { display: flex; justify-content: space-between; gap: 8px; padding: 11px 3px 4px; color: #654d38; font-size: 11px; }
+.memory-book-meta span { color: #9c7b60; }
+.memory-book-memory p { margin: 3px; color: #5c4634; font-family: "Segoe Print", "Bradley Hand", cursive; font-size: 15px; line-height: 1.35; text-align: left; }
+.memory-book-empty { margin-top: 220px; color: #aa9276; font-family: "Segoe Print", cursive; }
+.memory-book-controls { display: flex; align-items: center; justify-content: center; gap: 24px; margin-top: 20px; color: #80644a; font: 11px var(--mono); }
+.memory-book-controls button { border: 0; padding: 7px 0; background: transparent; color: #765237; font: 11px var(--mono); }.memory-book-controls button:disabled { opacity: .35; }
+.memory-book-share-button { margin-top: 25px; border: 1px solid #985a43; border-radius: 4px; padding: 13px 19px; background: #a8614a; box-shadow: 0 5px 0 #784235; color: #fffaf0; font-weight: 800; }
+.memory-book-modal-backdrop { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 18px; background: rgba(49,30,16,.45); backdrop-filter: blur(6px); }
+.memory-book-share-modal { position: relative; width: min(430px, 100%); padding: 30px; border: 1px solid #c8a67a; border-radius: 8px; background: repeating-linear-gradient(transparent 0 29px, rgba(124,165,187,.17) 30px 31px), #fffbee; box-shadow: 0 25px 70px rgba(45,27,14,.35); text-align: left; }
+.memory-book-share-modal h2 { margin: 9px 0 7px; font-family: Georgia, serif; font-size: 30px; }.memory-book-share-modal p { color: #77604a; line-height: 1.6; }.memory-book-modal-close { position: absolute; top: 12px; right: 15px; border: 0; background: transparent; color: #77533a; font-size: 25px; }
+.memory-book-share-modal form { display: grid; gap: 10px; }.memory-book-upload-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }.memory-book-upload-actions label { display: grid; min-height: 70px; place-items: center; border: 1px dashed #bd9568; background: rgba(255,255,255,.43); color: #704f35; font-size: 12px; font-weight: 700; cursor: pointer; }.memory-book-share-modal input[type='file'] { display: none; }.memory-book-file-name { color: #9c7a5e; font-size: 11px; }.memory-book-share-modal textarea { resize: vertical; border: 1px solid #c5aa87; padding: 11px; background: rgba(255,255,255,.72); color: #513b2b; outline: none; }.memory-book-save { border: 0; padding: 12px; background: #a8614a; color: #fffaf0; font-weight: 800; }.memory-book-save:disabled { opacity: .5; }
+@media (max-width: 700px) { .memory-book-header { width: min(100% - 28px, 620px); }.memory-book-header .memory-book-label { display: none; }.memory-book-spread { min-height: 405px; }.memory-book-sheet { min-height: 405px; padding: 25px 14px; }.memory-book-memory { width: 135px; padding: 6px 6px 10px; }.memory-book-memory img { height: 124px; }.memory-book-meta { display: block; }.memory-book-meta span { display: block; margin-top: 3px; }.memory-book-memory p { font-size: 12px; }.memory-book-sheet-1 .memory-book-memory { margin-top: 90px; }.memory-book-empty { margin-top: 170px; font-size: 12px; }.memory-book-controls { gap: 12px; } }
+
+/* Memory book palette aligned with the existing Enter Karabakh scene. */
+.memory-book-page { color: var(--ink); background: radial-gradient(circle at 77% 14%, rgba(56,189,248,.12), transparent 28%), radial-gradient(circle at 14% 82%, rgba(199,250,131,.08), transparent 30%), #050807; }
+.memory-book-page::before { position: fixed; inset: 0; z-index: 0; pointer-events: none; content: ''; opacity: .27; background-image: linear-gradient(rgba(191,240,211,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(191,240,211,.04) 1px, transparent 1px); background-size: 72px 72px; }
+.memory-book-header, .memory-book-main { position: relative; z-index: 1; }
+.memory-book-brand { color: var(--ink); }.memory-book-label { color: #7dd3fc; }.memory-book-account { display: grid; width: 50px; height: 50px; place-items: center; border-color: rgba(56,189,248,.42); border-radius: 3px; padding: 0; background: rgba(56,189,248,.08); }.memory-book-account img { width: 38px; height: 38px; object-fit: contain; }.memory-book-account:hover { border-color: #38bdf8; background: rgba(56,189,248,.16); box-shadow: 0 8px 22px rgba(14,165,233,.2); }
+.memory-book-intro h1 { color: var(--ink); }.memory-book-intro h1 em { color: var(--lime); }.memory-book-intro p { color: var(--muted); }
+.memory-book { border-color: #162a21; background: linear-gradient(110deg, #0a1711, #183426 42%, #08130d); box-shadow: inset 0 0 0 2px rgba(199,250,131,.13), 0 34px 62px rgba(0,0,0,.55); }
+.memory-book-sheet { background: repeating-linear-gradient(transparent 0 30px, rgba(129,170,190,.2) 31px 32px), linear-gradient(90deg, transparent 52px, rgba(206,104,92,.16) 53px 55px, transparent 55px), #f1e4c9; }
+.memory-book-share-button, .memory-book-save { background: var(--lime); box-shadow: 0 5px 0 #71944b; color: #0b170d; }.memory-book-share-button:hover { background: #dcffae; }
+
+/* A weathered archive book: subdued leather, parchment and age marks. */
+.memory-book-page { color: #3f2c1d; background: radial-gradient(ellipse at 50% -10%, rgba(236,207,151,.24), transparent 42%), radial-gradient(circle at 13% 80%, rgba(113,67,32,.25), transparent 32%), #21150e; }
+.memory-book-page::before { opacity: .14; background-image: radial-gradient(rgba(255,229,178,.28) .7px, transparent .7px); background-size: 5px 5px; }
+.memory-book-brand { color: #e7cf9c; }.memory-book-label { color: #cba767; }.memory-book-account { border-color: rgba(211,171,97,.45); background: rgba(83,48,26,.66); }.memory-book-account:hover { border-color: #edc77e; background: rgba(116,69,33,.72); box-shadow: 0 7px 21px rgba(0,0,0,.35); }
+.memory-book-intro h1 { color: #f2dfba; text-shadow: 0 3px 17px rgba(0,0,0,.45); }.memory-book-intro h1 em { color: #d4a861; }.memory-book-intro p { color: #cdb995; }
+.memory-book { padding: 17px 18px 30px; border: 0; border-radius: 11px 18px 18px 11px; background: repeating-linear-gradient(90deg, rgba(255,232,175,.035) 0 1px, transparent 1px 7px), linear-gradient(105deg, #28160d, #7b4827 18%, #4a2818 49%, #8d5730 83%, #2c180e); box-shadow: inset 0 0 0 2px rgba(234,189,107,.22), inset 0 0 34px rgba(18,8,3,.7), 0 36px 70px rgba(0,0,0,.62); }
+.memory-book::after { position: absolute; top: 5px; right: 5px; bottom: 5px; left: 5px; border: 1px solid rgba(249,209,134,.22); border-radius: 7px 13px 13px 7px; content: ''; pointer-events: none; }
+.memory-book-spread { min-height: 520px; border: 1px solid rgba(84,47,23,.65); border-radius: 4px 9px 9px 4px; box-shadow: 0 13px 21px rgba(0,0,0,.42); }
+.memory-book-sheet { min-height: 520px; background: radial-gradient(ellipse at 9% 10%, rgba(117,75,30,.14), transparent 23%), radial-gradient(ellipse at 88% 87%, rgba(113,71,25,.11), transparent 27%), repeating-linear-gradient(0deg, transparent 0 29px, rgba(110,81,47,.13) 30px 31px), #e9d1a3; }
+.memory-book-sheet::after { position: absolute; inset: 0; pointer-events: none; content: ''; opacity: .25; background-image: radial-gradient(rgba(84,52,25,.35) .55px, transparent .7px); background-size: 4px 4px; mix-blend-mode: multiply; }
+.memory-book-sheet-0 { box-shadow: inset -22px 0 28px rgba(67,37,13,.24); }.memory-book-sheet-1 { box-shadow: inset 22px 0 28px rgba(67,37,13,.24); }.memory-book-spine { background: linear-gradient(90deg, rgba(45,22,8,.44), rgba(224,187,121,.44), rgba(52,25,9,.42)); }
+.memory-book-page-count { color: #8a5c34; }.memory-book-memory { background: #f5e5c5; box-shadow: 3px 7px 14px rgba(52,29,12,.36); }.memory-book-memory img { filter: sepia(.18) saturate(.82) contrast(1.04); }.memory-book-meta { color: #5d3920; }.memory-book-meta span { color: #936440; }.memory-book-memory p, .memory-book-empty { color: #542f1a; font-family: "Segoe Print", "Bradley Hand", cursive; }
+.memory-book-controls { color: #d5b67f; }.memory-book-controls button { color: #e1c58f; }.memory-book-share-button, .memory-book-save { background: linear-gradient(135deg, #b17640, #7c4427); box-shadow: 0 5px 0 #482416; color: #fff2d2; }.memory-book-share-button:hover { background: linear-gradient(135deg, #c48a50, #8e5130); }
+.memory-book-share-modal { border-color: #9d6b3e; background: repeating-linear-gradient(0deg, transparent 0 28px, rgba(110,81,47,.12) 29px 30px), #e9d1a3; box-shadow: inset 0 0 30px rgba(84,48,17,.12), 0 25px 70px rgba(0,0,0,.6); }.memory-book-share-modal h2 { color: #452719; }.memory-book-share-modal p { color: #694528; }.memory-book-upload-actions label { border-color: #a77949; background: rgba(255,246,219,.4); color: #5b3820; }.memory-book-share-modal textarea { border-color: #a77949; background: rgba(255,247,225,.67); color: #4b2c1a; }
+
+/* Match the Trip page backdrop; simplify the book into a classic bound volume. */
+.memory-book-page { position: relative; isolation: isolate; background: #050a10 url('/shusha/shusha.JPG') center / cover fixed no-repeat; }
+.memory-book-page::before { z-index: 0; opacity: 1; background: linear-gradient(rgba(5,10,16,.84), rgba(5,10,16,.84)); }
+.memory-book-header { border-bottom: 1px solid rgba(255,255,255,.1); }.memory-book-brand { color: #fff; }.memory-book-label { color: #7dd3fc; }.memory-book-intro h1 { color: #fff; }.memory-book-intro h1 em { color: #7dd3fc; }.memory-book-intro p { color: rgba(255,255,255,.74); }
+.memory-book { max-width: 1080px; margin-right: auto; margin-left: auto; padding: 22px 24px 32px; border: 1px solid #9e6a39; border-radius: 5px 11px 11px 5px; background: linear-gradient(90deg, #2d160d 0%, #63371c 4%, #351a0e 8%, #66391d 50%, #32190e 92%, #1d0e08 100%); box-shadow: inset 0 0 0 2px rgba(234,189,107,.18), inset 0 0 30px rgba(0,0,0,.65), 0 34px 75px rgba(0,0,0,.72); transform: perspective(1700px) rotateX(2deg); }
+.memory-book::after { top: 9px; right: 9px; bottom: 9px; left: 9px; border-color: rgba(242,204,135,.34); border-radius: 2px 7px 7px 2px; }
+.memory-book-spread { min-height: 540px; overflow: hidden; border: 0; border-radius: 1px 5px 5px 1px; background: #d7bd8a; box-shadow: 0 8px 18px rgba(0,0,0,.5), inset 0 0 0 1px rgba(93,57,24,.46); }
+.memory-book-sheet { min-height: 540px; padding: 48px 56px; background: radial-gradient(ellipse at 6% 4%, rgba(101,58,20,.16), transparent 23%), radial-gradient(ellipse at 90% 92%, rgba(101,58,20,.13), transparent 27%), repeating-linear-gradient(0deg, transparent 0 32px, rgba(128,92,51,.09) 33px 34px), #ead6ad; }
+.memory-book-sheet::after { opacity: .14; }.memory-book-sheet-0 { box-shadow: inset -30px 0 28px rgba(65,35,12,.25); }.memory-book-sheet-1 { box-shadow: inset 30px 0 28px rgba(65,35,12,.25); }
+.memory-book-spine { width: 28px; background: linear-gradient(90deg, rgba(37,17,6,.42), rgba(238,202,140,.52), rgba(47,21,7,.46)); }.memory-book-memory, .memory-book-sheet-1 .memory-book-memory { width: min(100%, 315px); margin: 35px auto; padding: 12px 12px 20px; border: 1px solid rgba(86,47,17,.38); background: #f6e8cb; box-shadow: 0 8px 18px rgba(55,30,10,.26); transform: none; }
+.memory-book-memory::after, .memory-book-tape { display: none; }.memory-book-memory img { height: 265px; border: 5px solid #fdf5e5; outline: 1px solid rgba(86,47,17,.31); filter: sepia(.12) saturate(.86) contrast(1.04); }.memory-book-meta { padding: 13px 3px 5px; }.memory-book-memory p { margin: 3px; font-size: 16px; }.memory-book-empty { margin-top: 230px; }.memory-book-controls { color: #f0d7a2; }.memory-book-controls button { color: #fff0c9; }
+
+/* Embedded experience: preserve the existing Inter Karabakh world completely. */
+.memory-world .memory-traces, .memory-world .memory-info, .memory-world .memory-title-note, .memory-world .trace-entry, .memory-world .trace-form-space { display: none; }
+.memory-book-embedded { position: absolute; top: 15%; left: 50%; z-index: 7; width: min(960px, 76vw); min-height: 0; overflow: visible; background: transparent; transform: translateX(-50%); isolation: auto; }
+.memory-book-embedded::before { display: none; }.memory-book-embedded .memory-book-header, .memory-book-embedded .memory-book-intro { display: none; }.memory-book-embedded .memory-book-main { width: 100%; padding: 0; }.memory-book-embedded .memory-book { width: 100%; }.memory-book-embedded .memory-book-spread, .memory-book-embedded .memory-book-sheet { min-height: 470px; }.memory-book-embedded .memory-book-sheet { padding: 34px 48px; }.memory-book-embedded .memory-book-memory, .memory-book-embedded .memory-book-sheet-1 .memory-book-memory { margin-top: 26px; }.memory-book-embedded .memory-book-memory img { height: 220px; }
+@media (max-width: 800px) { .memory-book-embedded { top: 21%; width: min(620px, 92vw); }.memory-book-embedded .memory-book-spread, .memory-book-embedded .memory-book-sheet { min-height: 355px; }.memory-book-embedded .memory-book-sheet { padding: 20px 12px; }.memory-book-embedded .memory-book-memory, .memory-book-embedded .memory-book-sheet-1 .memory-book-memory { width: 132px; margin-top: 22px; }.memory-book-embedded .memory-book-memory img { height: 118px; }.memory-book-embedded .memory-book-memory p { font-size: 11px; } }
+
+/* Two-page journal layout: one photograph, one left-aligned written entry. */
+.memory-book-bulbul { width: 43px; height: 43px; object-fit: contain; }.memory-book-embedded .memory-book-bulbul { display: none; }
+.memory-book-embedded .memory-book { padding: 18px 21px 27px; border-color: #756257; background: linear-gradient(90deg, #30251f, #55453b 8%, #403229 50%, #56463a 92%, #2e241f); transform: perspective(1500px) rotateX(10deg); transform-origin: center bottom; }
+.memory-book-embedded .memory-book-spread { min-height: 480px; box-shadow: 0 17px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(86,70,57,.42); }
+.memory-book-embedded .memory-book-sheet { min-height: 480px; padding: 42px 48px; background: radial-gradient(ellipse at 8% 8%, rgba(107,89,70,.08), transparent 26%), repeating-linear-gradient(0deg, transparent 0 31px, rgba(98,82,64,.07) 32px 33px), #f3efe6; }
+.memory-book-embedded .memory-book-sheet::after { opacity: .08; }.memory-book-embedded .memory-book-sheet-0 { box-shadow: inset -32px 0 32px rgba(53,40,28,.2); }.memory-book-embedded .memory-book-sheet-1 { box-shadow: inset 32px 0 32px rgba(53,40,28,.2); }
+.memory-book-embedded .memory-book-spine { z-index: 6; width: 31px; background: linear-gradient(90deg, rgba(37,27,20,.4), rgba(255,255,255,.24) 48%, rgba(37,27,20,.44)); box-shadow: 0 0 19px rgba(21,15,10,.36); }
+.memory-book-photo-page { display: grid; place-items: center; }.memory-book-photo { position: relative; width: min(100%, 328px); padding: 12px 12px 28px; background: #fdfcf8; box-shadow: 2px 8px 18px rgba(46,35,24,.26); transform: rotate(-1.5deg); }.memory-book-photo img { display: block; width: 100%; height: 280px; object-fit: cover; filter: saturate(.86) contrast(1.02); }.memory-book-photo-corner { position: absolute; z-index: 2; width: 29px; height: 29px; border-color: rgba(186,178,164,.88); border-style: solid; }.corner-one { top: -3px; left: -3px; border-width: 2px 0 0 2px; }.corner-two { top: -3px; right: -3px; border-width: 2px 2px 0 0; }.corner-three { bottom: -3px; left: -3px; border-width: 0 0 2px 2px; }.corner-four { right: -3px; bottom: -3px; border-width: 0 2px 2px 0; }
+.memory-book-note-page { display: flex; flex-direction: column; align-items: flex-start; color: #3e342c; text-align: left; }.memory-book-stamp { display: inline-flex; flex-direction: column; gap: 4px; border: 1px solid #998a7b; padding: 8px 10px; color: #665a4e; font: 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; }.memory-book-stamp span { color: #988a7b; font-size: 8px; }.memory-book-entry { margin: 58px 0 0 20px; max-width: 82%; }.memory-book-entry p { margin: 0; color: #45372d; font-family: "Segoe Print", "Bradley Hand", cursive; font-size: clamp(17px, 1.7vw, 22px); line-height: 1.65; text-align: left; }.memory-book-author { display: flex; align-items: center; gap: 9px; margin: auto 0 12px 20px; color: #74675a; font-size: 11px; }.memory-book-author strong { color: #44362c; }.memory-book-author-mark { display: grid; width: 23px; height: 23px; place-items: center; border: 1px solid #a5998a; border-radius: 50%; color: #66594c; font: 10px Georgia, serif; }
+.memory-book-embedded .memory-book-controls { margin-top: 18px; }.memory-book-embedded .memory-book-share-button { position: absolute; top: -52px; right: 0; margin: 0; border: 1px solid rgba(255,255,255,.32); border-radius: 3px; padding: 9px 12px; background: rgba(9,20,14,.78); box-shadow: none; color: #f2f6ef; font-size: 11px; }.memory-book-embedded .memory-book-share-button:hover { background: rgba(199,250,131,.15); color: #dcffae; }
+@media (max-width: 800px) { .memory-book-embedded .memory-book { padding: 10px 12px 18px; transform: perspective(1100px) rotateX(6deg); }.memory-book-embedded .memory-book-spread, .memory-book-embedded .memory-book-sheet { min-height: 350px; }.memory-book-embedded .memory-book-sheet { padding: 25px 18px; }.memory-book-photo { width: 135px; padding: 6px 6px 15px; }.memory-book-photo img { height: 130px; }.memory-book-photo-corner { width: 17px; height: 17px; }.memory-book-entry { margin: 30px 0 0 9px; max-width: 91%; }.memory-book-entry p { font-size: 12px; }.memory-book-author { margin-left: 9px; }.memory-book-stamp { padding: 6px; font-size: 7px; }.memory-book-embedded .memory-book-share-button { top: -42px; font-size: 9px; } }

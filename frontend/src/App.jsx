@@ -3,6 +3,7 @@ import Globe from "globe.gl";
 import * as THREE from "three";
 import VanillaTilt from "vanilla-tilt";
 import AuthModal from "./components/AuthModal.jsx";
+import MemoryBook from "./components/MemoryBook.jsx";
 
 const destination = { lat: 40.1431, lng: 47.5769, altitude: 0.72 };
 const photos = [
@@ -238,12 +239,11 @@ function Landing() {
   const enter = () => {
     if (!globe || departing) return;
     setDeparting(true);
-    globe.controls().autoRotate = false;
     globe.pointOfView(destination, 1800);
     window.setTimeout(() => {
       window.location.hash = "#community";
       window.dispatchEvent(new HashChangeEvent("hashchange"));
-    }, 180);
+    }, 1800);
   };
   return (
     <main className="landing">
@@ -1113,6 +1113,7 @@ function CommunityArchive() {
             <img src="/lacin/khari-bulbul1.png" alt="" />
             <span />
           </div>
+          <MemoryBook embedded />
           <div
             className="memory-traces"
             style={{
@@ -1300,7 +1301,16 @@ function Community() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [traceOpen, setTraceOpen] = useState(false);
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => localStorage.getItem("isLoggedIn") === "true",
+  );
+
+  useEffect(() => {
+    const syncAuth = () =>
+      setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+    window.addEventListener("auth:changed", syncAuth);
+    return () => window.removeEventListener("auth:changed", syncAuth);
+  }, []);
 
   const openAuthIfGuest = (event) => {
     if (!isLoggedIn) {
@@ -1316,13 +1326,15 @@ function Community() {
       window.dispatchEvent(new CustomEvent("auth:open"));
       return;
     }
-    if (!selectedFile && !caption.trim()) return;
-    if (selectedFile)
-      setUploadedImage({
-        src: URL.createObjectURL(selectedFile),
-        caption: caption.trim() || "A new field note",
-      });
+    if (!selectedFile) return;
+    setUploadedImage({
+      src: URL.createObjectURL(selectedFile),
+      caption: caption.trim() || "A new Karabakh memory",
+    });
     setShared(true);
+    setTraceOpen(false);
+    setCaption("");
+    setSelectedFile(null);
   };
 
   const cards = [
@@ -1347,53 +1359,51 @@ function Community() {
   ];
 
   return (
-    <div className="page-shell community-memory-page">
+    <div className="page-shell community-scrapbook-page">
       <Header active="community" />
-      <main className="community-memory-main">
-        <section className="community-memory-intro">
+      <main className="community-scrapbook-main">
+        <section className="community-scrapbook-intro">
           <span className="eyebrow mono" style={{ color: "#38bdf8" }}>
-            Inter Karabakh / living archive
+            Inter Karabakh / travel diary
           </span>
           <h1>
-            Leave a trace.
+            Karabakh
             <br />
-            <em>Keep it alive.</em>
+            <em>memory book.</em>
           </h1>
           <p>
-            Real moments from the road, held in a quiet space for the next
-            traveller to discover.
+            Turn the pages and collect small moments from the road. Every
+            photograph is a note left by a traveller.
           </p>
         </section>
         <section
-          className="community-memory-stage"
+          className="community-scrapbook"
           aria-label="Community memories"
         >
           {cards.map((card) => (
             <article
-              className={card.className}
+              className={`scrapbook-memory ${card.className}`}
               key={`${card.src}-${card.author}`}
             >
-              <div className="community-card-string" aria-hidden="true" />
-              <div className="community-card-image">
+              <span className="photo-tape" aria-hidden="true" />
+              <div className="scrapbook-photo">
                 <img src={card.src} alt={card.alt} loading="lazy" />
               </div>
-              <div className="community-card-meta">
+              <div className="scrapbook-card-meta">
                 <span>{card.author}</span>
                 <span className="mono">{card.place}</span>
               </div>
-              <p className="community-card-comment">
+              <p className="scrapbook-comment">
                 “{card.caption || card.alt}”
               </p>
             </article>
           ))}
-          <span className="community-stage-line" />
-          <span className="community-stage-light" />
         </section>
-        {isLoggedIn && <button className="community-trace-trigger" type="button" onClick={() => setTraceOpen((open) => !open)} aria-label="Open photo upload" title="Upload a photo">
+        {isLoggedIn && <button className="community-share-trigger" type="button" onClick={() => setTraceOpen((open) => !open)} aria-label="Open photo upload" title="Upload a photo">
           <span>{traceOpen ? "×" : "+"}</span>
         </button>}
-        {isLoggedIn && traceOpen && <aside className="community-trace-panel">
-          <h2>Share one moment.</h2>
+        {isLoggedIn && traceOpen && <aside className="community-trace-panel community-share-sheet" role="dialog" aria-modal="true">
+          <h2>Paste in a new memory.</h2>
           <p>
             {isLoggedIn
               ? "Your field note will join the memory wall."
@@ -1406,7 +1416,7 @@ function Community() {
               onClick={openAuthIfGuest}
             >
               <span className="community-upload-icon">+</span>
-              <span>{selectedFile ? selectedFile.name : "Choose a photo"}</span>
+              <span>{selectedFile ? selectedFile.name : "Add a photo"}</span>
             </label>
             <input
               id="community-photo-input"
@@ -1418,15 +1428,29 @@ function Community() {
               onClick={openAuthIfGuest}
               disabled={!isLoggedIn}
             />
+            <label className="community-upload community-camera-upload" htmlFor="community-camera-input">
+              <span className="community-upload-icon">◉</span>
+              <span>Take a photo</span>
+            </label>
+            <input
+              id="community-camera-input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(event) =>
+                setSelectedFile(event.target.files?.[0] || null)
+              }
+              disabled={!isLoggedIn}
+            />
             <input
               value={caption}
               onChange={(event) => setCaption(event.target.value)}
-              placeholder="A short caption"
-              aria-label="A short caption"
+              placeholder="Write your comment..."
+              aria-label="Comment for your photo"
               onClick={openAuthIfGuest}
               disabled={!isLoggedIn}
             />
-            <button type="submit" onClick={openAuthIfGuest}>
+            <button type="submit" onClick={openAuthIfGuest} disabled={!selectedFile}>
               {shared
                 ? "Added to the archive"
                 : isLoggedIn
@@ -1773,7 +1797,7 @@ export default function App() {
 
   let page = <Landing />;
   if (route === "dashboard") page = <Dashboard />;
-  if (route === "community") page = <Community />;
+  if (route === "community") page = <CommunityArchive />;
   if (route === "district")
     page = (
       <DistrictPage slug={window.location.pathname.replace("/district/", "")} />
