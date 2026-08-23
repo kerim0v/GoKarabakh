@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Globe from 'globe.gl';
 import * as THREE from 'three';
 import VanillaTilt from 'vanilla-tilt';
+import AuthModal from './components/AuthModal.jsx';
 
 const destination = { lat: 40.1431, lng: 47.5769, altitude: 0.72 };
 const photos = [
@@ -13,15 +14,28 @@ const photos = [
 ];
 
 function Header({ active }) {
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  
   return <header className="topbar">
     <a className="brand" href="/"><span className="brand-mark" style={{ background: '#38bdf8' }}>G</span><span>GOKARABAKH</span></a>
     <nav className="nav" aria-label="Primary navigation">
       <a className={active === 'explore' ? 'active' : ''} href="/">Explore</a>
       <a className={active === 'trip' ? 'active' : ''} href="/dashboard">Trip</a>
-      <a className={active === 'community' ? 'active' : ''} href="/community">Community</a>
     </nav>
-    {active === 'explore' ? <span className="mono">01 / 03</span> : <div className="wallet"><span className="wallet-icon" style={{ color: '#38bdf8' }}>◈</span><b>1,240</b><span className="mono">coins</span></div>}
+    <div className="header-actions">{active === 'explore' ? <span className="mono">01 / 03</span> : isLoggedIn && <div className="wallet"><span className="wallet-icon" style={{ color: '#38bdf8' }}>◈</span><b>1,240</b><span className="mono">coins</span></div>}<button className="auth-trigger" type="button" onClick={() => window.dispatchEvent(new CustomEvent('auth:open'))} aria-label={isLoggedIn ? 'Open account' : 'Open sign in or sign up'} title={isLoggedIn ? 'Account' : 'Sign in or sign up'}><img src="/lacin/khari-bulbul1.png" alt="Sign In" className="khari-bulbul-icon" /></button></div>
   </header>;
+}
+
+function AuthShell({ children }) {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  useEffect(() => {
+    const openAuth = (event) => { setPendingAction(() => event.detail?.onSuccess || null); setAuthOpen(true); };
+    window.addEventListener('auth:open', openAuth);
+    return () => window.removeEventListener('auth:open', openAuth);
+  }, []);
+  const authenticated = () => { const action = pendingAction; setPendingAction(null); setAuthOpen(false); action?.(); };
+  return <>{children}<AuthModal open={authOpen} onClose={() => { setAuthOpen(false); setPendingAction(null); }} onAuthenticated={authenticated} /></>;
 }
 
 function ParticleField({ globe }) {
@@ -72,8 +86,17 @@ function Landing() {
     setGlobe(() => instance);
     return () => instance._destructor?.();
   }, []);
-  const enter = () => { if (!globe || departing) return; setDeparting(true); globe.controls().autoRotate = false; globe.pointOfView(destination, 1800); window.setTimeout(() => { window.location.href = '/dashboard'; }, 1800); };
-  return <main className="landing"><div className="page-shell"><Header active="explore" /></div><section className="globe-stage" aria-label="Interactive globe explorer"><div id="globe" ref={mount} />{globe && <ParticleField globe={globe} />}<div className="stage-copy reveal"><span className="eyebrow mono" style={{ color: '#38bdf8' }}>A new latitude</span><h1>Find the<br /><span>untold.</span></h1><p>A living atlas of mountain air, ancient routes and the people who make Karabakh unforgettable.</p></div><div className="stage-control glass reveal delay-2"><p className="mono">Mission / discover 01</p><p>Drag the earth, or follow the signal into Azerbaijan.</p><button className="button button-primary" onClick={enter} type="button" style={{ background: '#38bdf8', color: '#000' }}>Enter Karabakh <span>↗</span></button></div><span className="corner-note mono">40°08' N&nbsp;&nbsp; 47°34' E</span></section>{departing && <div className="modal-backdrop open" aria-hidden="true" />}</main>;
+  const enter = () => {
+    if (!globe || departing) return;
+    setDeparting(true);
+    globe.controls().autoRotate = false;
+    globe.pointOfView(destination, 1800);
+    window.setTimeout(() => {
+      window.location.hash = '#community';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    }, 180);
+  };
+  return <main className="landing"><div className="page-shell"><Header active="explore" /></div><section className="globe-stage" aria-label="Interactive globe explorer"><div id="globe" ref={mount} />{globe && <ParticleField globe={globe} />}<div className="stage-copy reveal"><span className="eyebrow mono" style={{ color: '#38bdf8' }}>A new latitude</span><h1>Find the<br /><span>untold.</span></h1><p>A living atlas of mountain air, ancient routes and the people who make Karabakh unforgettable.</p></div><div className="stage-control glass reveal delay-2"><p className="mono" style={{ marginBottom: '6px', color: '#7dd3fc', letterSpacing: '0.14em' }}>Inter Karabakh</p><p>Drag the earth, or follow the signal into Azerbaijan.</p><button className="button button-primary" onClick={enter} type="button" title="Inter Karabakh community" aria-label="Inter Karabakh community" style={{ background: '#38bdf8', color: '#000' }}>Enter Karabakh <span>↗</span></button></div><span className="corner-note mono">40°08' N&nbsp;&nbsp; 47°34' E</span></section>{departing && <div className="modal-backdrop open" aria-hidden="true" />}</main>;
 }
 
 function Dashboard() {
@@ -84,9 +107,9 @@ function Dashboard() {
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
   const cidirImages = [
-    '/cidir-1.jpg',
-    '/cidir-2.jpg',
-    '/cidir-3.jpg'
+    '/shusha/shusha.JPG',
+    '/kelbecer/kelbecer.jpg',
+    '/khankendi/khankendi.jpeg'
   ];
 
   // Window scroll-u birbaşa izləyən funksiya (Bu 100% işləyəcək)
@@ -114,15 +137,15 @@ function Dashboard() {
   }, []);
 
   const karabakhRegions = [
-    { slug: 'shusha', label: 'Shusha', image: '/map-shusha.png', fact: 'Cultural capital', narrative: 'A storied hilltop city of music, poetry, and panoramic limestone cliffs.' },
-    { slug: 'kalbajar', label: 'Kalbajar', image: '/map-kalbajar.png', fact: 'Highland escape', narrative: 'Hot springs, alpine passes, and ancient stone sanctuaries in the high Caucasus.' },
-    { slug: 'lachin', label: 'Lachin', image: '/map-lachin.png', fact: 'Forest corridor', narrative: 'Deep green valleys and river routes opening toward the mountain frontier.' },
-    { slug: 'khankendi', label: 'Khankendi', image: '/map-khankendi.png', fact: 'Valley centre', narrative: 'A welcoming city base set among the gentle folds of the Karabakh range.' },
-    { slug: 'aghdam', label: 'Aghdam', image: '/map-aghdam.png', fact: 'Heritage plains', narrative: 'An expansive district of cultural landmarks, open plains, and renewed connections.' },
-    { slug: 'khojaly', label: 'Khojaly', image: '/map-khojaly.png', fact: 'Ancient landscape', narrative: 'Rolling uplands where archaeological traces meet wide, quiet horizons.' },
-    { slug: 'khojavend', label: 'Khojavend', image: '/map-khojavend.png', fact: 'Wild viewpoints', narrative: 'Wooded slopes, hidden trails, and a landscape shaped for slow exploration.' },
-    { slug: 'qubadli', label: 'Qubadli', image: '/map-qubadli.png', fact: 'Riverside routes', narrative: 'A lush southern gateway framed by rivers, ridges, and village pathways.' },
-    { slug: 'zangilan', label: 'Zangilan', image: '/map-zangilan.png', fact: 'Nature reserve', narrative: 'Wetlands, plane forests, and an unhurried route through the Aras valley.' }
+    { slug: 'shusha', label: 'Shusha', image: '/map/map-shusha.png', fact: 'Cultural capital', narrative: 'A storied hilltop city of music, poetry, and panoramic limestone cliffs.' },
+    { slug: 'kalbajar', label: 'Kalbajar', image: '/map/map-kalbajar.png', fact: 'Highland escape', narrative: 'Hot springs, alpine passes, and ancient stone sanctuaries in the high Caucasus.' },
+    { slug: 'lachin', label: 'Lachin', image: '/map/map-lachin.png', fact: 'Forest corridor', narrative: 'Deep green valleys and river routes opening toward the mountain frontier.' },
+    { slug: 'khankendi', label: 'Khankendi', image: '/map/map-khankendi.png', fact: 'Valley centre', narrative: 'A welcoming city base set among the gentle folds of the Karabakh range.' },
+    { slug: 'aghdam', label: 'Aghdam', image: '/map/map-aghdam.png', fact: 'Heritage plains', narrative: 'An expansive district of cultural landmarks, open plains, and renewed connections.' },
+    { slug: 'khojaly', label: 'Khojaly', image: '/map/map-khojaly.png', fact: 'Ancient landscape', narrative: 'Rolling uplands where archaeological traces meet wide, quiet horizons.' },
+    { slug: 'khojavend', label: 'Khojavend', image: '/map/map-khojavend.png', fact: 'Wild viewpoints', narrative: 'Wooded slopes, hidden trails, and a landscape shaped for slow exploration.' },
+    { slug: 'qubadli', label: 'Qubadli', image: '/map/map-qubadli.png', fact: 'Riverside routes', narrative: 'A lush southern gateway framed by rivers, ridges, and village pathways.' },
+    { slug: 'zangilan', label: 'Zangilan', image: '/map/map-zangilan.png', fact: 'Nature reserve', narrative: 'Wetlands, plane forests, and an unhurried route through the Aras valley.' }
   ];
 
   const regionTabs = [
@@ -277,7 +300,7 @@ function Dashboard() {
                 <span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: '600', textTransform: 'uppercase' }}>Destination</span>
                 <input 
                   type="text" 
-                  placeholder="Shusha, Lachin, Kəlbəcər..." 
+                  placeholder="Shusha, Lachin, Kalbajar..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   style={{ width: '100%', border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', fontWeight: '600', color: '#1e293b', marginTop: '2px' }}
@@ -370,10 +393,24 @@ function Community() {
   const [shared, setShared] = useState(false);
   const [caption, setCaption] = useState('');
   const [coins, setCoins] = useState([]);
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+  const openAuthIfGuest = (event) => {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    if (!isLoggedIn) {
+      window.dispatchEvent(new CustomEvent('auth:open'));
+      return true;
+    }
+    return false;
+  };
 
   const share = (event) => {
     event.preventDefault();
     if (!caption.trim()) return;
+    if (!isLoggedIn) {
+      window.dispatchEvent(new CustomEvent('auth:open', { detail: { onSuccess: () => share(event) } }));
+      return;
+    }
     setShared(true);
     setCoins(Array.from({ length: 34 }, (_, index) => ({
       id: `${Date.now()}-${index}`,
@@ -390,7 +427,7 @@ function Community() {
       <main className="community-main">
         <section className="community-hero reveal">
           <div>
-            <span className="eyebrow mono" style={{ color: '#38bdf8' }}>Field notes / 03</span>
+            <span className="eyebrow mono" style={{ color: '#38bdf8' }}>Inter Karabakh / 03</span>
             <h1>Seen through<br />your eyes.</h1>
           </div>
           <p>Small moments from a shared map. Add your own coordinates and help the next traveller look closer.</p>
@@ -407,12 +444,12 @@ function Community() {
           <aside className="upload-panel glass reveal delay-3" style={{ border: '1px solid rgba(56,189,248,0.2)' }}>
             <span className="eyebrow mono" style={{ color: '#38bdf8' }}>Add to the atlas</span>
             <h3>Leave a trace.</h3>
-            <p>Share one frame from your route and receive 50 GoKarabakh coins.</p>
+            <p>{isLoggedIn ? 'Share one frame from your route and receive 50 GoKarabakh coins.' : 'Share one frame from your route with the community.'}</p>
             <form className="share-form" onSubmit={share}>
-              <label className="upload-drop" htmlFor="photo-input">
+              <label className="upload-drop" htmlFor="photo-input" onClick={openAuthIfGuest}>
                 <span>＋</span><span>Choose a field note</span>
               </label>
-              <input id="photo-input" type="file" accept="image/*" />
+              <input id="photo-input" type="file" accept="image/*" disabled={!isLoggedIn} onClick={openAuthIfGuest} />
               <input 
                 value={caption} 
                 onChange={(event) => setCaption(event.target.value)} 
@@ -420,9 +457,11 @@ function Community() {
                 placeholder="A short caption" 
                 aria-label="A short caption" 
                 required 
+                disabled={!isLoggedIn}
+                onClick={openAuthIfGuest}
               />
-              <button className="button button-primary" type="submit" style={{ background: '#38bdf8', color: '#000' }}>
-                {shared ? 'Shared / +50 coins' : 'Share / earn 50 ↗'}
+              <button className="button button-primary" type="submit" style={{ background: '#38bdf8', color: '#000' }} onClick={openAuthIfGuest}>
+                {shared ? 'Shared' : isLoggedIn ? 'Share / earn 50 ↗' : 'Sign in to share ↗'}
               </button>
             </form>
           </aside>
@@ -445,17 +484,17 @@ function Community() {
 
 function DistrictPage({ slug }) {
   const districts = {
-    shusha: { name: 'Shusha', image: '/shusha.JPG', tagline: 'The cultural heart of Karabakh, poised above the plateau.' },
-    kalbajar: { name: 'Kalbajar', image: '/kelbecer.jpg', tagline: 'A highland escape of alpine passes, springs, and wild trails.' },
-    lachin: { name: 'Lachin', image: '/lacin.jpg', tagline: 'Forested valleys and quiet river routes at the mountain frontier.' },
-    khankendi: { name: 'Khankendi', image: '/khankendi.jpg', tagline: 'A welcoming valley base for an unhurried Karabakh journey.' },
-    aghdam: { name: 'Aghdam', image: '/agdam.jpg', tagline: 'Heritage plains, cultural landmarks, and open horizons.' },
-    khojaly: { name: 'Khojaly', image: '/khocali.jpg', tagline: 'Ancient landscapes and wide, rolling uplands to explore.' },
-    khojavend: { name: 'Khojavend', image: '/xocavend.jpeg', tagline: 'Wooded slopes, hidden trails, and striking viewpoints.' },
-    qubadli: { name: 'Qubadli', image: '/qubadli.jpg', tagline: 'Riverside routes and lush southern mountain landscapes.' },
-    zangilan: { name: 'Zangilan', image: '/zengilan.jpeg', tagline: 'Nature reserves and the tranquil Aras valley.' }
+    shusha: { name: 'Shusha', image: '/shusha/shusha.JPG', tagline: 'The cultural heart of Karabakh, poised above the plateau.' },
+    kalbajar: { name: 'Kalbajar', image: '/kelbecer/kelbecer.jpg', tagline: 'A highland escape of alpine passes, springs, and wild trails.' },
+    lachin: { name: 'Lachin', image: '/lacin/lacin.jpg', tagline: 'Forested valleys and quiet river routes at the mountain frontier.' },
+    khankendi: { name: 'Khankendi', image: '/khankendi/khankendi.jpeg', tagline: 'A welcoming valley base for an unhurried Karabakh journey.' },
+    aghdam: { name: 'Aghdam', image: '/agdam/agdam.jpg', tagline: 'Heritage plains, cultural landmarks, and open horizons.' },
+    khojaly: { name: 'Khojaly', image: '/khocali/khocali.jpg', tagline: 'Ancient landscapes and wide, rolling uplands to explore.' },
+    khojavend: { name: 'Khojavend', image: '/xocavend/xocavend.jpeg', tagline: 'Wooded slopes, hidden trails, and striking viewpoints.' },
+    qubadli: { name: 'Qubadli', image: '/qubadli/qubadli.jpg', tagline: 'Riverside routes and lush southern mountain landscapes.' },
+    zangilan: { name: 'Zangilan', image: '/zengilan/zengilan.jpeg', tagline: 'Nature reserves and the tranquil Aras valley.' }
   };
-  const district = districts[slug] || { name: slug, image: '/cidir-1.jpg', tagline: 'Discover the landscapes, stays, and stories of Karabakh.' };
+  const district = districts[slug] || { name: slug, image: '/shusha/shusha.JPG', tagline: 'Discover the landscapes, stays, and stories of Karabakh.' };
   const [activeCategory, setActiveCategory] = useState('Hotels');
   const categories = [
     { name: 'Hotels', icon: '🏨' },
@@ -517,9 +556,31 @@ function DistrictPage({ slug }) {
 }
 
 export default function App() {
-  const path = window.location.pathname.replace(/\/$/, '');
-  if (path === '/dashboard' || path === '/dashboard.html') return <Dashboard />;
-  if (path === '/community' || path === '/community.html') return <Community />;
-  if (path.startsWith('/district/')) return <DistrictPage slug={path.replace('/district/', '')} />;
-  return <Landing />;
+  const getRoute = () => {
+    const path = window.location.pathname.replace(/\/$/, '');
+    const hash = (window.location.hash || '').toLowerCase();
+    if (hash === '#community' || hash === '#inter-karabakh') return 'community';
+    if (path === '/dashboard' || path === '/dashboard.html') return 'dashboard';
+    if (path === '/community' || path === '/community.html') return 'community';
+    if (path.startsWith('/district/')) return 'district';
+    return 'landing';
+  };
+
+  const [route, setRoute] = useState(getRoute());
+
+  useEffect(() => {
+    const syncRoute = () => setRoute(getRoute());
+    window.addEventListener('hashchange', syncRoute);
+    window.addEventListener('popstate', syncRoute);
+    return () => {
+      window.removeEventListener('hashchange', syncRoute);
+      window.removeEventListener('popstate', syncRoute);
+    };
+  }, []);
+
+  let page = <Landing />;
+  if (route === 'dashboard') page = <Dashboard />;
+  if (route === 'community') page = <Community />;
+  if (route === 'district') page = <DistrictPage slug={window.location.pathname.replace('/district/', '')} />;
+  return <AuthShell>{page}</AuthShell>;
 }
