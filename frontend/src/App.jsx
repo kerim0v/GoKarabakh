@@ -114,15 +114,15 @@ function Dashboard() {
   }, []);
 
   const karabakhRegions = [
-    { slug: 'shusha', label: 'Shusha', image: '/map-shusha.png', fact: 'Cultural capital', narrative: 'A storied hilltop city of music, poetry, and panoramic limestone cliffs.' },
-    { slug: 'kalbajar', label: 'Kalbajar', image: '/map-kalbajar.png', fact: 'Highland escape', narrative: 'Hot springs, alpine passes, and ancient stone sanctuaries in the high Caucasus.' },
-    { slug: 'lachin', label: 'Lachin', image: '/map-lachin.png', fact: 'Forest corridor', narrative: 'Deep green valleys and river routes opening toward the mountain frontier.' },
-    { slug: 'khankendi', label: 'Khankendi', image: '/map-khankendi.png', fact: 'Valley centre', narrative: 'A welcoming city base set among the gentle folds of the Karabakh range.' },
-    { slug: 'aghdam', label: 'Aghdam', image: '/map-aghdam.png', fact: 'Heritage plains', narrative: 'An expansive district of cultural landmarks, open plains, and renewed connections.' },
-    { slug: 'khojaly', label: 'Khojaly', image: '/map-khojaly.png', fact: 'Ancient landscape', narrative: 'Rolling uplands where archaeological traces meet wide, quiet horizons.' },
-    { slug: 'khojavend', label: 'Khojavend', image: '/map-khojavend.png', fact: 'Wild viewpoints', narrative: 'Wooded slopes, hidden trails, and a landscape shaped for slow exploration.' },
-    { slug: 'qubadli', label: 'Qubadli', image: '/map-qubadli.png', fact: 'Riverside routes', narrative: 'A lush southern gateway framed by rivers, ridges, and village pathways.' },
-    { slug: 'zangilan', label: 'Zangilan', image: '/map-zangilan.png', fact: 'Nature reserve', narrative: 'Wetlands, plane forests, and an unhurried route through the Aras valley.' }
+    { slug: 'shusha', label: 'Shusha', image: '/map/map-shusha.png', fact: 'Cultural capital', narrative: 'A storied hilltop city of music, poetry, and panoramic limestone cliffs.' },
+    { slug: 'kalbajar', label: 'Kalbajar', image: '/map/map-kalbajar.png', fact: 'Highland escape', narrative: 'Hot springs, alpine passes, and ancient stone sanctuaries in the high Caucasus.' },
+    { slug: 'lachin', label: 'Lachin', image: '/map/map-lachin.png', fact: 'Forest corridor', narrative: 'Deep green valleys and river routes opening toward the mountain frontier.' },
+    { slug: 'khankendi', label: 'Khankendi', image: '/map/map-khankendi.png', fact: 'Valley centre', narrative: 'A welcoming city base set among the gentle folds of the Karabakh range.' },
+    { slug: 'aghdam', label: 'Aghdam', image: '/map/map-aghdam.png', fact: 'Heritage plains', narrative: 'An expansive district of cultural landmarks, open plains, and renewed connections.' },
+    { slug: 'khojaly', label: 'Khojaly', image: '/map/map-khojaly.png', fact: 'Ancient landscape', narrative: 'Rolling uplands where archaeological traces meet wide, quiet horizons.' },
+    { slug: 'khojavend', label: 'Khojavend', image: '/map/map-khojavend.png', fact: 'Wild viewpoints', narrative: 'Wooded slopes, hidden trails, and a landscape shaped for slow exploration.' },
+    { slug: 'qubadli', label: 'Qubadli', image: '/map/map-qubadli.png', fact: 'Riverside routes', narrative: 'A lush southern gateway framed by rivers, ridges, and village pathways.' },
+    { slug: 'zangilan', label: 'Zangilan', image: '/map/map-zangilan.png', fact: 'Nature reserve', narrative: 'Wetlands, plane forests, and an unhurried route through the Aras valley.' }
   ];
 
   const regionTabs = [
@@ -445,18 +445,20 @@ function Community() {
 
 function DistrictPage({ slug }) {
   const districts = {
-    shusha: { name: 'Shusha', image: '/shusha.JPG', tagline: 'The cultural heart of Karabakh, poised above the plateau.' },
-    kalbajar: { name: 'Kalbajar', image: '/kelbecer.jpg', tagline: 'A highland escape of alpine passes, springs, and wild trails.' },
-    lachin: { name: 'Lachin', image: '/lacin.jpg', tagline: 'Forested valleys and quiet river routes at the mountain frontier.' },
-    khankendi: { name: 'Khankendi', image: '/khankendi.jpg', tagline: 'A welcoming valley base for an unhurried Karabakh journey.' },
-    aghdam: { name: 'Aghdam', image: '/agdam.jpg', tagline: 'Heritage plains, cultural landmarks, and open horizons.' },
-    khojaly: { name: 'Khojaly', image: '/khocali.jpg', tagline: 'Ancient landscapes and wide, rolling uplands to explore.' },
-    khojavend: { name: 'Khojavend', image: '/xocavend.jpeg', tagline: 'Wooded slopes, hidden trails, and striking viewpoints.' },
-    qubadli: { name: 'Qubadli', image: '/qubadli.jpg', tagline: 'Riverside routes and lush southern mountain landscapes.' },
-    zangilan: { name: 'Zangilan', image: '/zengilan.jpeg', tagline: 'Nature reserves and the tranquil Aras valley.' }
+    shusha: { name: 'Shusha', images: ['/shusha/shusha.JPG', '/shusha/shusha2.JPG', '/shusha/shusha3.JPG', '/shusha/shusha4.JPG'], tagline: 'The cultural heart of Karabakh, poised above the plateau.' },
+    kalbajar: { name: 'Kalbajar', images: ['/kelbecer/kelbecer.jpg', '/kelbecer/kelbecer2.jpeg', '/kelbecer/kelbecer3.jpeg'], tagline: 'A highland escape of alpine passes, springs, and wild trails.' },
+    lachin: { name: 'Lachin', images: ['/lacin/lacin.jpg', '/lacin/lacin2.jpeg', '/lacin/lacin3.jpg'], tagline: 'Forested valleys and quiet river routes at the mountain frontier.' },
+    khankendi: { name: 'Khankendi', images: ['/khankendi/khankendi.jpeg', '/khankendi/khankendi2.jpg'], tagline: 'A welcoming valley base for an unhurried Karabakh journey.' },
+    aghdam: { name: 'Aghdam', images: ['/agdam/agdam.jpg', '/agdam/agdam2.jpg', '/agdam/agdam3.jpg'], tagline: 'Heritage plains, cultural landmarks, and open horizons.' },
+    khojaly: { name: 'Khojaly', images: ['/khocali/khocali.jpg', '/khocali/khocali3.jpg'], tagline: 'Ancient landscapes and wide, rolling uplands to explore.' },
+    khojavend: { name: 'Khojavend', images: ['/xocavend/xocavend.jpeg', '/xocavend/xocavend2.jpeg'], tagline: 'Wooded slopes, hidden trails, and striking viewpoints.' },
+    qubadli: { name: 'Qubadli', images: ['/qubadli/qubadli.jpg', '/qubadli/qubadli2.jpg', '/qubadli/qubadli3.jpg'], tagline: 'Riverside routes and lush southern mountain landscapes.' },
+    zangilan: { name: 'Zangilan', images: ['/zengilan/zengilan.jpeg', '/zengilan/zengilan2.jpeg'], tagline: 'Nature reserves and the tranquil Aras valley.' }
   };
-  const district = districts[slug] || { name: slug, image: '/cidir-1.jpg', tagline: 'Discover the landscapes, stays, and stories of Karabakh.' };
+  const district = districts[slug] || { name: slug, images: ['/cidir-1.jpg'], tagline: 'Discover the landscapes, stays, and stories of Karabakh.' };
+  const isShusha = slug === 'shusha';
   const [activeCategory, setActiveCategory] = useState('Hotels');
+  const [activeSlide, setActiveSlide] = useState(0);
   const categories = [
     { name: 'Hotels', icon: '🏨' },
     { name: 'Attractions', icon: '🏛️' },
@@ -469,46 +471,84 @@ function DistrictPage({ slug }) {
     Restaurants: 'Local tables, regional flavours, and welcoming places to pause between discoveries.',
     'The Most Popular': 'The most-loved stays, sights, and local experiences in this region.'
   };
+  const palette = {
+    amber: '#e7a52f',
+    gold: '#f7d78a',
+    leaf: '#708f3d',
+    moss: '#b7cf78',
+    lake: '#8bd3e6',
+    ink: '#050704',
+    panel: 'rgba(13, 18, 10, 0.9)'
+  };
+
+  useEffect(() => {
+    setActiveSlide(0);
+  }, [slug]);
+
+  useEffect(() => {
+    if (district.images.length < 2) return undefined;
+    const carousel = window.setInterval(() => {
+      setActiveSlide((currentSlide) => (currentSlide + 1) % district.images.length);
+    }, 5000);
+    return () => window.clearInterval(carousel);
+  }, [district.images.length, slug]);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#08131d', color: '#fff' }}>
-      <section style={{ position: 'relative', minHeight: '500px', overflow: 'hidden', backgroundImage: `url(${district.image})`, backgroundPosition: 'center', backgroundSize: 'cover' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(4,12,20,0.9), rgba(4,12,20,0.45) 55%, rgba(4,12,20,0.68)), linear-gradient(0deg, rgba(4,12,20,0.78), transparent 52%)' }} />
-        <div style={{ position: 'relative', zIndex: 1, width: 'min(1400px, calc(100% - 72px))', margin: '0 auto' }}>
-          <Header active="trip" />
+    <div style={{ minHeight: '100vh', background: isShusha ? 'linear-gradient(rgba(5, 10, 5, 0.62), rgba(5, 10, 5, 0.82)), url(/shusha/background.avif) center / cover fixed' : 'radial-gradient(circle at 88% 2%, rgba(77, 157, 178, 0.16), transparent 25%), radial-gradient(circle at 8% 18%, rgba(112, 143, 61, 0.14), transparent 27%), #020301', color: '#fff' }}>
+      <header style={{ width: 'min(1100px, calc(100% - 72px))', margin: '0 auto', padding: '40px 0 36px' }}>
+        <a href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: '9px', padding: '9px 0', color: '#7dd3fc', fontSize: '14px', fontWeight: '700', textDecoration: 'none' }}>← Back to Explore</a>
+        <p className="mono" style={{ margin: '28px 0 0', color: '#7dd3fc' }}>Trip / Karabakh / {district.name}</p>
+        <h1 style={{ maxWidth: '760px', margin: '14px 0 12px', color: '#fff', fontSize: 'clamp(44px, 7vw, 76px)', letterSpacing: '-0.075em', lineHeight: 0.95 }}>{district.name}</h1>
+        <p style={{ maxWidth: '620px', margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '17px', lineHeight: 1.6 }}>{district.tagline}</p>
+        <span style={{ display: 'inline-flex', marginTop: '20px', padding: '9px 12px', border: '1px solid #65a30d', borderRadius: '999px', color: '#f6c453', fontSize: '13px' }}>✦ Plan a 2–4 day stay</span>
+      </header>
+
+      <section aria-label={`${district.name} nature gallery`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.85fr) minmax(92px, 1fr)', gap: 'clamp(8px, 1.2vw, 14px)', width: 'min(960px, calc(100% - 56px))', height: 'clamp(170px, 24vh, 200px)', margin: '0 auto', position: 'relative', isolation: 'isolate' }}>
+        <div style={{ position: 'relative', overflow: 'hidden', border: `1px solid rgba(139,211,230,0.36)`, borderRadius: '24px', color: '#fff', boxShadow: '0 24px 60px rgba(0,0,0,0.58)' }}>
+        {district.images.map((image, index) => (
+          <img key={image} src={image} alt={index === activeSlide ? `${district.name} landscape` : ''} aria-hidden={index !== activeSlide} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', opacity: index === activeSlide ? 1 : 0, filter: 'sepia(30%) saturate(130%) contrast(110%) hue-rotate(-10deg)', transition: 'opacity 1.2s ease-in-out', imageRendering: 'auto' }} />
+        ))}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(6,16,13,0.05) 38%, rgba(0,0,0,0.8)), linear-gradient(105deg, rgba(112,143,61,0.12), transparent 48%, rgba(139,211,230,0.1))' }} />
+        <div aria-label="Carousel slide navigation" style={{ position: 'absolute', zIndex: 2, bottom: '28px', left: '50%', display: 'flex', gap: '8px', transform: 'translateX(-50%)' }}>
+          {district.images.map((image, index) => <button key={image} type="button" aria-label={`Show image ${index + 1} of ${district.images.length}`} aria-current={index === activeSlide} onClick={() => setActiveSlide(index)} style={{ width: index === activeSlide ? '22px' : '8px', height: '8px', padding: 0, border: `1px solid ${palette.gold}`, borderRadius: '999px', background: index === activeSlide ? palette.amber : 'rgba(0,0,0,0.45)', cursor: 'pointer', transition: 'width 0.3s ease, background 0.3s ease' }} />)}
         </div>
-        <div style={{ position: 'relative', zIndex: 1, width: 'min(1100px, calc(100% - 72px))', margin: '110px auto 0' }}>
-          <p className="mono" style={{ margin: 0, color: '#7dd3fc' }}>Trip / Karabakh / {district.name}</p>
-          <h1 style={{ maxWidth: '680px', margin: '14px 0 12px', fontSize: 'clamp(44px, 7vw, 76px)', letterSpacing: '-0.075em', lineHeight: 0.95 }}>{district.name}</h1>
-          <p style={{ maxWidth: '560px', margin: 0, color: 'rgba(255,255,255,0.82)', fontSize: '17px', lineHeight: 1.6 }}>{district.tagline}</p>
-          <span style={{ display: 'inline-flex', marginTop: '20px', padding: '8px 11px', border: '1px solid rgba(255,255,255,0.28)', borderRadius: '8px', background: 'rgba(5,12,20,0.48)', fontSize: '13px' }}>✦ Plan a 2–4 day stay</span>
         </div>
+        <aside aria-label="Nature Gallery thumbnails" style={{ display: 'grid', gridTemplateRows: `repeat(${district.images.length}, minmax(0, 1fr))`, gap: '12px', minHeight: 0, height: '100%', overflow: 'hidden' }}>
+          {district.images.map((image, index) => (
+            <button key={image} type="button" onClick={() => setActiveSlide(index)} aria-label={`View nature gallery image ${index + 1}`} style={{ position: 'relative', minHeight: 0, height: '100%', overflow: 'hidden', padding: 0, border: index === activeSlide ? `2px solid ${palette.amber}` : `1px solid ${palette.leaf}`, borderRadius: '24px', background: palette.ink, cursor: 'pointer', boxShadow: index === activeSlide ? '0 10px 24px rgba(231,165,47,0.28)' : 'none' }}>
+              <img src={image} alt="" aria-hidden="true" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', filter: index === activeSlide ? 'sepia(30%) saturate(145%) contrast(110%) hue-rotate(-10deg)' : 'sepia(30%) saturate(110%) contrast(105%) hue-rotate(-10deg) brightness(0.72)', transition: 'filter 0.3s ease' }} />
+              <span style={{ position: 'absolute', right: '9px', bottom: '8px', color: '#fff', fontSize: '11px', fontWeight: '800', textShadow: '0 1px 6px #000' }}>0{index + 1}</span>
+            </button>
+          ))}
+        </aside>
       </section>
 
-      <main style={{ width: 'min(1100px, calc(100% - 72px))', margin: '0 auto', padding: '30px 0 80px' }}>
-        <nav aria-label={`${district.name} travel categories`} style={{ display: 'flex', justifyContent: 'center', gap: '28px', overflowX: 'auto', padding: '6px 10px 18px', borderBottom: '1px solid rgba(255,255,255,0.13)' }}>
+      <section aria-label={`${district.name} category navigation`} style={{ display: 'block', clear: 'both', width: 'min(960px, calc(100% - 72px))', margin: '2rem auto', padding: '0 10px 2rem', background: '#000', position: 'relative', isolation: 'isolate' }}>
+        <nav aria-label={`${district.name} travel categories`} style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(16px, 3vw, 28px)', overflowX: 'auto', padding: '0 0 22px', borderBottom: `1px solid ${palette.leaf}`, position: 'static' }}>
           {categories.map((category) => {
             const isActive = activeCategory === category.name;
             return (
-              <button key={category.name} type="button" onClick={() => setActiveCategory(category.name)} style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: 0, border: 'none', background: 'transparent', color: isActive ? '#7dd3fc' : 'rgba(255,255,255,0.8)', cursor: 'pointer', fontSize: '13px', fontWeight: isActive ? '800' : '600' }}>
-                <span style={{ display: 'grid', width: '84px', height: '84px', placeItems: 'center', border: isActive ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.18)', borderRadius: '50%', background: isActive ? '#e0f2fe' : '#ffffff', boxShadow: isActive ? '0 12px 28px rgba(56,189,248,0.35)' : '0 10px 24px rgba(0,0,0,0.24)', color: '#0284c7', fontSize: '34px', transform: isActive ? 'translateY(-4px)' : 'translateY(0)', transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease' }}>{category.icon}</span>
+              <button key={category.name} type="button" onClick={() => setActiveCategory(category.name)} style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', padding: 0, border: 'none', background: 'transparent', color: isActive ? palette.gold : 'rgba(255,255,255,0.72)', cursor: 'pointer', fontSize: '13px', fontWeight: isActive ? '800' : '600' }}>
+                <span style={{ display: 'grid', width: '76px', height: '76px', placeItems: 'center', border: isActive ? `2px solid ${palette.amber}` : `1px solid ${palette.leaf}`, borderRadius: '50%', background: isActive ? 'linear-gradient(145deg, rgba(231,165,47,0.23), rgba(112,143,61,0.16))' : palette.ink, boxShadow: isActive ? '0 12px 28px rgba(231,165,47,0.24), inset 0 0 0 5px rgba(139,211,230,0.07)' : '0 10px 24px rgba(0,0,0,0.3)', color: isActive ? palette.gold : palette.moss, fontSize: '30px', transition: 'box-shadow 0.25s ease, border-color 0.25s ease' }}>{category.icon}</span>
                 <span style={{ whiteSpace: 'nowrap' }}>{category.name}</span>
               </button>
             );
           })}
         </nav>
+      </section>
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(240px, 0.7fr)', gap: '22px', marginTop: '28px' }}>
-          <article style={{ padding: '28px', border: '1px solid rgba(125,211,252,0.2)', borderRadius: '18px', background: 'rgba(16,35,49,0.72)' }}>
-            <span className="eyebrow mono" style={{ color: '#38bdf8' }}>{activeCategory}</span>
+      <main style={{ width: 'min(1040px, calc(100% - 72px))', margin: '0 auto', padding: '36px 0 120px', position: 'relative', zIndex: 1 }}>
+        <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(240px, 0.7fr)', gap: '22px', marginTop: 0 }}>
+          <article style={{ padding: '28px', border: `1px solid ${palette.leaf}`, borderRadius: '18px', background: 'linear-gradient(145deg, rgba(112,143,61,0.12), rgba(13,18,10,0.94) 40%)', boxShadow: '0 16px 35px rgba(0,0,0,0.32)' }}>
+            <span className="eyebrow mono" style={{ color: palette.gold }}>{activeCategory}</span>
             <h2 style={{ margin: '14px 0 10px', fontSize: '28px' }}>Discover {district.name}</h2>
-            <p style={{ maxWidth: '620px', margin: 0, color: 'rgba(255,255,255,0.72)', fontSize: '15px', lineHeight: 1.7 }}>{categoryCopy[activeCategory]}</p>
-            <button type="button" style={{ marginTop: '22px', padding: '11px 15px', border: 'none', borderRadius: '9px', background: '#38bdf8', color: '#07111a', cursor: 'pointer', fontWeight: '800' }}>Browse {activeCategory} ↗</button>
+            <p style={{ maxWidth: '620px', margin: 0, color: 'rgba(255,255,255,0.74)', fontSize: '15px', lineHeight: 1.7 }}>{categoryCopy[activeCategory]}</p>
+            <button type="button" style={{ marginTop: '22px', padding: '11px 15px', border: 'none', borderRadius: '9px', background: '#f6c453', color: '#1a1200', cursor: 'pointer', fontWeight: '800' }}>Browse {activeCategory} ↗</button>
           </article>
-          <aside style={{ padding: '24px', border: '1px solid rgba(255,255,255,0.14)', borderRadius: '18px', background: 'rgba(255,255,255,0.06)' }}>
-            <span className="mono" style={{ color: '#7dd3fc' }}>Local tip</span>
-            <p style={{ margin: '12px 0 0', color: 'rgba(255,255,255,0.78)', lineHeight: 1.65 }}>Build your route around daylight viewpoints, then leave time for an unplanned local stop.</p>
-            <a href="/dashboard" style={{ display: 'inline-block', marginTop: '18px', color: '#7dd3fc', fontWeight: '700' }}>← Back to the map</a>
+          <aside style={{ padding: '24px', border: `1px solid rgba(139,211,230,0.45)`, borderRadius: '18px', background: 'linear-gradient(160deg, rgba(77,157,178,0.16), rgba(13,18,10,0.94) 55%)' }}>
+            <span className="mono" style={{ color: palette.lake }}>Local tip</span>
+            <p style={{ margin: '12px 0 0', color: 'rgba(255,255,255,0.8)', lineHeight: 1.65 }}>Build your route around daylight viewpoints, then leave time for an unplanned local stop.</p>
+            <a href="/dashboard" style={{ display: 'inline-block', marginTop: '18px', color: '#ffc107', fontWeight: '700' }}>← Back to the map</a>
           </aside>
         </section>
       </main>
