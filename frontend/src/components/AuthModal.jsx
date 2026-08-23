@@ -27,6 +27,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
         createdAt: Date.now(),
       }),
     );
+    window.dispatchEvent(new CustomEvent("auth:changed"));
     if (isNewAccount && !localStorage.getItem("signupRewardClaimed")) {
       localStorage.setItem("signupRewardClaimed", "true");
       setNotice(rewardText);
@@ -54,13 +55,16 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
         <motion.div
           className="auth-backdrop-enhanced"
           initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-          animate={{ opacity: 1, backdropFilter: "blur(16px)" }}
+          animate={{ opacity: 1, backdropFilter: "blur(28px)" }}
           exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
           transition={{ duration: 0.4 }}
           onClick={(event) => event.target === event.currentTarget && onClose()}
         >
           <motion.div
             className="auth-card-enhanced glass"
+            layout
+            style={{ transformOrigin: "center center" }}
+            transformTemplate={(latest, generated) => `perspective(1000px) rotateX(2deg) ${generated}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-title"
@@ -69,14 +73,13 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
               y: 40,
               rotateX: 15,
               rotateY: 8,
-              scale: 0.85,
+              scale: 0.2,
             }}
             animate={{ opacity: 1, y: 0, rotateX: 0, rotateY: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 25, scale: 0.9 }}
+            exit={{ opacity: 0, y: 25, scale: 0.2 }}
             transition={{
-              type: "spring",
-              stiffness: 150,
-              damping: 20,
+              duration: 0.65,
+              ease: [0.34, 1.56, 0.64, 1],
               delay: 0.05,
             }}
           >
@@ -91,43 +94,50 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
             >
               ✕
             </motion.button>
-            <motion.img
-              className="modal-khari-bulbul"
-              src="/lacin/khari-bulbul1.png"
-              alt="Khari Bulbul"
-              initial={{ scale: 0.8, rotateZ: -8 }}
-              animate={{ scale: 1, rotateZ: 0 }}
-              transition={{
-                delay: 0.15,
-                type: "spring",
-                stiffness: 180,
-                damping: 22,
-              }}
-            />
+            <div className="auth-symbol-container">
+              <motion.img
+                className="modal-khari-bulbul"
+                src="/lacin/khari-bulbul1.png"
+                alt="Khari Bulbul"
+                initial={{ scale: 0.8, rotateZ: -8 }}
+                animate={{ scale: 1, rotateZ: 0 }}
+                transition={{
+                  delay: 0.15,
+                  type: "spring",
+                  stiffness: 180,
+                  damping: 22,
+                }}
+              />
+            </div>
             <motion.span
               className="eyebrow mono auth-eyebrow"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Karabakh Passport
+              KARABAKH PASSPORT •
             </motion.span>
+            <div className="auth-content-enhanced">
             <motion.h2
               id="auth-title"
               className="auth-title-enhanced"
+              key={`${mode}-title`}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              {mode === "login" ? "Welcome back." : "Start your journey."}
+              {mode === "login" ? "Welcome back." : "Claim Your Passport."}
             </motion.h2>
             <motion.p
               className="auth-subtitle-enhanced"
+              key={`${mode}-subtitle`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              Keep your routes, rewards, and favorite places together.
+              {mode === "login"
+                ? "Keep your routes, rewards, and favorite places together."
+                : "Unlock custom routes, personal bookmarks, and local stories."}
             </motion.p>
             <motion.div
               className="auth-switch-enhanced"
@@ -170,6 +180,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
             </motion.div>
             <motion.form
               className="auth-form-enhanced"
+              key={mode}
               onSubmit={submit}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -184,7 +195,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
                   <label htmlFor="name-input" className="form-label">
-                    <span>Full Name</span>
+                    <span>FULL NAME •</span>
                     <span className="label-accent" />
                   </label>
                   <div className="input-wrapper">
@@ -192,7 +203,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                       id="name-input"
                       name="name"
                       type="text"
-                      placeholder="Your name"
+                      placeholder="e.g. Nizami Ganjavi"
                       onFocus={() => setFocusedField("name")}
                       onBlur={() => setFocusedField(null)}
                       required={mode === "signup"}
@@ -205,7 +216,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
               )}
               <div className="form-group">
                 <label htmlFor="email-input" className="form-label">
-                  <span>Email</span>
+                    <span>EMAIL •</span>
                   <span className="label-accent" />
                 </label>
                 <div className="input-wrapper">
@@ -225,7 +236,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
               </div>
               <div className="form-group">
                 <label htmlFor="password-input" className="form-label">
-                  <span>Password</span>
+                    <span>PASSWORD •</span>
                   <span className="label-accent" />
                 </label>
                 <div className="input-wrapper">
@@ -233,8 +244,8 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                     id="password-input"
                     name="password"
                     type="password"
-                    placeholder="••••••••"
-                    minLength="6"
+                    placeholder={mode === "login" ? "••••••••" : "At least 8 characters"}
+                    minLength="8"
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
                     required
@@ -254,10 +265,11 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <span>{mode === "login" ? "Sign In" : "Create Account"}</span>
+                <span>{mode === "login" ? "Sign In" : "Create Passport"}</span>
                 <span className="button-arrow">↗</span>
               </motion.button>
             </motion.form>
+            </div>
             {notice && (
               <motion.div
                 className="auth-notice-enhanced"
