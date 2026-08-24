@@ -3,36 +3,35 @@ import Globe from "globe.gl";
 import * as THREE from "three";
 import VanillaTilt from "vanilla-tilt";
 import AuthModal from "./components/AuthModal.jsx";
-import MemoryBook from "./components/MemoryBook.jsx";
 
 const destination = { lat: 40.1431, lng: 47.5769, altitude: 0.72 };
 const photos = [
   [
-    "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=1100&q=85",
+    "/shusha/shusha.JPG",
     "Misty green mountains in Karabakh",
     "@aysel.travels",
     "Tartar / 06:42",
   ],
   [
-    "https://images.unsplash.com/photo-1533130061792-64b345e4a833?auto=format&fit=crop&w=800&q=85",
+    "/khocali/khocali3.jpg",
     "Ancient stone architecture",
     "@nadirnorth",
     "Shusha",
   ],
   [
-    "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=85",
+    "/lacin/lacin.jpg",
     "Hiking trail through a green valley",
     "@leyla.frames",
     "Lachin",
   ],
   [
-    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=85",
+    "/kelbecer/kelbecer.jpg",
     "Sunlight over a valley",
     "@safar.notes",
     "Kalbajar",
   ],
   [
-    "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1100&q=85",
+    "/xocavend/xocavend.jpeg",
     "Snowy mountain ridge beneath clouds",
     "@samir.road",
     "Murovdag",
@@ -991,12 +990,22 @@ function Dashboard() {
 function CommunityArchive() {
   const [shared, setShared] = useState(false);
   const [caption, setCaption] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadedMemory, setUploadedMemory] = useState(null);
   const [coins, setCoins] = useState([]);
   const [selectedMemory, setSelectedMemory] = useState(null);
   const [activeCluster, setActiveCluster] = useState(null);
   const [traceOpen, setTraceOpen] = useState(false);
   const [worldTilt, setWorldTilt] = useState({ x: 0, y: 0 });
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => localStorage.getItem("isLoggedIn") === "true",
+  );
+
+  useEffect(() => {
+    const syncAuth = () => setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+    window.addEventListener("auth:changed", syncAuth);
+    return () => window.removeEventListener("auth:changed", syncAuth);
+  }, []);
 
   const memories = photos.map(([src, alt, author, place], index) => ({
     id: src,
@@ -1013,6 +1022,7 @@ function CommunityArchive() {
       { left: "66%", top: "67%" },
     ][index],
   }));
+  const allMemories = uploadedMemory ? [uploadedMemory, ...memories] : memories;
   const clusters = Object.values(
     memories.reduce((groups, memory) => {
       const cluster = groups[memory.place] || {
@@ -1049,7 +1059,7 @@ function CommunityArchive() {
 
   const share = (event) => {
     event.preventDefault();
-    if (!caption.trim()) return;
+    if (!caption.trim() || !selectedFile) return;
     if (!isLoggedIn) {
       window.dispatchEvent(
         new CustomEvent("auth:open", {
@@ -1059,6 +1069,17 @@ function CommunityArchive() {
       return;
     }
     setShared(true);
+    setUploadedMemory({
+      id: `user-memory-${Date.now()}`,
+      src: URL.createObjectURL(selectedFile),
+      alt: caption.trim(),
+      author: "You",
+      place: "Community partner",
+      type: "PHOTO",
+    });
+    setCaption("");
+    setSelectedFile(null);
+    setTraceOpen(false);
     setCoins(
       Array.from({ length: 34 }, (_, index) => ({
         id: `${Date.now()}-${index}`,
@@ -1109,11 +1130,18 @@ function CommunityArchive() {
               and a story comes closer.
             </p>
           </div>
-          <div className="memory-guide" aria-hidden="true">
-            <img src="/lacin/khari-bulbul1.png" alt="" />
-            <span />
-          </div>
-          <MemoryBook embedded />
+          <section className="partner-memory-grid" aria-label="Visitor photos and comments">
+            {allMemories.map((memory) => (
+              <article className="partner-memory-card" key={memory.id}>
+                <img src={memory.src} alt={memory.alt} loading="lazy" />
+                <div className="partner-memory-copy">
+                  <span className="mono">{memory.place}</span>
+                  <p>“{memory.alt}”</p>
+                  <small>{memory.author}</small>
+                </div>
+              </article>
+            ))}
+          </section>
           <div
             className="memory-traces"
             style={{
@@ -1199,14 +1227,14 @@ function CommunityArchive() {
           <div className="memory-title-note mono">
             40°08' N&nbsp;&nbsp; 47°34' E / archive 03
           </div>
-          <button
+          {isLoggedIn && <button
             className={`trace-entry ${traceOpen ? "is-open" : ""}`}
             type="button"
             onClick={() => setTraceOpen((open) => !open)}
           >
             <span className="trace-entry-dot" />
             Leave a trace <b>{traceOpen ? "×" : "↗"}</b>
-          </button>
+          </button>}
           {traceOpen && (
             <aside className="trace-form-space glass">
               <span className="eyebrow mono">Add to the atlas</span>
@@ -1246,6 +1274,7 @@ function CommunityArchive() {
                   id="photo-input"
                   type="file"
                   accept="image/*"
+                  onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
                   disabled={!isLoggedIn}
                   onClick={openAuthIfGuest}
                 />

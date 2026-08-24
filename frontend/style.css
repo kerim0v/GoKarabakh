@@ -1025,3 +1025,49 @@ button { cursor: pointer; }
 .memory-book-note-page { display: flex; flex-direction: column; align-items: flex-start; color: #3e342c; text-align: left; }.memory-book-stamp { display: inline-flex; flex-direction: column; gap: 4px; border: 1px solid #998a7b; padding: 8px 10px; color: #665a4e; font: 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; }.memory-book-stamp span { color: #988a7b; font-size: 8px; }.memory-book-entry { margin: 58px 0 0 20px; max-width: 82%; }.memory-book-entry p { margin: 0; color: #45372d; font-family: "Segoe Print", "Bradley Hand", cursive; font-size: clamp(17px, 1.7vw, 22px); line-height: 1.65; text-align: left; }.memory-book-author { display: flex; align-items: center; gap: 9px; margin: auto 0 12px 20px; color: #74675a; font-size: 11px; }.memory-book-author strong { color: #44362c; }.memory-book-author-mark { display: grid; width: 23px; height: 23px; place-items: center; border: 1px solid #a5998a; border-radius: 50%; color: #66594c; font: 10px Georgia, serif; }
 .memory-book-embedded .memory-book-controls { margin-top: 18px; }.memory-book-embedded .memory-book-share-button { position: absolute; top: -52px; right: 0; margin: 0; border: 1px solid rgba(255,255,255,.32); border-radius: 3px; padding: 9px 12px; background: rgba(9,20,14,.78); box-shadow: none; color: #f2f6ef; font-size: 11px; }.memory-book-embedded .memory-book-share-button:hover { background: rgba(199,250,131,.15); color: #dcffae; }
 @media (max-width: 800px) { .memory-book-embedded .memory-book { padding: 10px 12px 18px; transform: perspective(1100px) rotateX(6deg); }.memory-book-embedded .memory-book-spread, .memory-book-embedded .memory-book-sheet { min-height: 350px; }.memory-book-embedded .memory-book-sheet { padding: 25px 18px; }.memory-book-photo { width: 135px; padding: 6px 6px 15px; }.memory-book-photo img { height: 130px; }.memory-book-photo-corner { width: 17px; height: 17px; }.memory-book-entry { margin: 30px 0 0 9px; max-width: 91%; }.memory-book-entry p { font-size: 12px; }.memory-book-author { margin-left: 9px; }.memory-book-stamp { padding: 6px; font-size: 7px; }.memory-book-embedded .memory-book-share-button { top: -42px; font-size: 9px; } }
+
+/* Real WebGL archive object, composed over the preserved Inter Karabakh world. */
+.memory-book-embedded { position: absolute; top: 18%; left: 50%; z-index: 7; width: min(920px, 70vw); min-height: 0; transform: translateX(-50%); background: transparent; color: #f5ead5; }
+.memory-book-embedded .memory-book-archive-meta { position: absolute; top: -34px; left: 0; right: 0; display: flex; justify-content: space-between; color: rgba(245,234,213,.72); font: 10px var(--mono); letter-spacing: .14em; text-transform: uppercase; }
+.archive-book-object { height: min(52vw, 520px); min-height: 370px; filter: drop-shadow(0 26px 22px rgba(0,0,0,.55)); }
+.archive-book-canvas { width: 100%; height: 100%; cursor: pointer; outline: none; transition: filter .35s ease; }
+.archive-book-canvas:hover { filter: brightness(1.08); }
+.archive-book-canvas.is-turning { animation: archive-page-turn .54s cubic-bezier(.33,.03,.15,.98); pointer-events: none; }
+@keyframes archive-page-turn { 0% { transform: perspective(1200px) rotateY(0); } 46% { transform: perspective(1200px) rotateY(-12deg) translateX(-14px); filter: brightness(.74); } 100% { transform: perspective(1200px) rotateY(0); } }
+.memory-book-embedded .memory-book-controls { justify-content: space-between; margin: -1px auto 0; width: min(430px, 78%); color: rgba(245,234,213,.62); font-size: 9px; }
+.memory-book-embedded .memory-book-controls button { color: #f2d29b; cursor: pointer; }.memory-book-embedded .memory-book-controls button:hover { color: #fff7e7; }
+.memory-book-embedded .memory-book-share-button { position: absolute; top: -59px; right: 0; margin: 0; border: 1px solid rgba(238,207,152,.42); background: rgba(30,24,18,.72); box-shadow: none; color: #f5e2bc; font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.memory-book-embedded .memory-book-share-button:hover { background: rgba(83,57,34,.86); color: #fff7e7; }
+@media (prefers-reduced-motion: reduce) { .archive-book-canvas.is-turning { animation: none; } }
+@media (max-width: 800px) { .memory-book-embedded { top: 24%; width: 94vw; }.archive-book-object { height: 60vw; min-height: 300px; }.memory-book-embedded .memory-book-archive-meta { top: -27px; font-size: 8px; }.memory-book-embedded .memory-book-controls { width: 92%; font-size: 8px; }.memory-book-embedded .memory-book-share-button { top: -48px; font-size: 8px; } }
+
+/* Inter Karabakh partner stories: full landscape, clean cards, and a restrained contribution action. */
+.memory-world-shell { width: 100vw; margin-left: calc(50% - 50vw); }
+.memory-world { min-height: calc(100vh - 92px); }
+.memory-world .memory-guide, .memory-world .memory-traces, .memory-world .memory-info, .memory-world .memory-title-note { display: none; }
+.memory-intro { top: 8%; left: 6%; max-width: 315px; }.memory-intro h1 { font-size: clamp(38px, 4.6vw, 64px); }.memory-intro p { font-size: 14px; }
+.partner-memory-grid { position: relative; z-index: 7; display: grid; grid-template-columns: repeat(3, minmax(150px, 214px)); justify-content: center; align-items: center; gap: clamp(14px, 2vw, 28px); min-height: calc(100vh - 150px); padding: 145px 260px 88px; perspective: 1100px; }
+.partner-memory-card { position: relative; overflow: hidden; aspect-ratio: .83; border: 1px solid rgba(255,255,255,.26); background: #111; box-shadow: 0 20px 38px rgba(0,0,0,.38); transform: rotateY(-7deg) rotateX(3deg); transform-style: preserve-3d; transition: transform .38s cubic-bezier(.2,.8,.2,1), box-shadow .38s ease, border-color .38s ease; }
+.partner-memory-card:nth-child(2) { transform: translateY(28px) rotateY(4deg) rotateX(2deg); }.partner-memory-card:nth-child(3) { transform: translateY(-16px) rotateY(-3deg) rotateX(4deg); }.partner-memory-card:nth-child(4) { transform: rotateY(5deg) rotateX(3deg); }.partner-memory-card:nth-child(5) { transform: translateY(14px) rotateY(-4deg) rotateX(2deg); }
+.partner-memory-card:hover { z-index: 3; border-color: rgba(244,200,121,.78); box-shadow: 0 34px 64px rgba(0,0,0,.65), 0 0 25px rgba(244,200,121,.2); transform: translateY(-18px) rotateX(0) rotateY(0) scale(1.07); }
+.partner-memory-card img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease, filter .35s ease; }.partner-memory-card:hover img { transform: scale(1.07); filter: brightness(.72); }
+.partner-memory-copy { position: absolute; inset: auto 0 0; padding: 38px 15px 14px; background: linear-gradient(transparent, rgba(4,8,6,.92) 45%); color: #fff; transform: translateZ(18px); }.partner-memory-copy span { color: #f4c879; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }.partner-memory-copy p { margin: 7px 0 8px; font-size: 13px; line-height: 1.35; }.partner-memory-copy small { color: rgba(255,255,255,.7); font-size: 11px; }
+.trace-entry { right: 6%; bottom: 35px; z-index: 9; }.trace-form-space { right: 6%; bottom: 88px; z-index: 10; background: rgba(9,16,12,.86); backdrop-filter: blur(13px); }.trace-form-space .upload-drop { min-height: 86px; }.trace-form-space input[type="file"] { display: none; }
+@media (max-width: 950px) { .partner-memory-grid { grid-template-columns: repeat(3, minmax(130px, 180px)); padding-right: 36px; padding-left: 36px; }.memory-intro { top: 4%; } }
+@media (max-width: 640px) { .memory-world { min-height: 100vh; overflow-y: auto; }.memory-intro { position: relative; top: auto; left: auto; padding: 34px 24px 0; }.memory-intro h1 { margin: 12px 0; font-size: 40px; }.partner-memory-grid { grid-template-columns: repeat(2, minmax(130px, 1fr)); min-height: auto; padding: 30px 24px 105px; gap: 14px; }.partner-memory-card:nth-child(n) { display: block; transform: none; }.partner-memory-card:hover { transform: translateY(-7px) scale(1.02); }.trace-entry { position: fixed; right: 18px; bottom: 18px; }.trace-form-space { position: fixed; right: 18px; bottom: 66px; } }
+
+/* Fixed Khojaly background, including the transparent navigation area. */
+.memory-page { position: relative; z-index: 0; isolation: isolate; }
+.memory-page::before { position: fixed; inset: 0; z-index: -2; background: url('/khocali/khocali3.jpg') center / cover no-repeat; content: ''; }
+.memory-page::after { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: rgba(4, 9, 7, .52); content: ''; }
+.memory-page .topbar { position: relative; z-index: 12; background: transparent; }
+.memory-world { background: transparent; }
+.memory-world .memory-mountains, .memory-world .memory-valley { display: none; }
+.memory-world::before, .memory-world .memory-sky { background: transparent; }
+.memory-world .trace-entry { display: inline-flex; }
+.memory-world .trace-form-space { display: block; }
+
+/* Keep the Khojaly image visually continuous through the navigation. */
+.memory-page .topbar { background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; border: none !important; }
+.memory-page .topbar .nav a { color: #fff !important; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,.7); }
+.memory-page .memory-intro { top: 2.5%; left: 2.5%; }
