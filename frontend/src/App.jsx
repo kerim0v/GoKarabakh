@@ -291,7 +291,6 @@ function Landing() {
         </div>
         <span className="corner-note mono">40°08' N&nbsp;&nbsp; 47°34' E</span>
       </section>
-      {departing && <div className="modal-backdrop open" aria-hidden="true" />}
     </main>
   );
 }
