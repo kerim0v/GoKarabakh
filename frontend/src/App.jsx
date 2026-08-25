@@ -38,6 +38,16 @@ const photos = [
   ],
 ];
 
+let transitionAudio;
+
+function playRegionTransitionAudio() {
+  transitionAudio?.pause();
+  transitionAudio = new Audio("/audio.mp3");
+  transitionAudio.play().catch(() => {
+    // Playback can be blocked by browser settings; navigation should still work.
+  });
+}
+
 function Header({ active }) {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => localStorage.getItem("isLoggedIn") === "true",
@@ -237,6 +247,7 @@ function Landing() {
   }, []);
   const enter = () => {
     if (!globe || departing) return;
+    playRegionTransitionAudio();
     setDeparting(true);
     globe.pointOfView(destination, 1800);
     window.setTimeout(() => {
@@ -302,10 +313,16 @@ function Dashboard() {
   const [activeRegionTab, setActiveRegionTab] = useState("all");
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
+  const openRegionDetails = (slug) => {
+    playRegionTransitionAudio();
+    window.history.pushState({}, "", `/district/${slug}`);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  };
+
   const cidirImages = [
-    "/shusha/shusha.JPG",
-    "/kelbecer/kelbecer.jpg",
-    "/khankendi/khankendi.jpeg",
+    "/cidir-1.jpg",
+    "/cidir-2.jpg",
+    "/cidir-3.jpg",
   ];
 
   // Window scroll-u birbaşa izləyən funksiya (Bu 100% işləyəcək)
@@ -850,7 +867,7 @@ function Dashboard() {
                     onFocus={() => setHoveredRegion(region.slug)}
                     onBlur={() => setHoveredRegion(null)}
                     onClick={() => {
-                      window.location.href = `/district/${region.slug}`;
+                      openRegionDetails(region.slug);
                     }}
                     style={{
                       position: "absolute",
@@ -949,6 +966,10 @@ function Dashboard() {
                     </div>
                     <a
                       href={`/district/${activeMapRegion.slug}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        openRegionDetails(activeMapRegion.slug);
+                      }}
                       style={{
                         flex: "0 0 auto",
                         padding: "10px 14px",
@@ -1547,6 +1568,7 @@ function DistrictPage({ slug }) {
     tagline: "Discover the landscapes, stays, and stories of Karabakh.",
   };
   const [activeCategory, setActiveCategory] = useState("Hotels");
+
   const categories = [
     { name: "Hotels", icon: "🏨" },
     { name: "Attractions", icon: "🏛️" },
@@ -1555,23 +1577,109 @@ function DistrictPage({ slug }) {
   ];
   const categoryCopy = {
     Hotels:
-      "Handpicked stays with mountain views, local character, and easy access to the region.",
+      "Dağ mənzərəsi, yerli ab-hava və regionun əsas nöqtələrinə rahat çıxış verən seçilmiş gecələmələr.",
     Attractions:
-      "Essential landmarks, viewpoints, and cultural sites for your route.",
+      "Marşrutunuza əlavə edə biləcəyiniz əsas tarixi məkanlar, baxış nöqtələri və mədəni dayanacaqlar.",
     Restaurants:
-      "Local tables, regional flavours, and welcoming places to pause between discoveries.",
+      "Kəşflər arasında fasilə vermək üçün yerli dadlar və qonaqpərvər məkanlar.",
     "The Most Popular":
-      "The most-loved stays, sights, and local experiences in this region.",
+      "Şuşada səyahətçilərin ən çox seçdiyi gecələmə, görməli yer və təcrübələr.",
+  };
+  const shushaCategoryCards = {
+    Hotels: [
+      ["Shusha Boutique Stay", "Mərkəz • 2 nəfər üçün", "Tarixi mərkəzə piyada yaxın, səhər şəhər mənzərəsi ilə.", "Gecəlik 140 AZN-dən", "/shusha/shusha.JPG"],
+      ["Cıdır View House", "Cıdır düzü • mənzərəli otaqlar", "Gün batımını izləmək və sakit bir gecə üçün seçilmiş ünvan.", "Mənzərəli seçim", "/cidir-1.jpg"],
+      ["Karvansara Guest Rooms", "Şuşa qalası yaxınlığı", "Klassik atmosfer və əsas dayanacaqlara rahat çıxış.", "Mərkəzdə yerləşir", "/shusha/shusha2.JPG"],
+    ],
+    Attractions: [
+      ["Cıdır düzü", "Panoramik dayanacaq • gün batımı", "Qayalıqlar və vadi mənzərəsi ilə qısa gəzinti üçün ideal nöqtə.", "20–40 dəq.", "/cidir-2.jpg"],
+      ["Şuşa qalası", "Tarixi məkan • şəhər mərkəzi", "Şəhərin keçmişini hiss etmək üçün marşrutun əsas dayanacağı.", "Tarix və memarlıq", "/shusha/shusha3.JPG"],
+      ["Xarıbülbül izi", "Təbiət gəzintisi • yüngül marşrut", "Sakit tempdə Şuşanın təbii relyefini kəşf edən qısa yol.", "Səhər üçün ideal", "/cidir-3.jpg"],
+    ],
+    Restaurants: [
+      ["Qala Süfrəsi", "Azərbaycan mətbəxi • mərkəz", "Plov, sac və mövsümi yerli dadlarla isti nahar fasiləsi.", "Orta hesab 25–40 AZN", "/shusha/shusha4.JPG"],
+      ["Cıdır Çay Evi", "Çay & şirniyyat • mənzərə", "Gəzintidən sonra çay, mürəbbə və yüngül qəlyanaltı üçün.", "Gün batımından əvvəl", "/cidir-1.jpg"],
+      ["Şuşa Mətbəxi", "Ailəvi məkan • yerli ləzzətlər", "Uzun şam yeməyi və günü toplamaq üçün rahat seçim.", "Rezervasiya tövsiyə olunur", "/shusha/shusha2.JPG"],
+    ],
+    "The Most Popular": [
+      ["Cıdırda gün batımı", "Görməli yer • ən çox seçilən", "İlk dəfə gələnlər üçün Şuşa təcrübəsinin ən yaddaqalan hissəsi.", "Top seçim", "/cidir-3.jpg"],
+      ["Şuşa mərkəzi gəzintisi", "2–3 saat • piyada", "Qala, mədəniyyət dayanacaqları və yerli dadları birləşdirən marşrut.", "Hazır marşrut", "/shusha/shusha3.JPG"],
+      ["Mənzərəli gecələmə", "Stay • Cıdır istiqaməti", "Səhəri dağ havası və vadinin açılan mənzərəsi ilə qarşılayın.", "Səyahətçilərin favoriti", "/shusha/shusha.JPG"],
+    ],
+  };
+  const shushaCards = shushaCategoryCards[activeCategory];
+  const regionTravelData = {
+    shusha: { name: "Shusha", setting: "Cıdır Plateau", attractions: ["Cıdır Plateau", "Shusha Fortress", "Kharibulbul Trail"], images: ["/shusha/shusha.JPG", "/shusha/shusha2.JPG", "/shusha/shusha3.JPG"] },
+    kalbajar: { name: "Kalbajar", setting: "Highland Pass", attractions: ["Istisu Springs", "Alpine Passes", "Ancient Stone Sanctuaries"], images: ["/kelbecer/kelbecer.jpg", "/kelbecer/kelbecer2.jpeg", "/kelbecer/kelbecer3.jpeg"] },
+    lachin: { name: "Lachin", setting: "Forest Valley", attractions: ["Lachin Corridor Views", "Forest Valley Walk", "River Lookout"], images: ["/lacin/lacin.jpg", "/lacin/lacin2.jpeg", "/lacin/lacin3.jpg"] },
+    khankendi: { name: "Khankendi", setting: "Valley Centre", attractions: ["Valley Promenade", "City Viewpoint", "Karabakh Foothills"], images: ["/khankendi/khankendi.jpeg", "/khankendi/khankendi2.jpg", "/khankendi/khankendi.jpeg"] },
+    aghdam: { name: "Aghdam", setting: "Heritage Plain", attractions: ["Heritage Plains", "Historic Route", "Open Horizon View"], images: ["/agdam/agdam.jpg", "/agdam/agdam2.jpg", "/agdam/agdam3.jpg"] },
+    khojaly: { name: "Khojaly", setting: "Highland Landscape", attractions: ["Ancient Landscape", "Upland Viewpoint", "Quiet Country Route"], images: ["/khocali/khocali.jpg", "/khocali/khocali3.jpg", "/khocali/khocali.jpg"] },
+    khojavend: { name: "Khojavend", setting: "Woodland Ridge", attractions: ["Woodland Slopes", "Hidden Trail", "Ridge Viewpoint"], images: ["/xocavend/xocavend.jpeg", "/xocavend/xocavend2.jpeg", "/xocavend/xocavend.jpeg"] },
+    qubadli: { name: "Qubadli", setting: "Riverside Route", attractions: ["Riverside Route", "Green Ridge Walk", "Village Pathway"], images: ["/qubadli/qubadli.jpg", "/qubadli/qubadli2.jpg", "/qubadli/qubadli3.jpg"] },
+    zangilan: { name: "Zangilan", setting: "Aras Valley", attractions: ["Aras Valley", "Plane Forest", "Nature Reserve"], images: ["/zengilan/zengilan.jpeg", "/zengilan/zengilan2.jpeg", "/zengilan/zengilan.jpeg"] },
+  };
+  const region = regionTravelData[slug];
+  const categoryDescriptions = {
+    Hotels: "Handpicked stays with local character and easy access to the region's essential stops.",
+    Attractions: "Landmarks, viewpoints, and cultural places worth adding to your route.",
+    Restaurants: "Local flavours and welcoming places to pause between discoveries.",
+    "The Most Popular": "The stays, sights, and experiences travellers save most often.",
+  };
+  const buildRegionCards = (data) => {
+    if (!data) return [];
+    const [firstImage, secondImage, thirdImage] = data.images;
+    const [firstSpot, secondSpot, thirdSpot] = data.attractions;
+    const cards = {
+      Hotels: [
+        [`${data.name} Panorama Stay`, `${data.setting} • mountain views`, "A relaxed base with easy access to the region's key stops.", "From 140 AZN / night", firstImage],
+        [`${data.setting} Guesthouse`, "Local character • quiet setting", "A comfortable overnight option for an unhurried regional escape.", "Guest favourite", secondImage],
+        [`${data.name} Mountain Lodge`, "Scenic rooms • flexible stay", "Wake up close to the landscapes you came to explore.", "Best for a weekend", thirdImage],
+      ],
+      Attractions: [
+        [firstSpot, "Signature stop • scenic route", "Make this your first stop for a clear sense of the region's character.", "Must see", firstImage],
+        [secondSpot, "Culture & landscape • easy pace", "A memorable place to pause, take in the surroundings, and continue your route.", "Allow 30–60 min", secondImage],
+        [thirdSpot, "Local discovery • daytime", "A quieter experience for travellers who want to explore beyond the main view.", "Morning pick", thirdImage],
+      ],
+      Restaurants: [
+        [`${data.name} Local Table`, "Regional cuisine • central stop", "A welcoming table for classic Azerbaijani flavours between explorations.", "Average 25–40 AZN", firstImage],
+        [`${data.setting} Tea House`, "Tea & sweets • relaxed pace", "Settle in for tea, preserves, and a light break with local atmosphere.", "Afternoon favourite", secondImage],
+        [`${data.name} Kitchen`, "Family-friendly • local flavours", "An easy choice for finishing a full day on the road.", "Booking recommended", thirdImage],
+      ],
+      "The Most Popular": [
+        [firstSpot, "Sightseeing • traveller favourite", "One of the region's most saved stops for first-time visitors.", "Top pick", firstImage],
+        [`${data.name} Signature Walk`, "2–3 hours • on foot", `A simple route that pairs ${firstSpot} with local atmosphere and views.`, "Ready route", secondImage],
+        [`${data.name} Scenic Overnight`, "Stay • close to nature", "Combine a slow morning, a memorable view, and a comfortable night.", "Most saved stay", thirdImage],
+      ],
+    };
+    return cards[activeCategory];
+  };
+  const categoryCards = region ? buildRegionCards(region) : shushaCards;
+  const [savedPlaces, setSavedPlaces] = useState([]);
+  const [showRoutePlan, setShowRoutePlan] = useState(false);
+  const routePlan = region && {
+    image: region.images[0],
+    highlight: region.attractions[0],
+    dayOne: `${region.attractions[0]} & local highlights`,
+    dayTwo: `${region.attractions[1]} & slow views`,
+    dayOneCopy: `Begin with ${region.attractions[0]}, then leave time for the local atmosphere and a relaxed dinner.`,
+    dayTwoCopy: `Continue to ${region.attractions[1]} and finish with ${region.attractions[2]} at an unhurried pace.`,
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#08131d", color: "#fff" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        color: "#fff",
+        background: "#08110d url('/design.jpg') center / cover fixed",
+      }}
+    >
       <section
         style={{
           position: "relative",
-          minHeight: "500px",
+          minHeight: "430px",
           overflow: "hidden",
-          backgroundImage: `url(${district.image})`,
+          backgroundImage: "url('/design.jpg')",
           backgroundPosition: "center",
           backgroundSize: "cover",
         }}
@@ -1581,7 +1689,7 @@ function DistrictPage({ slug }) {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(90deg, rgba(4,12,20,0.9), rgba(4,12,20,0.45) 55%, rgba(4,12,20,0.68)), linear-gradient(0deg, rgba(4,12,20,0.78), transparent 52%)",
+              "linear-gradient(90deg, rgba(5,12,10,0.82), rgba(5,12,10,0.38) 56%, rgba(5,12,10,0.68)), linear-gradient(0deg, rgba(4,10,8,0.84), rgba(4,10,8,0.08) 64%)",
           }}
         />
         <div
@@ -1592,54 +1700,89 @@ function DistrictPage({ slug }) {
             margin: "0 auto",
           }}
         >
-          <Header active="trip" />
+          <a
+            href="/dashboard"
+            style={{
+              display: "inline-block",
+              paddingTop: "28px",
+              color: "#7dd3fc",
+              fontSize: "14px",
+              fontWeight: "800",
+              textDecoration: "none",
+            }}
+          >
+            ← Back to Explore
+          </a>
         </div>
         <div
           style={{
             position: "relative",
             zIndex: 1,
             width: "min(1100px, calc(100% - 72px))",
-            margin: "110px auto 0",
+            margin: "46px auto 0",
           }}
         >
-          <p className="mono" style={{ margin: 0, color: "#7dd3fc" }}>
+          <p className="mono" style={{ margin: 0, color: "#7dd3fc", fontSize: "12px", letterSpacing: "0.12em", textTransform: "uppercase" }}>
             Trip / Karabakh / {district.name}
           </p>
           <h1
             style={{
               maxWidth: "680px",
-              margin: "14px 0 12px",
-              fontSize: "clamp(44px, 7vw, 76px)",
+              margin: "14px 0 10px",
+              fontSize: "clamp(50px, 7vw, 78px)",
               letterSpacing: "-0.075em",
-              lineHeight: 0.95,
+              lineHeight: 0.92,
             }}
           >
             {district.name}
           </h1>
           <p
             style={{
-              maxWidth: "560px",
+              maxWidth: "600px",
               margin: 0,
               color: "rgba(255,255,255,0.82)",
               fontSize: "17px",
-              lineHeight: 1.6,
+              lineHeight: 1.55,
             }}
           >
             {district.tagline}
           </p>
-          <span
-            style={{
-              display: "inline-flex",
-              marginTop: "20px",
-              padding: "8px 11px",
-              border: "1px solid rgba(255,255,255,0.28)",
-              borderRadius: "8px",
-              background: "rgba(5,12,20,0.48)",
-              fontSize: "13px",
-            }}
-          >
-            ✦ Plan a 2–4 day stay
-          </span>
+          {routePlan && (
+            <>
+              <button
+                className="shusha-plan-trigger"
+                type="button"
+                onClick={() => setShowRoutePlan((isOpen) => !isOpen)}
+                aria-expanded={showRoutePlan}
+              >
+                ✦ Plan a 2-day stay <span aria-hidden="true">{showRoutePlan ? "−" : "+"}</span>
+              </button>
+              {showRoutePlan && (
+                <section className="shusha-route-postcard" aria-label={`Two-day ${district.name} itinerary`}>
+                  <div className="shusha-route-image">
+                    <img src={routePlan.image} alt={`${routePlan.highlight}, ${district.name}`} />
+                    <div className="shusha-route-image-copy">
+                      <span>DAY 1 HIGHLIGHT</span>
+                      <strong>{routePlan.highlight}</strong>
+                      <p>Best in daylight · start from the centre</p>
+                    </div>
+                  </div>
+                  <div className="shusha-route-days">
+                    <article>
+                      <span>DAY 01</span>
+                      <h3>{routePlan.dayOne}</h3>
+                      <p>{routePlan.dayOneCopy}</p>
+                    </article>
+                    <article>
+                      <span>DAY 02</span>
+                      <h3>{routePlan.dayTwo}</h3>
+                      <p>{routePlan.dayTwoCopy}</p>
+                    </article>
+                  </div>
+                </section>
+              )}
+            </>
+          )}
         </div>
       </section>
 
@@ -1647,7 +1790,7 @@ function DistrictPage({ slug }) {
         style={{
           width: "min(1100px, calc(100% - 72px))",
           margin: "0 auto",
-          padding: "30px 0 80px",
+          padding: "0 0 44px",
         }}
       >
         <nav
@@ -1657,8 +1800,11 @@ function DistrictPage({ slug }) {
             justifyContent: "center",
             gap: "28px",
             overflowX: "auto",
-            padding: "6px 10px 18px",
-            borderBottom: "1px solid rgba(255,255,255,0.13)",
+            margin: "12px auto 0",
+            padding: "12px 28px 18px",
+            borderTop: "1px solid rgba(255,255,255,0.14)",
+            borderBottom: "1px solid rgba(204,178,74,0.52)",
+            background: "transparent",
           }}
         >
           {categories.map((category) => {
@@ -1673,33 +1819,32 @@ function DistrictPage({ slug }) {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  gap: "10px",
+                  gap: "8px",
                   padding: 0,
                   border: "none",
                   background: "transparent",
-                  color: isActive ? "#7dd3fc" : "rgba(255,255,255,0.8)",
+                  color: isActive ? "#f4d66d" : "rgba(255,255,255,0.78)",
                   cursor: "pointer",
-                  fontSize: "13px",
+                  fontSize: "12px",
                   fontWeight: isActive ? "800" : "600",
                 }}
               >
                 <span
                   style={{
                     display: "grid",
-                    width: "84px",
-                    height: "84px",
+                    width: "60px",
+                    height: "60px",
                     placeItems: "center",
                     border: isActive
-                      ? "2px solid #38bdf8"
-                      : "1px solid rgba(255,255,255,0.18)",
+                      ? "2px solid #d7af2d"
+                      : "1px solid rgba(159,177,78,0.68)",
                     borderRadius: "50%",
-                    background: isActive ? "#e0f2fe" : "#ffffff",
+                    background: "rgba(9,13,8,0.82)",
                     boxShadow: isActive
-                      ? "0 12px 28px rgba(56,189,248,0.35)"
-                      : "0 10px 24px rgba(0,0,0,0.24)",
-                    color: "#0284c7",
-                    fontSize: "34px",
-                    transform: isActive ? "translateY(-4px)" : "translateY(0)",
+                      ? "0 0 18px rgba(215,175,45,0.48)"
+                      : "none",
+                    fontSize: "28px",
+                    transform: "translateY(0)",
                     transition:
                       "transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease",
                   }}
@@ -1712,9 +1857,53 @@ function DistrictPage({ slug }) {
           })}
         </nav>
 
+        {categoryCards.length > 0 && (
+          <section className="district-card-section" aria-live="polite">
+            <div className="district-card-heading">
+              <div>
+                <span className="eyebrow mono">EXPLORE {district.name.toUpperCase()}</span>
+                <h2>{activeCategory}</h2>
+              </div>
+              <p>{categoryDescriptions[activeCategory]}</p>
+            </div>
+            <div className="district-card-grid">
+              {categoryCards.map(([title, meta, detail, tag, image]) => (
+                <article className="district-card" key={title}>
+                  <div
+                    className="district-card-image"
+                    style={{ backgroundImage: `url(${image})` }}
+                  >
+                    <span>{tag}</span>
+                  </div>
+                  <div className="district-card-content">
+                    <p className="district-card-meta">{meta}</p>
+                    <h3>{title}</h3>
+                    <p>{detail}</p>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSavedPlaces((places) =>
+                          places.includes(title)
+                            ? places.filter((place) => place !== title)
+                            : [...places, title],
+                        )
+                      }
+                    >
+                      {savedPlaces.includes(title)
+                        ? "Added to itinerary"
+                        : "Add to itinerary"}{" "}
+                      <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section
           style={{
-            display: "grid",
+            display: "none",
             gridTemplateColumns: "minmax(0, 1.5fr) minmax(240px, 0.7fr)",
             gap: "22px",
             marginTop: "28px",
