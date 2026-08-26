@@ -191,3 +191,8 @@ button { cursor: pointer; }
   .photo-grid { grid-auto-rows: 70px; gap: 7px; }
   .photo-tile:nth-child(1) { grid-column: span 7; grid-row: span 4; }
 }
+.karabakh-map { position: relative; padding: 24px; margin: 46px 0 10px; }
+.karabakh-map h3 { margin: 12px 0 16px; font-size: 26px; letter-spacing: -.06em; }
+.map-stage { border: 1px solid var(--line); background: rgba(0,0,0,.2); }
+.map-tooltip { position: fixed; z-index: 30; max-width: 220px; padding: 12px 14px; pointer-events: none; }
+.map-tooltip p { margin: 8px 0 0; color: #c9d6ce; font-size: 12px; line-height: 1.6; }
