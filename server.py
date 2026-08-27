@@ -4,11 +4,19 @@ from app.models.user import User
 from app.services import facade
 from app.share import share_init
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_swagger_ui import get_swagger_blueprint
 import config
 
 
 app = Flask(__name__)
 share_init(app)
+
+SWAGGER_URL = "/api/docs"
+API_URL = "/static/openapi.json"
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL, API_URL, config={"app_name": "GoKarabakh API"}
+)
+app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
 @app.route("/")
 def home():
@@ -80,6 +88,24 @@ def create_user():
     facade.create_user(user)
     return jsonify({"status": "User created successfully"}), 200
 
+@app.route("/api/v1/users/update", methods=["PUT"])
+@jwt_required()
+def update_user_route():
+    current_user_id = get_jwt_identity()
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
+    allowed_fields = {"name", "year_of_birth", "month_of_birth", "day_of_birth"}
+    updates = {k: v for k, v in data.items() if k in allowed_fields}
+    if not updates:
+        return jsonify({"error": "No valid fields to update"}), 400
+
+    updated = facade.update_user(current_user_id, updates)
+    if not updated:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify(updated.to_dict()), 200
+
 # Places -------------------------------------
 
 @app.route("/api/v1/places/get")
@@ -146,7 +172,57 @@ def create_place():
         tags=tags,
     )
     facade.create_place(place)
-    return 200
+    return jsonify(place.to_dict()), 200
+
+@app.route("/api/v1/places/update", methods=["PUT"])
+@jwt_required()
+def update_place():
+    current_user_id = get_jwt_identity()
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
+    place_id = data.get("id")
+    if not place_id:
+        return jsonify({"error": "Place id was not provided"}), 400
+
+    place = facade.get_place(place_id)
+    if not place:
+        return jsonify({"error": "No place with specified id."}), 404
+
+    if place.owner_user_id != current_user_id:
+        return jsonify({"error": "You are not the owner of this place"}), 403
+
+    allowed_fields = {"name", "description", "cost", "main_photo_url", "tags", "is_tour"}
+    updates = {k: v for k, v in data.items() if k in allowed_fields}
+    if not updates:
+        return jsonify({"error": "No valid fields to update"}), 400
+
+    updated = facade.update_place(place_id, updates)
+    return jsonify(updated.to_dict()), 200
+
+
+@app.route("/api/v1/places/delete", methods=["POST"])
+@jwt_required()
+def delete_place():
+    current_user_id = get_jwt_identity()
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
+    place_id = data.get("id")
+    if not place_id:
+        return jsonify({"error": "Place id was not provided"}), 400
+
+    place = facade.get_place(place_id)
+    if not place:
+        return jsonify({"error": "No place with specified id."}), 404
+
+    if place.owner_user_id != current_user_id:
+        return jsonify({"error": "You are not the owner of this place"}), 403
+
+    facade.delete_place(place_id)
+    return "", 200
 
 @app.route("/api/v1/places/book", methods=["POST"])
 @jwt_required()
