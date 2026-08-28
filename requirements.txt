@@ -1,6 +1,5 @@
 flask
 flask-bcrypt
+flask-cors
 flask-jwt-extended
 python-dotenv
-flask-sqlalchemy
-flask-swagger-ui

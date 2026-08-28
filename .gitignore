@@ -217,8 +217,12 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# node.js
-node_modules/
+# Node.js / React Frontend ignores
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+*.log
 
-# DATABASE
-*.db
+# Secure keys
+cert.pem
+key.pem

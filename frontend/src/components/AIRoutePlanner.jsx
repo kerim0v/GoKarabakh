@@ -1,0 +1,16 @@
+import { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
+import gsap from 'gsap';
+
+const stops = [['01', 'Shusha Fortress', '09:00 — 11:30', 'Aysel / local historian'], ['02', 'Jidir Plain', '12:00 — 14:00', 'Open sky / walking route'], ['03', 'Khari Bulbul Site', '15:30 — 18:00', 'Nigar / food & culture']];
+
+export default function AIRoutePlanner() {
+  const [days, setDays] = useState(3);
+  const [interest, setInterest] = useState('History');
+  const [budget, setBudget] = useState('Balanced');
+  const [generated, setGenerated] = useState(false);
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+  const output = useRef(null);
+  const generate = () => { setGenerated(true); if (output.current) gsap.fromTo(output.current.querySelectorAll('.route-stop'), { opacity: 0, y: 30, rotateX: -18 }, { opacity: 1, y: 0, rotateX: 0, duration: .75, stagger: .12, ease: 'power3.out' }); };
+  return <section className="route-planner glass"><div className="route-intro"><span className="eyebrow mono">AI navigator / live beta</span><h2>Feel your<br /><em>route.</em></h2><p>Choose a few preferences and Karabakh will build a route at your pace.</p></div><div className="route-controls"><label className="route-label">Duration <strong>{days} days</strong><input type="range" min="1" max="7" value={days} onChange={(event) => setDays(event.target.value)} /></label><div><span className="route-label">Interest</span><div className="interest-pills">{['History', 'Nature', 'Cuisine'].map((item) => <button className={interest === item ? 'active' : ''} onClick={() => setInterest(item)} type="button" key={item}>#{item}</button>)}</div></div><label className="route-label">Budget<select value={budget} onChange={(event) => setBudget(event.target.value)}><option>Economy</option><option>Balanced</option><option>Premium</option></select></label><button className="button button-primary route-generate" onClick={generate} type="button"><span className="energy-ring" />Build AI Route ✦</button></div>{generated && <motion.div className="route-output" ref={output} initial={{ opacity: 0 }} animate={{ opacity: 1 }}><div className="route-line" />{stops.map(([number, title, time, guide]) => <article className="route-stop" key={title}><span className="route-node">{number}</span><div><span className="mono">{time}</span><h3>{title}</h3><p>{guide} · {budget}</p></div>{isLoggedIn && <span className="route-bonus">+150 Coins<br />Route Bonus</span>}</article>)}</motion.div>}</section>;
+}

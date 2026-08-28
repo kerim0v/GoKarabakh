@@ -1,34 +1,27 @@
-from app.models.place import Place
 from app.models.user import User
-from app.repository.sqlalchemy_repo import SQLAlchemyRepository
-from app.database import db
+from app.repository.base import *
+from app.repository.memory import *
 
 
-user_repository = SQLAlchemyRepository(User)
-place_repository = SQLAlchemyRepository(Place)
+FACTORY = RepositoryFactory(lambda: MemoryRepository())
 
-def commit():
-    db.session.commit()
+
+user_repository = FACTORY.create_repository()
+place_repository = FACTORY.create_repository()
 
 # Users
 
 def get_user(id) -> User: return user_repository.get(id)
 def create_user(user): user_repository.add(user)
 def get_users() -> list[User]: return user_repository.get_all()
-def update_user(user_id, data): return user_repository.update(user_id, data)
+# added a missing function update_user
+def update_user(user): 
+    user_repository.update(user.id, user.__dict__)
+
+#def delete_user_by_id_if_pwd(id, pwd): this function is no longer called anywhere, we might delete this
+#    u = get_user(id)
+#   if u.check_pwd(pwd):
+#        delete_user(u)
+#        return True
+#    return False
 def delete_user(user_id): user_repository.delete(user_id)
-
-# Places
-
-def get_place(id) -> Place: return place_repository.get(id)
-def create_place(place): place_repository.add(place)
-def get_places() -> list[Place]: return place_repository.get_all()
-def update_place(place_id, data): return place_repository.update(place_id, data)
-def delete_place(place_id): place_repository.delete(place_id)
-
-def places_by_tag(tag):
-    places = []
-    for place in get_places():
-        if all(item in (place.tags or []) for item in tag):
-            places.append(place)
-    return places
