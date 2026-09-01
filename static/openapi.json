@@ -22,7 +22,33 @@
           "year_of_birth": {"type": "integer"},
           "month_of_birth": {"type": "integer"},
           "day_of_birth": {"type": "integer"},
-          "email": {"type": "string", "format": "email"}
+          "email": {"type": "string", "format": "email"},
+          "role": {"type": "string", "enum": ["user", "business_owner", "guide"]}
+        }
+      },
+      "Booking": {
+        "allOf": [
+          {"$ref": "#/components/schemas/Place"},
+          {"type": "object", "properties": {"booked_at": {"type": "string", "format": "date-time"}}}
+        ]
+      },
+      "PlaceStats": {
+        "type": "object",
+        "properties": {
+          "places": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "place_id": {"type": "string"},
+                "name": {"type": "string"},
+                "bookings": {"type": "integer"},
+                "revenue": {"type": "number"}
+              }
+            }
+          },
+          "total_bookings": {"type": "integer"},
+          "total_revenue": {"type": "number"}
         }
       },
       "Place": {
@@ -79,7 +105,8 @@
             "type": "object", "required": ["email", "password", "about_me"],
             "properties": {
               "email": {"type": "string", "format": "email"},
-              "password": {"type": "string", "format": "password"},
+              "password": {"type": "string", "format": "password", "minLength": 8},
+              "role": {"type": "string", "enum": ["user", "business_owner", "guide"], "default": "user"},
               "about_me": {
                 "type": "object",
                 "required": ["name", "year_of_birth", "month_of_birth", "day_of_birth"],
@@ -93,13 +120,14 @@
             }
           },
           "example": {
-            "email": "user@example.com", "password": "hunter2",
+            "email": "user@example.com", "password": "hunter22", "role": "business_owner",
             "about_me": {"name": "Tamerlan", "year_of_birth": 2005, "month_of_birth": 6, "day_of_birth": 14}
           }}}
         },
         "responses": {
           "200": { "description": "User created" },
-          "400": { "description": "Missing or invalid fields", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+          "400": { "description": "Missing/invalid fields, invalid role, or password under 8 characters", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "409": { "description": "Email is already registered", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
       }
     },
@@ -188,7 +216,7 @@
     },
     "/api/v1/places/create": {
       "post": {
-        "tags": ["Places"], "summary": "Create a new place (tour, hotel, or guide listing)",
+        "tags": ["Places"], "summary": "Create a new place (tour, hotel, or guide listing). Requires a business_owner or guide account.",
         "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
@@ -213,7 +241,8 @@
         },
         "responses": {
           "200": { "description": "Place created", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Place"}}}},
-          "400": { "description": "Missing required fields" }
+          "400": { "description": "Missing required fields" },
+          "403": { "description": "Account is not a business_owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
       }
     },
@@ -275,6 +304,25 @@
             "type": "object", "properties": {"status": {"type": "string"}, "amount_charged": {"type": "number"}}
           }}}},
           "404": { "description": "User or place not found" }
+        }
+      }
+    },
+    "/api/v1/users/bookings": {
+      "get": {
+        "tags": ["Users"], "summary": "List the logged-in user's booking history",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Booked places with booking timestamps", "content": { "application/json": { "schema": {"type": "array", "items": {"$ref": "#/components/schemas/Booking"}}}}}
+        }
+      }
+    },
+    "/api/v1/places/stats": {
+      "get": {
+        "tags": ["Places"], "summary": "Booking counts and revenue for the logged-in owner's/guide's places",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Per-place and total stats", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/PlaceStats"}}}},
+          "403": { "description": "Account is not a business_owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
       }
     }

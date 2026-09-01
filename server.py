@@ -80,6 +80,12 @@ def create_user():
     if role not in ROLES:
         return jsonify({"error": f"Invalid role, must be one of {ROLES}"}), 400
 
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters"}), 400
+
+    if facade.get_user_by_email(email):
+        return jsonify({"error": "Email is already registered"}), 409
+
     user = User(
         kx_count=0,
         name=name,
@@ -238,6 +244,9 @@ def delete_place():
 def book_place():
     user_id = get_jwt_identity()
     data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
     use_kx = data.get("use_kx", False)
     place_id = data.get("place_id")
 
@@ -308,14 +317,13 @@ def get_owner_stats():
 @app.route("/api/v1/auth/login", methods=["POST"])
 def login():
     data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
     email = data.get("email")
     password = data.get("password")
 
-    user = None
-    for u in facade.get_users():
-        if u.email == email:
-            user = u
-            break
+    user = facade.get_user_by_email(email)
 
     if not user or not user.check_pwd(password):
         return jsonify({"error": "Invalid email or password"}), 401
