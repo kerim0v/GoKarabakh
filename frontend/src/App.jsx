@@ -176,8 +176,8 @@ function BookingModal({ booking, onClose, onSubmit }) {
       card_last4: (form.get("card_number")?.toString() || "").replace(/\D/g, "").slice(-4),
     });
   };
-  return <div className="auth-backdrop-enhanced" style={{ zIndex: 2000 }} onClick={(event) => event.target === event.currentTarget && onClose()}>
-    <div className="auth-card-enhanced glass" style={{ maxWidth: "580px", width: "min(92vw, 580px)" }} role="dialog" aria-modal="true" aria-labelledby="booking-title">
+  return <div className="auth-backdrop-enhanced booking-backdrop" style={{ zIndex: 2000 }} onClick={(event) => event.target === event.currentTarget && onClose()}>
+    <div className="auth-card-enhanced glass booking-card" style={{ maxWidth: "580px", width: "min(92vw, 580px)" }} role="dialog" aria-modal="true" aria-labelledby="booking-title">
       <button className="button-auth-close" type="button" onClick={onClose} aria-label="Close booking form">×</button>
       <div className="auth-content-enhanced">
         <span className="eyebrow mono auth-eyebrow">BOOKING REQUEST •</span>
@@ -346,6 +346,45 @@ function Profile() {
     setPartnerOpen(false);
   };
   return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p><span className="mono" style={{ display: "inline-block", marginTop: "8px", color: "#f4d66d" }}>Role: {roleLabel}</span></div>{roleAction ? <a className="profile-explore-link" href={roleAction.href}>{roleAction.label} →</a> : <button className="profile-explore-link" type="button" onClick={() => setPartnerOpen(true)}>{user.applicationStatus === "pending" ? "Application under review" : "Become a Partner →"}</button>}</section><section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{bookings.length ? <div className="profile-bookings">{bookings.map((booking) => <div className="profile-booking" key={booking.id || `${booking.name}-${booking.date}`}><img src={booking.image} alt="" /><div><strong>{booking.name}</strong><span>{booking.type} · {booking.start_date || booking.date}</span></div><b>{booking.status || "Confirmed"}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main><PartnerApplicationModal open={partnerOpen} onClose={() => setPartnerOpen(false)} onSubmit={submitPartner} userName={displayName} userEmail={user.email || ""} /></div>;
+}
+
+function PartnerWorkspace({ role }) {
+  const readItems = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
+  const user = getStoredUser();
+  const isAllowed = localStorage.getItem("isLoggedIn") === "true" && user.role === role;
+  const itemLabel = role === "owner" ? "business listing" : "guided tour";
+  const itemTitle = role === "owner" ? "My Businesses" : "My Tours";
+  const [items, setItems] = useState(() => readItems(`karabakh${role === "owner" ? "Listings" : "Tours"}`));
+  const [requests, setRequests] = useState(() => readItems("karabakhPartnerBookingRequests"));
+  const [notice, setNotice] = useState("");
+
+  const addItem = (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const item = { id: `${role}-${Date.now()}`, name: form.get("name"), region: form.get("region"), category: form.get("category"), description: form.get("description"), owner_email: user.email, created_at: new Date().toISOString() };
+    const next = [...items, item];
+    setItems(next);
+    localStorage.setItem(`karabakh${role === "owner" ? "Listings" : "Tours"}`, JSON.stringify(next));
+    event.currentTarget.reset();
+    setNotice(`Your ${itemLabel} has been saved and is ready for review.`);
+  };
+  const decideRequest = (id, status) => {
+    const next = requests.map((request) => request.id === id ? { ...request, status } : request);
+    setRequests(next);
+    localStorage.setItem("karabakhPartnerBookingRequests", JSON.stringify(next));
+    const bookings = readItems("karabakhBookings").map((booking) => booking.id === id ? { ...booking, status } : booking);
+    localStorage.setItem("karabakhBookings", JSON.stringify(bookings));
+    setNotice(status === "Confirmed – payment captured" ? "Availability confirmed. The traveller's payment is now captured." : "Booking request declined. The traveller will not be charged.");
+  };
+
+  if (!isAllowed) return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-panel glass"><h1>Partner access required</h1><p>Only approved {role === "owner" ? "business owners" : "guides"} can use this workspace.</p><a className="profile-explore-link" href="/profile">Go to profile →</a></section></main></div>;
+  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main">
+    <section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{role === "owner" ? "O" : "G"}</div><div><span className="eyebrow mono">Partner workspace</span><h1>{itemTitle}</h1><p>Create your {itemLabel}s and manage incoming booking requests.</p></div><a className="profile-explore-link" href="/profile">My profile →</a></section>
+    {notice && <p role="status" style={{ margin: "18px 0", color: "#eaffb5" }}>{notice}</p>}
+    <section className="profile-grid" style={{ marginTop: "18px" }}><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Add a new entry</span><h2>Create {role === "owner" ? "a business listing" : "a guided tour"}</h2></div></div><form className="auth-form-enhanced" onSubmit={addItem}><div className="form-group"><label className="form-label" htmlFor="partner-item-name"><span>NAME •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-name" name="name" placeholder={role === "owner" ? "Business name" : "Tour name"} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-region"><span>REGION •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-region" name="region" placeholder="e.g. Shusha" required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-category"><span>CATEGORY •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-category" name="category" placeholder={role === "owner" ? "Hotel, restaurant, activity..." : "Hiking, cultural, food..."} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-description"><span>DESCRIPTION •</span><span className="label-accent" /></label><div className="input-wrapper"><textarea id="partner-item-description" name="description" rows="4" placeholder="Tell travellers what to expect" required style={{ width: "100%", borderRadius: "12px", padding: "13px 14px", background: "rgba(15,23,42,.4)", color: "#fff" }} /></div></div><button className="button-auth-submit" type="submit">Save {role === "owner" ? "business" : "tour"} →</button></form></article>
+    <article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Published by you</span><h2>{itemTitle}</h2></div></div>{items.length ? <div className="profile-transactions">{items.map((item) => <div className="profile-transaction" key={item.id}><span>✓</span><div><strong>{item.name}</strong><small>{item.category} · {item.region}</small></div></div>)}</div> : <div className="profile-empty"><span>+</span><p>No {role === "owner" ? "businesses" : "tours"} yet.</p><small>Your saved entries will appear here.</small></div>}</article></section>
+    <section className="profile-panel glass" style={{ marginTop: "18px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Booking inbox</span><h2>Reservation requests</h2></div></div>{requests.length ? <div className="profile-bookings">{requests.map((request) => <div className="profile-booking" key={request.id}><img src={request.image} alt="" /><div><strong>{request.name}</strong><span>{request.type} · {request.guests} guest{Number(request.guests) === 1 ? "" : "s"} · {request.start_date}</span><small>{request.status}</small></div>{request.status === "Awaiting partner confirmation" ? <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Confirmed – payment captured")}>Confirm</button><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Declined – no charge")}>Decline</button></div> : <b>{request.status}</b>}</div>)}</div> : <div className="profile-empty"><span>⌂</span><p>No booking requests yet.</p><small>New traveller requests will appear here for confirmation.</small></div>}</section>
+  </main></div>;
 }
 
 function ParticleField({ globe }) {
@@ -2234,6 +2273,8 @@ export default function App() {
     if (hash === "#community" || hash === "#inter-karabakh") return "community";
     if (path === "/dashboard" || path === "/dashboard.html") return "dashboard";
     if (path === "/profile" || path === "/profile.html") return "profile";
+    if (path === "/owner-dashboard") return "owner-dashboard";
+    if (path === "/guide-dashboard") return "guide-dashboard";
     if (path === "/community" || path === "/community.html") return "community";
     if (path.startsWith("/district/")) return "district";
     return "landing";
@@ -2254,6 +2295,8 @@ export default function App() {
   let page = <Landing />;
   if (route === "dashboard") page = <Dashboard />;
   if (route === "profile") page = <Profile />;
+  if (route === "owner-dashboard") page = <PartnerWorkspace role="owner" />;
+  if (route === "guide-dashboard") page = <PartnerWorkspace role="guide" />;
   if (route === "community") page = <CommunityArchive />;
   if (route === "district")
     page = (
