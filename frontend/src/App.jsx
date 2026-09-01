@@ -335,7 +335,6 @@ function Dashboard() {
   const [hoveredRegion, setHoveredRegion] = useState(null);
 
   const openRegionDetails = (slug) => {
-    playRegionTransitionAudio();
     window.history.pushState({}, "", `/district/${slug}`);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
@@ -1593,6 +1592,7 @@ function DistrictPage({ slug }) {
     tagline: "Discover the landscapes, stays, and stories of Karabakh.",
   };
   const [activeCategory, setActiveCategory] = useState("Hotels");
+  const toImageUrl = (image) => (image ? encodeURI(image) : "");
 
   const categories = [
     { name: "Hotels", icon: "🏨" },
@@ -1612,7 +1612,7 @@ function DistrictPage({ slug }) {
   };
   const shushaCategoryCards = {
     Hotels: [
-      ["Shusha Boutique Stay", "Mərkəz • 2 nəfər üçün", "Tarixi mərkəzə piyada yaxın, səhər şəhər mənzərəsi ilə.", "Gecəlik 140 AZN-dən", "/shusha/shusha.JPG"],
+      ["Shusha Hotel", "Mərkəz • 2 nəfər üçün", "Tarixi mərkəzə piyada yaxın, səhər şəhər mənzərəsi ilə.", "Gecəlik 140 AZN-dən", "/shusha/shusha otel.jpg"],
       ["Cıdır View House", "Cıdır düzü • mənzərəli otaqlar", "Gün batımını izləmək və sakit bir gecə üçün seçilmiş ünvan.", "Mənzərəli seçim", "/cidir-1.jpg"],
       ["Karvansara Guest Rooms", "Şuşa qalası yaxınlığı", "Klassik atmosfer və əsas dayanacaqlara rahat çıxış.", "Mərkəzdə yerləşir", "/shusha/shusha2.JPG"],
     ],
@@ -1633,6 +1633,28 @@ function DistrictPage({ slug }) {
     ],
   };
   const shushaCards = shushaCategoryCards[activeCategory];
+  const khankendisCategory = {
+    Hotels: [
+      ["Karvansaray", "Xankendi • City Center", "Comfortable overnight in Khankendi city center with local hospitality.", "From 146 AZN / night", "/khankendi/xankendiotel.jpg"],
+      ["Cahan Hotel", "Cahan • Mountain Escape", "Mountain views and quiet setting in Cahan region for a peaceful stay.", "Guest favourite", "/khankendi/cahanotel.jpg"],
+      ["Valley House", "Khankendi • Valley Views", "Another welcoming option with regional character and easy access.", "Best for weekend", "/khankendi/khankendi.jpeg"],
+    ],
+    Attractions: [
+      ["Khankendi City Center", "Urban walk • cultural spots", "The main stops and cultural landmarks worth visiting on your route.", "Must see", "/khankendi/khankendi.jpeg"],
+      ["Valley Viewpoint", "Scenic lookout • easy access", "A short walk to see the valley landscape and surrounding horizons.", "Allow 30–40 min", "/khankendi/khankendi2.jpg"],
+      ["Local Market", "Cultural experience • daytime", "The heart of local life where you can explore authentic Khankendi.", "Morning pick", "/khankendi/khankendi.jpeg"],
+    ],
+    Restaurants: [
+      ["Khankendi Kitchen", "Regional cuisine • central", "Classic Azerbaijani flavours in a welcoming, unhurried setting.", "Average 25–40 AZN", "/khankendi/khankendi.jpeg"],
+      ["Valley Tea House", "Tea & sweets • relaxed", "Settle in for tea, local preserves and a peaceful break.", "Afternoon favourite", "/khankendi/khankendi2.jpg"],
+      ["Cahan Restaurant", "Mountain cuisine • family-friendly", "An excellent choice for finishing a full day of exploration.", "Booking recommended", "/khankendi/khankendi.jpeg"],
+    ],
+    "The Most Popular": [
+      ["Khankendi Valley Walk", "2 hours • on foot", "A simple route that combines city views with local atmosphere.", "Top pick", "/khankendi/khankendi.jpeg"],
+      ["Scenic Khankendi Stay", "Overnight • valley view", "Combine a slow morning, memorable views and comfortable nights.", "Most saved stay", "/khankendi/xankendi otel.jpg"],
+      ["Cahan Mountain Experience", "Day trip • highland heritage", "Explore the mountain region and experience local mountain hospitality.", "Traveller favourite", "/khankendi/cahan otel.jpg"],
+    ],
+  };
   const regionTravelData = {
     shusha: { name: "Shusha", setting: "Cıdır Plateau", attractions: ["Cıdır Plateau", "Shusha Fortress", "Kharibulbul Trail"], images: ["/shusha/shusha.JPG", "/shusha/shusha2.JPG", "/shusha/shusha3.JPG"] },
     kalbajar: { name: "Kalbajar", setting: "Highland Pass", attractions: ["Istisu Springs", "Alpine Passes", "Ancient Stone Sanctuaries"], images: ["/kelbecer/kelbecer.jpg", "/kelbecer/kelbecer2.jpeg", "/kelbecer/kelbecer3.jpeg"] },
@@ -1679,7 +1701,11 @@ function DistrictPage({ slug }) {
     };
     return cards[activeCategory];
   };
-  const categoryCards = region ? buildRegionCards(region) : shushaCards;
+  const categoryCards = slug === 'khankendi' 
+    ? (khankendisCategory[activeCategory] || [])
+    : slug === 'shusha'
+    ? (shushaCategoryCards[activeCategory] || [])
+    : (region ? buildRegionCards(region) : shushaCards) || [];
   const [savedPlaces, setSavedPlaces] = useState([]);
   const [showRoutePlan, setShowRoutePlan] = useState(false);
   const routePlan = region && {
@@ -1785,7 +1811,7 @@ function DistrictPage({ slug }) {
               {showRoutePlan && (
                 <section className="shusha-route-postcard" aria-label={`Two-day ${district.name} itinerary`}>
                   <div className="shusha-route-image">
-                    <img src={routePlan.image} alt={`${routePlan.highlight}, ${district.name}`} />
+                    <img src={toImageUrl(routePlan.image)} alt={`${routePlan.highlight}, ${district.name}`} />
                     <div className="shusha-route-image-copy">
                       <span>DAY 1 HIGHLIGHT</span>
                       <strong>{routePlan.highlight}</strong>
@@ -1896,7 +1922,7 @@ function DistrictPage({ slug }) {
                 <article className="district-card" key={title}>
                   <div
                     className="district-card-image"
-                    style={{ backgroundImage: `url(${image})` }}
+                    style={{ backgroundImage: `url("${toImageUrl(image)}")` }}
                   >
                     <span>{tag}</span>
                   </div>
