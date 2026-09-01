@@ -263,6 +263,48 @@ def book_place():
 
     return jsonify({"status": "Booked", "amount_charged": real_cost}), 200
 
+@app.route("/api/v1/users/bookings", methods=["GET"])
+@jwt_required()
+def get_user_bookings():
+    user_id = get_jwt_identity()
+    rows = facade.user_bookings(user_id)
+    result = []
+    for place, booked_at in rows:
+        d = place.to_dict()
+        d["booked_at"] = booked_at.isoformat() if booked_at else None
+        result.append(d)
+    return jsonify(result), 200
+
+@app.route("/api/v1/places/stats", methods=["GET"])
+@jwt_required()
+def get_owner_stats():
+    owner_id = get_jwt_identity()
+    owner = facade.get_user(owner_id)
+    if not owner or owner.role not in ("business_owner", "guide"):
+        return jsonify({"error": "Only business owners and guides can view stats"}), 403
+
+    places = facade.places_by_owner(owner_id)
+    place_stats = []
+    total_bookings = 0
+    total_revenue = 0.0
+    for p in places:
+        count = len(p.buyers)
+        revenue = p.cost * count
+        total_bookings += count
+        total_revenue += revenue
+        place_stats.append({
+            "place_id": p.id,
+            "name": p.name,
+            "bookings": count,
+            "revenue": revenue,
+        })
+
+    return jsonify({
+        "places": place_stats,
+        "total_bookings": total_bookings,
+        "total_revenue": total_revenue,
+    }), 200
+
 @app.route("/api/v1/auth/login", methods=["POST"])
 def login():
     data = request.get_json(force=True)

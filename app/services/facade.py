@@ -1,5 +1,5 @@
 from app.models.place import Place
-from app.models.user import User
+from app.models.user import User, bookings as bookings_table
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
 
@@ -32,3 +32,15 @@ def places_by_tag(tag):
         if all(item in (place.tags or []) for item in tag):
             places.append(place)
     return places
+
+def places_by_owner(owner_id):
+    return [p for p in get_places() if p.owner_user_id == owner_id]
+
+def user_bookings(user_id):
+    return (
+        db.session.query(Place, bookings_table.c.booked_at)
+        .join(bookings_table, Place.id == bookings_table.c.place_id)
+        .filter(bookings_table.c.user_id == user_id)
+        .order_by(bookings_table.c.booked_at.desc())
+        .all()
+    )
