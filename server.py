@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 from app.models.place import Place
-from app.models.user import User
+from app.models.user import User, ROLES
 from app.services import facade
 from app.share import share_init
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -76,6 +76,10 @@ def create_user():
     if not all([password, email, name, yob, mob, dob]):
         return jsonify({"error": "Missing required fields"}), 400
 
+    role = data.get("role", "user")
+    if role not in ROLES:
+        return jsonify({"error": f"Invalid role, must be one of {ROLES}"}), 400
+
     user = User(
         kx_count=0,
         name=name,
@@ -83,6 +87,7 @@ def create_user():
         month_of_birth=mob,
         day_of_birth=dob,
         email=email,
+        role=role,
     )
     user.hash_pwd(password)
     facade.create_user(user)
@@ -131,7 +136,11 @@ def create_place():
 
     if not owner_id:
         return jsonify({"error": "ID of owner was not provided"}), 400
-    
+
+    owner = facade.get_user(owner_id)
+    if not owner or owner.role not in ("business_owner", "guide"):
+        return jsonify({"error": "Only business owners and guides can create listings"}), 403
+
     desc = request.json.get("description")
 
     if not desc:

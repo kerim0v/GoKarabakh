@@ -11,6 +11,9 @@ bookings = db.Table(
 )
 
 
+ROLES = ("user", "business_owner", "guide")
+
+
 class User(ModelBase):
     __tablename__ = "users"
 
@@ -21,6 +24,7 @@ class User(ModelBase):
     day_of_birth = db.Column(db.Integer)
     email = db.Column(db.String(255), unique=True, nullable=False)
     pwd_hash = db.Column(db.String(255))
+    role = db.Column(db.String(20), nullable=False, default="user")
 
     bought_places = db.relationship("Place", secondary=bookings, backref="buyers")
 
