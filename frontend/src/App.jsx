@@ -98,7 +98,7 @@ function Header({ active }) {
               <span className="wallet-icon" style={{ color: "#38bdf8" }}>
                 ◈
               </span>
-              <b>1,240</b>
+              <b>0</b>
               <span className="mono">coins</span>
             </div>
           )
@@ -122,6 +122,7 @@ function Header({ active }) {
           </button>
           {isLoggedIn && accountOpen && (
             <div className="account-menu">
+              <a href="/profile">My profile</a>
               <button type="button" onClick={logout}>
                 Log out
               </button>
@@ -163,6 +164,26 @@ function AuthShell({ children }) {
       />
     </>
   );
+}
+
+function Profile() {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
+  const readJson = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } };
+  const [user, setUser] = useState(() => readJson("karabakhUser", {}));
+  const [history, setHistory] = useState(() => readJson("karabakhCoinHistory", []));
+  useEffect(() => {
+    const sync = () => { setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true"); setUser(readJson("karabakhUser", {})); setHistory(readJson("karabakhCoinHistory", [])); };
+    window.addEventListener("auth:changed", sync);
+    if (!isLoggedIn) window.dispatchEvent(new CustomEvent("auth:open"));
+    return () => window.removeEventListener("auth:changed", sync);
+  }, [isLoggedIn]);
+  if (!isLoggedIn) return <div className="page-shell profile-gate"><Header /><p>Sign in to view your Karabakh profile.</p></div>;
+  const displayName = user.name || user.email?.split("@")[0] || "Karabakh traveller";
+  const balance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
+  const earned = history.filter((item) => item.amount > 0).reduce((total, item) => total + item.amount, 0);
+  const spent = Math.abs(history.filter((item) => item.amount < 0).reduce((total, item) => total + item.amount, 0));
+  const bookings = readJson("karabakhBookings", []);
+  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p></div><a className="profile-explore-link" href="/dashboard">Plan a new trip →</a></section><section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{bookings.length ? <div className="profile-bookings">{bookings.map((booking) => <div className="profile-booking" key={booking.id || `${booking.name}-${booking.date}`}><img src={booking.image} alt="" /><div><strong>{booking.name}</strong><span>{booking.type} · {booking.date}</span></div><b>{booking.status || "Confirmed"}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main></div>;
 }
 
 function ParticleField({ globe }) {
@@ -1089,6 +1110,10 @@ function CommunityArchive() {
       return;
     }
     setShared(true);
+    const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
+    const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
+    localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
+    localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared a community memory", amount: 50, createdAt: Date.now() }, ...currentHistory]));
     setUploadedMemory({
       id: `user-memory-${Date.now()}`,
       src: URL.createObjectURL(selectedFile),
@@ -1995,6 +2020,7 @@ export default function App() {
     const hash = (window.location.hash || "").toLowerCase();
     if (hash === "#community" || hash === "#inter-karabakh") return "community";
     if (path === "/dashboard" || path === "/dashboard.html") return "dashboard";
+    if (path === "/profile" || path === "/profile.html") return "profile";
     if (path === "/community" || path === "/community.html") return "community";
     if (path.startsWith("/district/")) return "district";
     return "landing";
@@ -2014,6 +2040,7 @@ export default function App() {
 
   let page = <Landing />;
   if (route === "dashboard") page = <Dashboard />;
+  if (route === "profile") page = <Profile />;
   if (route === "community") page = <CommunityArchive />;
   if (route === "district")
     page = (
