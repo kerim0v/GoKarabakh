@@ -4,7 +4,7 @@ from app.models.user import User
 from app.services import facade
 from app.share import share_init
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-from flask_swagger_ui import get_swagger_blueprint
+from flask_swagger_ui import get_swaggerui_blueprint
 import config
 
 
