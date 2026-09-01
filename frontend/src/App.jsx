@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import Globe from "globe.gl";
 import * as THREE from "three";
 import VanillaTilt from "vanilla-tilt";
@@ -47,6 +48,152 @@ const getStoredUser = () => {
 };
 
 const getUserRole = () => getStoredUser().role || "user";
+
+const getPartnerApplications = () => {
+  try {
+    return JSON.parse(localStorage.getItem("karabakhPartnerApplications") || "[]");
+  } catch {
+    return [];
+  }
+};
+
+const savePartnerApplications = (applications) => {
+  localStorage.setItem("karabakhPartnerApplications", JSON.stringify(applications));
+};
+
+function PartnerApplicationModal({ open, onClose, onSubmit, userName, userEmail }) {
+  if (!open) return null;
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    onSubmit({
+      company_name: formData.get("company_name")?.toString() || "",
+      tax_id: formData.get("tax_id")?.toString() || "",
+      phone: formData.get("phone")?.toString() || "",
+      bio: formData.get("bio")?.toString() || "",
+      languages: formData.get("languages")?.toString() || "",
+      target_role: formData.get("target_role")?.toString() || "owner",
+      card_last4: (formData.get("card_number")?.toString() || "").replace(/\D/g, "").slice(-4),
+      user_name: userName,
+      user_email: userEmail,
+    });
+  };
+
+  return (
+    <div
+      className="auth-backdrop-enhanced partner-application-backdrop"
+      onClick={(event) => event.target === event.currentTarget && onClose()}
+      style={{ zIndex: 2000 }}
+    >
+      <div className="auth-card-enhanced glass partner-application-card" style={{ maxWidth: "640px", width: "min(92vw, 640px)" }}>
+        <button className="button-auth-close" type="button" onClick={onClose} aria-label="Close partner application modal">
+          ✕
+        </button>
+        <div className="auth-content-enhanced">
+          <span className="eyebrow mono auth-eyebrow">PARTNER APPLICATION •</span>
+          <h2 className="auth-title-enhanced" style={{ marginTop: "8px" }}>Become a Partner</h2>
+          <p className="auth-subtitle-enhanced">Share your details for review. Your partner fee is authorized now and charged only after approval.</p>
+          <form className="auth-form-enhanced" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="partner-role"><span>ROLE •</span><span className="label-accent" /></label>
+              <div className="input-wrapper">
+                <select id="partner-role" name="target_role" defaultValue="owner" style={{ width: "100%", border: "1px solid rgba(148, 163, 184, 0.4)", borderRadius: "12px", background: "rgba(15, 23, 42, 0.4)", color: "#f8fafc", padding: "13px 14px", fontSize: "14px" }}>
+                  <option value="owner">Business Owner</option>
+                  <option value="guide">Guide</option>
+                </select>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="partner-card-number"><span>PAYMENT CARD •</span><span className="label-accent" /></label>
+              <div className="input-wrapper">
+                <input id="partner-card-number" name="card_number" type="text" inputMode="numeric" autoComplete="cc-number" placeholder="Card number" minLength="12" required />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "10px" }}>
+                <input name="card_expiry" type="text" inputMode="numeric" autoComplete="cc-exp" placeholder="MM / YY" required />
+                <input name="card_cvc" type="text" inputMode="numeric" autoComplete="cc-csc" placeholder="CVC" minLength="3" maxLength="4" required />
+              </div>
+              <small style={{ display: "block", marginTop: "7px", color: "rgba(255,255,255,.62)", lineHeight: 1.4 }}>A partner fee will be charged only if GoKarabakh approves this application.</small>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="company-name"><span>COMPANY NAME •</span><span className="label-accent" /></label>
+              <div className="input-wrapper">
+                <input id="company-name" name="company_name" type="text" placeholder="Your business or brand name" required />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="tax-id"><span>TAX ID / VOEN •</span><span className="label-accent" /></label>
+              <div className="input-wrapper">
+                <input id="tax-id" name="tax_id" type="text" placeholder="Tax ID or VOEN" required />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="phone"><span>PHONE •</span><span className="label-accent" /></label>
+              <div className="input-wrapper">
+                <input id="phone" name="phone" type="tel" placeholder="+994 50 000 00 00" required />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="languages"><span>LANGUAGES •</span><span className="label-accent" /></label>
+              <div className="input-wrapper">
+                <input id="languages" name="languages" type="text" placeholder="English, Russian, Azerbaijani" required />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label" htmlFor="bio"><span>ABOUT YOU •</span><span className="label-accent" /></label>
+              <div className="input-wrapper">
+                <textarea id="bio" name="bio" rows="4" placeholder="Tell us about your experience and services" required style={{ width: "100%", border: "1px solid rgba(148, 163, 184, 0.4)", borderRadius: "12px", background: "rgba(15, 23, 42, 0.4)", color: "#f8fafc", padding: "13px 14px", resize: "vertical", minHeight: "110px" }} />
+              </div>
+            </div>
+            <motion.button
+              className="button-auth-submit"
+              type="submit"
+              whileHover={{ scale: 1.02, boxShadow: "0 12px 40px rgba(56, 189, 248, 0.35)" }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <span>Submit Application</span>
+              <span className="button-arrow">↗</span>
+            </motion.button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BookingModal({ booking, onClose, onSubmit }) {
+  if (!booking) return null;
+  const isHotel = booking.type === "Hotel";
+  const submit = (event) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    onSubmit({
+      ...booking,
+      guests: form.get("guests"),
+      start_date: form.get("start_date"),
+      end_date: isHotel ? form.get("end_date") : "",
+      card_last4: (form.get("card_number")?.toString() || "").replace(/\D/g, "").slice(-4),
+    });
+  };
+  return <div className="auth-backdrop-enhanced" style={{ zIndex: 2000 }} onClick={(event) => event.target === event.currentTarget && onClose()}>
+    <div className="auth-card-enhanced glass" style={{ maxWidth: "580px", width: "min(92vw, 580px)" }} role="dialog" aria-modal="true" aria-labelledby="booking-title">
+      <button className="button-auth-close" type="button" onClick={onClose} aria-label="Close booking form">×</button>
+      <div className="auth-content-enhanced">
+        <span className="eyebrow mono auth-eyebrow">BOOKING REQUEST •</span>
+        <h2 id="booking-title" className="auth-title-enhanced" style={{ marginTop: "8px" }}>Book {booking.name}</h2>
+        <p className="auth-subtitle-enhanced">Your request will be sent to the {booking.partnerLabel}. Your card is charged only after they confirm availability.</p>
+        <form className="auth-form-enhanced" onSubmit={submit}>
+          <div className="form-group"><label className="form-label" htmlFor="booking-guests"><span>GUESTS •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-guests" name="guests" type="number" min="1" defaultValue="2" required /></div></div>
+          <div className="form-group"><label className="form-label" htmlFor="booking-start"><span>{isHotel ? "CHECK-IN DATE" : "RESERVATION DATE"} •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-start" name="start_date" type="date" required /></div></div>
+          {isHotel && <div className="form-group"><label className="form-label" htmlFor="booking-end"><span>CHECK-OUT DATE •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-end" name="end_date" type="date" required /></div></div>}
+          <div className="form-group"><label className="form-label" htmlFor="booking-card"><span>PAYMENT CARD •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-card" name="card_number" type="text" inputMode="numeric" autoComplete="cc-number" placeholder="Card number" minLength="12" required /></div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "10px" }}><input name="card_expiry" type="text" inputMode="numeric" autoComplete="cc-exp" placeholder="MM / YY" required /><input name="card_cvc" type="text" inputMode="numeric" autoComplete="cc-csc" placeholder="CVC" minLength="3" maxLength="4" required /></div></div>
+          <motion.button className="button-auth-submit" type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: .98 }}><span>Send booking request</span><span className="button-arrow">→</span></motion.button>
+        </form>
+      </div>
+    </div>
+  </div>;
+}
 
 function Header({ active }) {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -125,8 +272,8 @@ function Header({ active }) {
           {isLoggedIn && accountOpen && (
             <div className="account-menu">
               <a href="/profile">My profile</a>
-              {userRole === "owner" && <a href="/owner-dashboard">My Listings</a>}
-              {userRole === "guide" && <a href="/guide-dashboard">My Tours</a>}
+              {userRole === "owner" && <a href="/profile">My Listings</a>}
+              {userRole === "guide" && <a href="/profile">My Tours</a>}
               <button type="button" onClick={logout}>
                 Log out
               </button>
@@ -175,6 +322,7 @@ function Profile() {
   const readJson = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } };
   const [user, setUser] = useState(() => readJson("karabakhUser", {}));
   const [history, setHistory] = useState(() => readJson("karabakhCoinHistory", []));
+  const [partnerOpen, setPartnerOpen] = useState(false);
   useEffect(() => {
     const sync = () => { setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true"); setUser(readJson("karabakhUser", {})); setHistory(readJson("karabakhCoinHistory", [])); };
     window.addEventListener("auth:changed", sync);
@@ -190,41 +338,14 @@ function Profile() {
   const userRole = user.role || "user";
   const roleLabel = userRole === "owner" ? "Business Owner" : userRole === "guide" ? "Guide" : "User";
   const roleAction = userRole === "owner" ? { href: "/owner-dashboard", label: "Open My Listings" } : userRole === "guide" ? { href: "/guide-dashboard", label: "Open My Tours" } : null;
-  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p><span className="mono" style={{ display: "inline-block", marginTop: "8px", color: "#f4d66d" }}>Role: {roleLabel}</span></div>{roleAction ? <a className="profile-explore-link" href={roleAction.href}>{roleAction.label} →</a> : <a className="profile-explore-link" href="/dashboard">Plan a new trip →</a>}</section><section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{bookings.length ? <div className="profile-bookings">{bookings.map((booking) => <div className="profile-booking" key={booking.id || `${booking.name}-${booking.date}`}><img src={booking.image} alt="" /><div><strong>{booking.name}</strong><span>{booking.type} · {booking.date}</span></div><b>{booking.status || "Confirmed"}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main></div>;
-}
-
-function OwnerDashboard() {
-  const user = getStoredUser();
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const userRole = user.role || "user";
-  if (!isLoggedIn || userRole !== "owner") {
-    return <div className="page-shell profile-gate"><Header /><main className="profile-main" style={{ padding: "40px 20px" }}><section className="profile-panel glass" style={{ maxWidth: "680px", margin: "0 auto", padding: "32px" }}><span className="eyebrow mono">Access restricted</span><h1 style={{ marginTop: "12px" }}>Owner dashboard</h1><p style={{ color: "rgba(255,255,255,0.75)" }}>Only Business Owners can access this area. Sign up with the Owner role to manage your listings.</p><a href="/dashboard" className="profile-explore-link">Back to dashboard →</a></section></main></div>;
-  }
-
-  const listings = [
-    { name: "Stone & Silence", type: "Boutique stay", status: "Live", city: "Shusha" },
-    { name: "Karvansaray", type: "Guest house", status: "Booked today", city: "Khankendi" },
-    { name: "Cahan Lodge", type: "Mountain retreat", status: "Draft", city: "Cahan" },
-  ];
-
-  return <div className="page-shell profile-page"><Header active="trip" /><main className="profile-main" style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px 20px 60px" }}><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{(user.name || "B").charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Business owner</span><h1>My Listings</h1><p>{user.email || "Manage your properties and availability in one place."}</p></div><a className="profile-explore-link" href="/dashboard">Explore market →</a></section><section className="profile-panel glass" style={{ marginTop: "24px", padding: "24px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Portfolio</span><h2>Active businesses</h2></div><button type="button" className="button button-primary" style={{ padding: "10px 16px", borderRadius: "999px" }}>+ Add listing</button></div><div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>{listings.map((listing) => <div key={listing.name} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 0.8fr 0.8fr", gap: "12px", alignItems: "center", padding: "16px 18px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", background: "rgba(255,255,255,0.03)" }}><div><strong>{listing.name}</strong><p style={{ margin: "6px 0 0", color: "rgba(255,255,255,0.7)" }}>{listing.type}</p></div><span className="mono" style={{ color: "#f4d66d" }}>{listing.city}</span><span className="mono" style={{ color: "#7dd3fc" }}>{listing.status}</span><button type="button" className="button button-secondary" style={{ justifySelf: "end" }}>Manage</button></div>)}</div></section></main></div>;
-}
-
-function GuideDashboard() {
-  const user = getStoredUser();
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  const userRole = user.role || "user";
-  if (!isLoggedIn || userRole !== "guide") {
-    return <div className="page-shell profile-gate"><Header /><main className="profile-main" style={{ padding: "40px 20px" }}><section className="profile-panel glass" style={{ maxWidth: "680px", margin: "0 auto", padding: "32px" }}><span className="eyebrow mono">Access restricted</span><h1 style={{ marginTop: "12px" }}>Guide dashboard</h1><p style={{ color: "rgba(255,255,255,0.75)" }}>Only Guides can access this area. Sign up with the Guide role to manage your tours.</p><a href="/dashboard" className="profile-explore-link">Back to dashboard →</a></section></main></div>;
-  }
-
-  const tours = [
-    { name: "Shusha Heritage Walk", date: "Tomorrow", status: "Booked", guests: "12 guests" },
-    { name: "Valley Circuit", date: "Fri 18 Oct", status: "Draft", guests: "6 guests" },
-    { name: "Sunrise Lookout Route", date: "Sat 19 Oct", status: "Confirmed", guests: "8 guests" },
-  ];
-
-  return <div className="page-shell profile-page"><Header active="trip" /><main className="profile-main" style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px 20px 60px" }}><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{(user.name || "G").charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Tour guide</span><h1>My Tours</h1><p>{user.email || "Manage your routes, schedule and guest bookings."}</p></div><a className="profile-explore-link" href="/dashboard">Plan a route →</a></section><section className="profile-panel glass" style={{ marginTop: "24px", padding: "24px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Schedule</span><h2>Upcoming tours</h2></div><button type="button" className="button button-primary" style={{ padding: "10px 16px", borderRadius: "999px" }}>+ New tour</button></div><div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>{tours.map((tour) => <div key={tour.name} style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 0.9fr", gap: "12px", alignItems: "center", padding: "16px 18px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", background: "rgba(255,255,255,0.03)" }}><div><strong>{tour.name}</strong><p style={{ margin: "6px 0 0", color: "rgba(255,255,255,0.7)" }}>{tour.guests}</p></div><span className="mono" style={{ color: "#f4d66d" }}>{tour.date}</span><span className="mono" style={{ color: "#7dd3fc" }}>{tour.status}</span><button type="button" className="button button-secondary" style={{ justifySelf: "end" }}>Edit</button></div>)}</div></section></main></div>;
+  const submitPartner = (application) => {
+    const record = { id: `partner-${Date.now()}`, ...application, status: "pending", created_at: new Date().toISOString() };
+    savePartnerApplications([...getPartnerApplications(), record]);
+    localStorage.setItem("karabakhUser", JSON.stringify({ ...user, applicationStatus: "pending" }));
+    setUser((current) => ({ ...current, applicationStatus: "pending" }));
+    setPartnerOpen(false);
+  };
+  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p><span className="mono" style={{ display: "inline-block", marginTop: "8px", color: "#f4d66d" }}>Role: {roleLabel}</span></div>{roleAction ? <a className="profile-explore-link" href={roleAction.href}>{roleAction.label} →</a> : <button className="profile-explore-link" type="button" onClick={() => setPartnerOpen(true)}>{user.applicationStatus === "pending" ? "Application under review" : "Become a Partner →"}</button>}</section><section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{bookings.length ? <div className="profile-bookings">{bookings.map((booking) => <div className="profile-booking" key={booking.id || `${booking.name}-${booking.date}`}><img src={booking.image} alt="" /><div><strong>{booking.name}</strong><span>{booking.type} · {booking.start_date || booking.date}</span></div><b>{booking.status || "Confirmed"}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main><PartnerApplicationModal open={partnerOpen} onClose={() => setPartnerOpen(false)} onSubmit={submitPartner} userName={displayName} userEmail={user.email || ""} /></div>;
 }
 
 function ParticleField({ globe }) {
@@ -1748,6 +1869,22 @@ function DistrictPage({ slug }) {
     : (region ? buildRegionCards(region) : shushaCards) || [];
   const [savedPlaces, setSavedPlaces] = useState([]);
   const [showRoutePlan, setShowRoutePlan] = useState(false);
+  const [bookingPlace, setBookingPlace] = useState(null);
+  const openBooking = (place) => {
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.dispatchEvent(new CustomEvent("auth:open", { detail: { onSuccess: () => setBookingPlace(place) } }));
+      return;
+    }
+    setBookingPlace(place);
+  };
+  const submitBooking = (request) => {
+    const booking = { id: `booking-${Date.now()}`, ...request, status: "Awaiting partner confirmation", requested_at: new Date().toISOString() };
+    const readRequests = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
+    localStorage.setItem("karabakhBookings", JSON.stringify([...readRequests("karabakhBookings"), booking]));
+    localStorage.setItem("karabakhPartnerBookingRequests", JSON.stringify([...readRequests("karabakhPartnerBookingRequests"), booking]));
+    setBookingPlace(null);
+    window.alert("Your booking request was sent to the partner. Your card will be charged only after availability is confirmed.");
+  };
   const routePlan = region && {
     image: region.images[0],
     highlight: region.attractions[0],
@@ -1985,6 +2122,15 @@ function DistrictPage({ slug }) {
                         : "Add to itinerary"}{" "}
                       <span aria-hidden="true">→</span>
                     </button>
+                    {(activeCategory === "Hotels" || activeCategory === "Restaurants") && (
+                      <button
+                        type="button"
+                        style={{ display: "block", marginTop: "10px" }}
+                        onClick={() => openBooking({ name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
+                      >
+                        Book now →
+                      </button>
+                    )}
                   </div>
                 </article>
               ))}
@@ -2076,6 +2222,7 @@ function DistrictPage({ slug }) {
           </aside>
         </section>
       </main>
+      <BookingModal booking={bookingPlace} onClose={() => setBookingPlace(null)} onSubmit={submitBooking} />
     </div>
   );
 }
@@ -2087,8 +2234,6 @@ export default function App() {
     if (hash === "#community" || hash === "#inter-karabakh") return "community";
     if (path === "/dashboard" || path === "/dashboard.html") return "dashboard";
     if (path === "/profile" || path === "/profile.html") return "profile";
-    if (path === "/owner-dashboard" || path === "/owner-dashboard.html") return "owner-dashboard";
-    if (path === "/guide-dashboard" || path === "/guide-dashboard.html") return "guide-dashboard";
     if (path === "/community" || path === "/community.html") return "community";
     if (path.startsWith("/district/")) return "district";
     return "landing";
@@ -2109,8 +2254,6 @@ export default function App() {
   let page = <Landing />;
   if (route === "dashboard") page = <Dashboard />;
   if (route === "profile") page = <Profile />;
-  if (route === "owner-dashboard") page = <OwnerDashboard />;
-  if (route === "guide-dashboard") page = <GuideDashboard />;
   if (route === "community") page = <CommunityArchive />;
   if (route === "district")
     page = (
