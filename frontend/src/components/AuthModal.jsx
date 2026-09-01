@@ -19,12 +19,14 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
   const submit = (event) => {
     event.preventDefault();
     const isNewAccount = mode === "signup";
+    const nextRole = mode === "signup" ? (event.currentTarget.role.value || "user") : (JSON.parse(localStorage.getItem("karabakhUser") || "{}").role || "user");
     localStorage.setItem("isLoggedIn", "true");
     const currentUser = JSON.parse(localStorage.getItem("karabakhUser") || "{}");
     localStorage.setItem("karabakhUser", JSON.stringify({
       ...currentUser,
       name: mode === "signup" ? event.currentTarget.name.value : currentUser.name,
       email: event.currentTarget.email.value,
+      role: nextRole,
       createdAt: currentUser.createdAt || Date.now(),
     }));
     window.dispatchEvent(new CustomEvent("auth:changed"));
@@ -220,6 +222,39 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                     )}
                   </div>
                 </motion.div>
+              )}
+              {mode === "signup" && (
+                <div className="form-group">
+                  <label htmlFor="role-input" className="form-label">
+                    <span>ROLE •</span>
+                    <span className="label-accent" />
+                  </label>
+                  <div className="input-wrapper">
+                    <select
+                      id="role-input"
+                      name="role"
+                      defaultValue="user"
+                      onFocus={() => setFocusedField("role")}
+                      onBlur={() => setFocusedField(null)}
+                      style={{
+                        width: "100%",
+                        border: "1px solid rgba(148, 163, 184, 0.4)",
+                        borderRadius: "12px",
+                        background: "rgba(15, 23, 42, 0.4)",
+                        color: "#f8fafc",
+                        padding: "13px 14px",
+                        fontSize: "14px",
+                      }}
+                    >
+                      <option value="user">User</option>
+                      <option value="owner">Business Owner</option>
+                      <option value="guide">Guide</option>
+                    </select>
+                    {focusedField === "role" && (
+                      <div className="input-focus-glow" aria-hidden="true" />
+                    )}
+                  </div>
+                </div>
               )}
               <div className="form-group">
                 <label htmlFor="email-input" className="form-label">

@@ -38,15 +38,15 @@ const photos = [
   ],
 ];
 
-let transitionAudio;
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("karabakhUser") || "{}");
+  } catch {
+    return {};
+  }
+};
 
-function playRegionTransitionAudio() {
-  transitionAudio?.pause();
-  transitionAudio = new Audio("/audio.mp3");
-  transitionAudio.play().catch(() => {
-    // Playback can be blocked by browser settings; navigation should still work.
-  });
-}
+const getUserRole = () => getStoredUser().role || "user";
 
 function Header({ active }) {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -72,6 +72,8 @@ function Header({ active }) {
     setAccountOpen(false);
     window.dispatchEvent(new CustomEvent("auth:changed"));
   };
+
+  const userRole = getUserRole();
 
   return (
     <header className="topbar">
@@ -123,6 +125,8 @@ function Header({ active }) {
           {isLoggedIn && accountOpen && (
             <div className="account-menu">
               <a href="/profile">My profile</a>
+              {userRole === "owner" && <a href="/owner-dashboard">My Listings</a>}
+              {userRole === "guide" && <a href="/guide-dashboard">My Tours</a>}
               <button type="button" onClick={logout}>
                 Log out
               </button>
@@ -183,7 +187,44 @@ function Profile() {
   const earned = history.filter((item) => item.amount > 0).reduce((total, item) => total + item.amount, 0);
   const spent = Math.abs(history.filter((item) => item.amount < 0).reduce((total, item) => total + item.amount, 0));
   const bookings = readJson("karabakhBookings", []);
-  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p></div><a className="profile-explore-link" href="/dashboard">Plan a new trip →</a></section><section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{bookings.length ? <div className="profile-bookings">{bookings.map((booking) => <div className="profile-booking" key={booking.id || `${booking.name}-${booking.date}`}><img src={booking.image} alt="" /><div><strong>{booking.name}</strong><span>{booking.type} · {booking.date}</span></div><b>{booking.status || "Confirmed"}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main></div>;
+  const userRole = user.role || "user";
+  const roleLabel = userRole === "owner" ? "Business Owner" : userRole === "guide" ? "Guide" : "User";
+  const roleAction = userRole === "owner" ? { href: "/owner-dashboard", label: "Open My Listings" } : userRole === "guide" ? { href: "/guide-dashboard", label: "Open My Tours" } : null;
+  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p><span className="mono" style={{ display: "inline-block", marginTop: "8px", color: "#f4d66d" }}>Role: {roleLabel}</span></div>{roleAction ? <a className="profile-explore-link" href={roleAction.href}>{roleAction.label} →</a> : <a className="profile-explore-link" href="/dashboard">Plan a new trip →</a>}</section><section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{bookings.length ? <div className="profile-bookings">{bookings.map((booking) => <div className="profile-booking" key={booking.id || `${booking.name}-${booking.date}`}><img src={booking.image} alt="" /><div><strong>{booking.name}</strong><span>{booking.type} · {booking.date}</span></div><b>{booking.status || "Confirmed"}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main></div>;
+}
+
+function OwnerDashboard() {
+  const user = getStoredUser();
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const userRole = user.role || "user";
+  if (!isLoggedIn || userRole !== "owner") {
+    return <div className="page-shell profile-gate"><Header /><main className="profile-main" style={{ padding: "40px 20px" }}><section className="profile-panel glass" style={{ maxWidth: "680px", margin: "0 auto", padding: "32px" }}><span className="eyebrow mono">Access restricted</span><h1 style={{ marginTop: "12px" }}>Owner dashboard</h1><p style={{ color: "rgba(255,255,255,0.75)" }}>Only Business Owners can access this area. Sign up with the Owner role to manage your listings.</p><a href="/dashboard" className="profile-explore-link">Back to dashboard →</a></section></main></div>;
+  }
+
+  const listings = [
+    { name: "Stone & Silence", type: "Boutique stay", status: "Live", city: "Shusha" },
+    { name: "Karvansaray", type: "Guest house", status: "Booked today", city: "Khankendi" },
+    { name: "Cahan Lodge", type: "Mountain retreat", status: "Draft", city: "Cahan" },
+  ];
+
+  return <div className="page-shell profile-page"><Header active="trip" /><main className="profile-main" style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px 20px 60px" }}><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{(user.name || "B").charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Business owner</span><h1>My Listings</h1><p>{user.email || "Manage your properties and availability in one place."}</p></div><a className="profile-explore-link" href="/dashboard">Explore market →</a></section><section className="profile-panel glass" style={{ marginTop: "24px", padding: "24px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Portfolio</span><h2>Active businesses</h2></div><button type="button" className="button button-primary" style={{ padding: "10px 16px", borderRadius: "999px" }}>+ Add listing</button></div><div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>{listings.map((listing) => <div key={listing.name} style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 0.8fr 0.8fr", gap: "12px", alignItems: "center", padding: "16px 18px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", background: "rgba(255,255,255,0.03)" }}><div><strong>{listing.name}</strong><p style={{ margin: "6px 0 0", color: "rgba(255,255,255,0.7)" }}>{listing.type}</p></div><span className="mono" style={{ color: "#f4d66d" }}>{listing.city}</span><span className="mono" style={{ color: "#7dd3fc" }}>{listing.status}</span><button type="button" className="button button-secondary" style={{ justifySelf: "end" }}>Manage</button></div>)}</div></section></main></div>;
+}
+
+function GuideDashboard() {
+  const user = getStoredUser();
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const userRole = user.role || "user";
+  if (!isLoggedIn || userRole !== "guide") {
+    return <div className="page-shell profile-gate"><Header /><main className="profile-main" style={{ padding: "40px 20px" }}><section className="profile-panel glass" style={{ maxWidth: "680px", margin: "0 auto", padding: "32px" }}><span className="eyebrow mono">Access restricted</span><h1 style={{ marginTop: "12px" }}>Guide dashboard</h1><p style={{ color: "rgba(255,255,255,0.75)" }}>Only Guides can access this area. Sign up with the Guide role to manage your tours.</p><a href="/dashboard" className="profile-explore-link">Back to dashboard →</a></section></main></div>;
+  }
+
+  const tours = [
+    { name: "Shusha Heritage Walk", date: "Tomorrow", status: "Booked", guests: "12 guests" },
+    { name: "Valley Circuit", date: "Fri 18 Oct", status: "Draft", guests: "6 guests" },
+    { name: "Sunrise Lookout Route", date: "Sat 19 Oct", status: "Confirmed", guests: "8 guests" },
+  ];
+
+  return <div className="page-shell profile-page"><Header active="trip" /><main className="profile-main" style={{ maxWidth: "1000px", margin: "0 auto", padding: "24px 20px 60px" }}><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{(user.name || "G").charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Tour guide</span><h1>My Tours</h1><p>{user.email || "Manage your routes, schedule and guest bookings."}</p></div><a className="profile-explore-link" href="/dashboard">Plan a route →</a></section><section className="profile-panel glass" style={{ marginTop: "24px", padding: "24px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Schedule</span><h2>Upcoming tours</h2></div><button type="button" className="button button-primary" style={{ padding: "10px 16px", borderRadius: "999px" }}>+ New tour</button></div><div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>{tours.map((tour) => <div key={tour.name} style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr 0.9fr", gap: "12px", alignItems: "center", padding: "16px 18px", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", background: "rgba(255,255,255,0.03)" }}><div><strong>{tour.name}</strong><p style={{ margin: "6px 0 0", color: "rgba(255,255,255,0.7)" }}>{tour.guests}</p></div><span className="mono" style={{ color: "#f4d66d" }}>{tour.date}</span><span className="mono" style={{ color: "#7dd3fc" }}>{tour.status}</span><button type="button" className="button button-secondary" style={{ justifySelf: "end" }}>Edit</button></div>)}</div></section></main></div>;
 }
 
 function ParticleField({ globe }) {
@@ -268,7 +309,6 @@ function Landing() {
   }, []);
   const enter = () => {
     if (!globe || departing) return;
-    playRegionTransitionAudio();
     setDeparting(true);
     globe.pointOfView(destination, 1800);
     window.setTimeout(() => {
@@ -2047,6 +2087,8 @@ export default function App() {
     if (hash === "#community" || hash === "#inter-karabakh") return "community";
     if (path === "/dashboard" || path === "/dashboard.html") return "dashboard";
     if (path === "/profile" || path === "/profile.html") return "profile";
+    if (path === "/owner-dashboard" || path === "/owner-dashboard.html") return "owner-dashboard";
+    if (path === "/guide-dashboard" || path === "/guide-dashboard.html") return "guide-dashboard";
     if (path === "/community" || path === "/community.html") return "community";
     if (path.startsWith("/district/")) return "district";
     return "landing";
@@ -2067,6 +2109,8 @@ export default function App() {
   let page = <Landing />;
   if (route === "dashboard") page = <Dashboard />;
   if (route === "profile") page = <Profile />;
+  if (route === "owner-dashboard") page = <OwnerDashboard />;
+  if (route === "guide-dashboard") page = <GuideDashboard />;
   if (route === "community") page = <CommunityArchive />;
   if (route === "district")
     page = (
