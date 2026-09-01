@@ -10,13 +10,15 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "d3-geo": "^3.1.1",
+    "framer-motion": "^13.1.1",
     "globe.gl": "latest",
     "gsap": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "react-simple-maps": "^3.0.0",
     "three": "latest",
     "vanilla-tilt": "latest",
     "vite": "latest"
-  },
-  "devDependencies": {}
+  }
 }
