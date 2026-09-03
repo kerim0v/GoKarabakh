@@ -11,7 +11,7 @@ bookings = db.Table(
 )
 
 
-ROLES = ("user", "business_owner", "guide")
+ROLES = ("user", "business_owner", "guide", "admin")
 
 
 class User(ModelBase):

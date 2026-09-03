@@ -66,6 +66,22 @@
           "tags": {"type": "array", "items": {"type": "string"}}
         }
       },
+      "PartnerApplication": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "creation_date": {"type": "string", "format": "date-time"},
+          "modification_date": {"type": "string", "format": "date-time"},
+          "user_id": {"type": "string"},
+          "target_role": {"type": "string", "enum": ["business_owner", "guide"]},
+          "company_name": {"type": "string"},
+          "tax_id": {"type": "string"},
+          "phone": {"type": "string"},
+          "bio": {"type": "string"},
+          "languages": {"type": "string"},
+          "status": {"type": "string", "enum": ["pending", "approved", "rejected"]}
+        }
+      },
       "Error": {
         "type": "object",
         "properties": { "error": {"type": "string"} }
@@ -106,7 +122,6 @@
             "properties": {
               "email": {"type": "string", "format": "email"},
               "password": {"type": "string", "format": "password", "minLength": 8},
-              "role": {"type": "string", "enum": ["user", "business_owner", "guide"], "default": "user"},
               "about_me": {
                 "type": "object",
                 "required": ["name", "year_of_birth", "month_of_birth", "day_of_birth"],
@@ -120,13 +135,13 @@
             }
           },
           "example": {
-            "email": "user@example.com", "password": "hunter22", "role": "business_owner",
+            "email": "user@example.com", "password": "hunter22",
             "about_me": {"name": "Tamerlan", "year_of_birth": 2005, "month_of_birth": 6, "day_of_birth": 14}
           }}}
         },
         "responses": {
-          "200": { "description": "User created" },
-          "400": { "description": "Missing/invalid fields, invalid role, or password under 8 characters", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "200": { "description": "User created with role=user. Use /api/v1/partner-applications to apply for business_owner/guide access." },
+          "400": { "description": "Missing/invalid fields, or password under 8 characters", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
           "409": { "description": "Email is already registered", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
       }
@@ -323,6 +338,65 @@
         "responses": {
           "200": { "description": "Per-place and total stats", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/PlaceStats"}}}},
           "403": { "description": "Account is not a business_owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      }
+    },
+    "/api/v1/partner-applications": {
+      "post": {
+        "tags": ["Partner Applications"], "summary": "Apply to become a business_owner or guide",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object", "required": ["target_role"],
+            "properties": {
+              "target_role": {"type": "string", "enum": ["business_owner", "guide"]},
+              "company_name": {"type": "string"},
+              "tax_id": {"type": "string"},
+              "phone": {"type": "string"},
+              "bio": {"type": "string"},
+              "languages": {"type": "string"}
+            }
+          }}}
+        },
+        "responses": {
+          "200": { "description": "Application submitted with status=pending", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/PartnerApplication"}}}},
+          "400": { "description": "Invalid target_role, or account is already business_owner/guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "409": { "description": "A pending application already exists", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      },
+      "get": {
+        "tags": ["Partner Applications"], "summary": "List all partner applications (admin only)",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "All applications", "content": { "application/json": { "schema": {"type": "array", "items": {"$ref": "#/components/schemas/PartnerApplication"}}}}},
+          "403": { "description": "Admin access required", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      }
+    },
+    "/api/v1/partner-applications/{id}/approve": {
+      "post": {
+        "tags": ["Partner Applications"], "summary": "Approve a pending application and upgrade the applicant's role (admin only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {
+          "200": { "description": "Approved" },
+          "400": { "description": "Application already decided", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "403": { "description": "Admin access required", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "404": { "description": "Application not found" }
+        }
+      }
+    },
+    "/api/v1/partner-applications/{id}/reject": {
+      "post": {
+        "tags": ["Partner Applications"], "summary": "Reject a pending application (admin only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {
+          "200": { "description": "Rejected" },
+          "400": { "description": "Application already decided", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "403": { "description": "Admin access required", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "404": { "description": "Application not found" }
         }
       }
     }

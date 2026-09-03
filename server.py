@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from app.models.place import Place
-from app.models.user import User, ROLES
+from app.models.user import User
+from app.models.partner_application import PartnerApplication
 from app.services import facade
 from app.share import share_init
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -76,10 +77,6 @@ def create_user():
     if not all([password, email, name, yob, mob, dob]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    role = data.get("role", "user")
-    if role not in ROLES:
-        return jsonify({"error": f"Invalid role, must be one of {ROLES}"}), 400
-
     if len(password) < 8:
         return jsonify({"error": "Password must be at least 8 characters"}), 400
 
@@ -93,7 +90,7 @@ def create_user():
         month_of_birth=mob,
         day_of_birth=dob,
         email=email,
-        role=role,
+        role="user",
     )
     user.hash_pwd(password)
     facade.create_user(user)
@@ -313,6 +310,82 @@ def get_owner_stats():
         "total_bookings": total_bookings,
         "total_revenue": total_revenue,
     }), 200
+
+# Partner applications -------------------------------------
+
+@app.route("/api/v1/partner-applications", methods=["POST"])
+@jwt_required()
+def create_partner_application():
+    user_id = get_jwt_identity()
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
+    target_role = data.get("target_role")
+    if target_role not in ("business_owner", "guide"):
+        return jsonify({"error": "target_role must be business_owner or guide"}), 400
+
+    user = facade.get_user(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    if user.role in ("business_owner", "guide"):
+        return jsonify({"error": "Account is already a business_owner or guide"}), 400
+    if facade.get_pending_application_for_user(user_id):
+        return jsonify({"error": "You already have a pending application"}), 409
+
+    application = PartnerApplication(
+        user_id=user_id,
+        target_role=target_role,
+        company_name=data.get("company_name", ""),
+        tax_id=data.get("tax_id", ""),
+        phone=data.get("phone", ""),
+        bio=data.get("bio", ""),
+        languages=data.get("languages", ""),
+        status="pending",
+    )
+    facade.create_partner_application(application)
+    return jsonify(application.to_dict()), 200
+
+@app.route("/api/v1/partner-applications", methods=["GET"])
+@jwt_required()
+def list_partner_applications():
+    admin = facade.get_user(get_jwt_identity())
+    if not admin or admin.role != "admin":
+        return jsonify({"error": "Admin access required"}), 403
+    return jsonify([a.to_dict() for a in facade.get_partner_applications()]), 200
+
+@app.route("/api/v1/partner-applications/<application_id>/approve", methods=["POST"])
+@jwt_required()
+def approve_partner_application(application_id):
+    admin = facade.get_user(get_jwt_identity())
+    if not admin or admin.role != "admin":
+        return jsonify({"error": "Admin access required"}), 403
+
+    application = facade.get_partner_application(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+    if application.status != "pending":
+        return jsonify({"error": "Application has already been decided"}), 400
+
+    facade.update_partner_application(application_id, {"status": "approved"})
+    facade.update_user(application.user_id, {"role": application.target_role})
+    return jsonify({"status": "Approved"}), 200
+
+@app.route("/api/v1/partner-applications/<application_id>/reject", methods=["POST"])
+@jwt_required()
+def reject_partner_application(application_id):
+    admin = facade.get_user(get_jwt_identity())
+    if not admin or admin.role != "admin":
+        return jsonify({"error": "Admin access required"}), 403
+
+    application = facade.get_partner_application(application_id)
+    if not application:
+        return jsonify({"error": "Application not found"}), 404
+    if application.status != "pending":
+        return jsonify({"error": "Application has already been decided"}), 400
+
+    facade.update_partner_application(application_id, {"status": "rejected"})
+    return jsonify({"status": "Rejected"}), 200
 
 @app.route("/api/v1/auth/login", methods=["POST"])
 def login():

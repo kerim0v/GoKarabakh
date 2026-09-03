@@ -1,11 +1,13 @@
 from app.models.place import Place
 from app.models.user import User, bookings as bookings_table
+from app.models.partner_application import PartnerApplication
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
 
 
 user_repository = SQLAlchemyRepository(User)
 place_repository = SQLAlchemyRepository(Place)
+partner_application_repository = SQLAlchemyRepository(PartnerApplication)
 
 def commit():
     db.session.commit()
@@ -45,3 +47,16 @@ def user_bookings(user_id):
         .order_by(bookings_table.c.booked_at.desc())
         .all()
     )
+
+# Partner applications
+
+def create_partner_application(application): partner_application_repository.add(application)
+def get_partner_application(id) -> PartnerApplication: return partner_application_repository.get(id)
+def get_partner_applications() -> list[PartnerApplication]: return partner_application_repository.get_all()
+def update_partner_application(id, data): return partner_application_repository.update(id, data)
+
+def get_pending_application_for_user(user_id):
+    for application in get_partner_applications():
+        if application.user_id == user_id and application.status == "pending":
+            return application
+    return None
