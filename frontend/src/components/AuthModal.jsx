@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import * as api from "../api.js";
 
 const rewardText =
   "Welcome! +100 KarabakhCoins have been added to your account.";
@@ -7,54 +8,66 @@ const rewardText =
 export default function AuthModal({ open, onClose, onAuthenticated }) {
   const [mode, setMode] = useState("login");
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [coins, setCoins] = useState([]);
   const [focusedField, setFocusedField] = useState(null);
 
   useEffect(() => {
     if (!open) return undefined;
     setNotice("");
+    setError("");
     return undefined;
   }, [open]);
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
+    setError("");
     const isNewAccount = mode === "signup";
-    localStorage.setItem("isLoggedIn", "true");
-    const currentUser = JSON.parse(localStorage.getItem("karabakhUser") || "{}");
-    localStorage.setItem("karabakhUser", JSON.stringify({
-      ...currentUser,
-      name: mode === "signup" ? event.currentTarget.name.value : currentUser.name,
-      email: event.currentTarget.email.value,
-      role: "user",
-      applicationStatus: mode === "signup" ? "none" : currentUser.applicationStatus || "none",
-      createdAt: currentUser.createdAt || Date.now(),
-    }));
-    window.dispatchEvent(new CustomEvent("auth:changed"));
-    if (isNewAccount && !localStorage.getItem("signupRewardClaimed")) {
-      localStorage.setItem("signupRewardClaimed", "true");
-      localStorage.setItem("karabakhCoinBalance", "100");
-      localStorage.setItem("karabakhCoinHistory", JSON.stringify([{
-        id: `welcome-${Date.now()}`,
-        label: "Welcome to GoKarabakh",
-        amount: 100,
-        createdAt: Date.now(),
-      }]));
-      setNotice(rewardText);
-      setCoins(
-        Array.from({ length: 30 }, (_, index) => ({
-          id: `${Date.now()}-${index}`,
-          x: Math.random() * 100,
-          y: Math.random() * 100,
-          delay: Math.random() * 0.35,
-          rotate: Math.random() * 360,
-        })),
-      );
-      window.setTimeout(() => {
-        setCoins([]);
+    const name = event.currentTarget.name?.value;
+    const email = event.currentTarget.email.value;
+    const password = event.currentTarget.password.value;
+
+    setSubmitting(true);
+    try {
+      if (isNewAccount) {
+        await api.signup({ name, email, password });
+      }
+      const user = await api.login({ email, password });
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("karabakhUser", JSON.stringify(user));
+      window.dispatchEvent(new CustomEvent("auth:changed"));
+
+      if (isNewAccount && !localStorage.getItem("signupRewardClaimed")) {
+        localStorage.setItem("signupRewardClaimed", "true");
+        localStorage.setItem("karabakhCoinBalance", "100");
+        localStorage.setItem("karabakhCoinHistory", JSON.stringify([{
+          id: `welcome-${Date.now()}`,
+          label: "Welcome to GoKarabakh",
+          amount: 100,
+          createdAt: Date.now(),
+        }]));
+        setNotice(rewardText);
+        setCoins(
+          Array.from({ length: 30 }, (_, index) => ({
+            id: `${Date.now()}-${index}`,
+            x: Math.random() * 100,
+            y: Math.random() * 100,
+            delay: Math.random() * 0.35,
+            rotate: Math.random() * 360,
+          })),
+        );
+        window.setTimeout(() => {
+          setCoins([]);
+          onAuthenticated?.();
+        }, 1600);
+      } else {
         onAuthenticated?.();
-      }, 1600);
-    } else {
-      onAuthenticated?.();
+      }
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -264,9 +277,15 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                   )}
                 </div>
               </div>
+              {error && (
+                <p role="alert" style={{ color: "#ff9d8a", margin: "4px 0 0" }}>
+                  {error}
+                </p>
+              )}
               <motion.button
                 className="button-auth-submit"
                 type="submit"
+                disabled={submitting}
                 whileHover={{
                   scale: 1.02,
                   boxShadow: "0 12px 40px rgba(56, 189, 248, 0.35)",
@@ -274,7 +293,9 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
-                <span>{mode === "login" ? "Sign In" : "Create Passport"}</span>
+                <span>
+                  {submitting ? "Please wait…" : mode === "login" ? "Sign In" : "Create Passport"}
+                </span>
                 <span className="button-arrow">↗</span>
               </motion.button>
             </motion.form>

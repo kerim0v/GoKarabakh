@@ -4,6 +4,7 @@ import Globe from "globe.gl";
 import * as THREE from "three";
 import VanillaTilt from "vanilla-tilt";
 import AuthModal from "./components/AuthModal.jsx";
+import * as api from "./api.js";
 
 const destination = { lat: 40.1431, lng: 47.5769, altitude: 0.72 };
 const photos = [
@@ -48,18 +49,6 @@ const getStoredUser = () => {
 };
 
 const getUserRole = () => getStoredUser().role || "user";
-
-const getPartnerApplications = () => {
-  try {
-    return JSON.parse(localStorage.getItem("karabakhPartnerApplications") || "[]");
-  } catch {
-    return [];
-  }
-};
-
-const savePartnerApplications = (applications) => {
-  localStorage.setItem("karabakhPartnerApplications", JSON.stringify(applications));
-};
 
 function PartnerApplicationModal({ open, onClose, onSubmit, userName, userEmail }) {
   if (!open) return null;
@@ -214,6 +203,7 @@ function Header({ active }) {
   };
 
   const logout = () => {
+    api.logout();
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("karabakhUser");
     setAccountOpen(false);
@@ -323,78 +313,156 @@ function Profile() {
   const [user, setUser] = useState(() => readJson("karabakhUser", {}));
   const [history, setHistory] = useState(() => readJson("karabakhCoinHistory", []));
   const [partnerOpen, setPartnerOpen] = useState(false);
+  const [bookings, setBookings] = useState([]);
+  const [bookingRequests, setBookingRequests] = useState([]);
+  const [applicationStatus, setApplicationStatus] = useState("none");
+  const [partnerError, setPartnerError] = useState("");
+
   useEffect(() => {
     const sync = () => { setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true"); setUser(readJson("karabakhUser", {})); setHistory(readJson("karabakhCoinHistory", [])); };
     window.addEventListener("auth:changed", sync);
     if (!isLoggedIn) window.dispatchEvent(new CustomEvent("auth:open"));
     return () => window.removeEventListener("auth:changed", sync);
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    api.fetchMe()
+      .then((me) => {
+        setUser(me);
+        localStorage.setItem("karabakhUser", JSON.stringify(me));
+      })
+      .catch(() => {});
+    api.getBookingHistory().then(setBookings).catch(() => {});
+    api.getMyBookingRequests().then(setBookingRequests).catch(() => {});
+    api.getMyPartnerApplications()
+      .then((apps) => {
+        const pending = apps.find((a) => a.status === "pending");
+        if (pending) setApplicationStatus("pending");
+      })
+      .catch(() => {});
+  }, [isLoggedIn]);
+
   if (!isLoggedIn) return <div className="page-shell profile-gate"><Header /><p>Sign in to view your Karabakh profile.</p></div>;
   const displayName = user.name || user.email?.split("@")[0] || "Karabakh traveller";
   const balance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
   const earned = history.filter((item) => item.amount > 0).reduce((total, item) => total + item.amount, 0);
   const spent = Math.abs(history.filter((item) => item.amount < 0).reduce((total, item) => total + item.amount, 0));
-  const bookings = readJson("karabakhBookings", []);
   const userRole = user.role || "user";
   const roleLabel = userRole === "owner" ? "Business Owner" : userRole === "guide" ? "Guide" : "User";
   const roleAction = userRole === "owner" ? { href: "/owner-dashboard", label: "Open My Listings" } : userRole === "guide" ? { href: "/guide-dashboard", label: "Open My Tours" } : null;
-  const submitPartner = (application) => {
-    const record = { id: `partner-${Date.now()}`, ...application, status: "pending", created_at: new Date().toISOString() };
-    savePartnerApplications([...getPartnerApplications(), record]);
-    localStorage.setItem("karabakhUser", JSON.stringify({ ...user, applicationStatus: "pending" }));
-    setUser((current) => ({ ...current, applicationStatus: "pending" }));
-    setPartnerOpen(false);
+  const submitPartner = async (application) => {
+    setPartnerError("");
+    try {
+      await api.submitPartnerApplication({
+        target_role: application.target_role,
+        company_name: application.company_name,
+        tax_id: application.tax_id,
+        phone: application.phone,
+        bio: application.bio,
+        languages: application.languages,
+      });
+      setApplicationStatus("pending");
+      setPartnerOpen(false);
+    } catch (err) {
+      setPartnerError(err.message || "Could not submit application.");
+    }
   };
-  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p><span className="mono" style={{ display: "inline-block", marginTop: "8px", color: "#f4d66d" }}>Role: {roleLabel}</span></div>{roleAction ? <a className="profile-explore-link" href={roleAction.href}>{roleAction.label} →</a> : <button className="profile-explore-link" type="button" onClick={() => setPartnerOpen(true)}>{user.applicationStatus === "pending" ? "Application under review" : "Become a Partner →"}</button>}</section><section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{bookings.length ? <div className="profile-bookings">{bookings.map((booking) => <div className="profile-booking" key={booking.id || `${booking.name}-${booking.date}`}><img src={booking.image} alt="" /><div><strong>{booking.name}</strong><span>{booking.type} · {booking.start_date || booking.date}</span></div><b>{booking.status || "Confirmed"}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main><PartnerApplicationModal open={partnerOpen} onClose={() => setPartnerOpen(false)} onSubmit={submitPartner} userName={displayName} userEmail={user.email || ""} /></div>;
+  const reservationItems = [
+    ...bookings.map((b) => ({
+      id: `booking-${b.id}`,
+      image: b.main_photo_url,
+      name: b.name,
+      meta: `${b.is_tour ? "Tour" : "Stay"} · ${new Date(b.booked_at).toLocaleDateString()}`,
+      status: "Confirmed",
+    })),
+    ...bookingRequests.map((r) => ({
+      id: `request-${r.id}`,
+      image: r.place_photo_url,
+      name: r.place_name,
+      meta: `${r.guests} guest${Number(r.guests) === 1 ? "" : "s"} · ${r.check_in}${r.check_out ? ` – ${r.check_out}` : ""}`,
+      status: r.status.charAt(0).toUpperCase() + r.status.slice(1),
+    })),
+  ];
+  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{displayName.charAt(0).toUpperCase()}</div><div><span className="eyebrow mono">Karabakh passport</span><h1>{displayName}</h1><p>{user.email || "Your routes, reservations and local rewards in one place."}</p><span className="mono" style={{ display: "inline-block", marginTop: "8px", color: "#f4d66d" }}>Role: {roleLabel}</span></div>{roleAction ? <a className="profile-explore-link" href={roleAction.href}>{roleAction.label} →</a> : <button className="profile-explore-link" type="button" onClick={() => setPartnerOpen(true)}>{applicationStatus === "pending" ? "Application under review" : "Become a Partner →"}</button>}</section>{partnerError && <p role="alert" style={{ color: "#ff9d8a" }}>{partnerError}</p>}<section className="profile-stats" aria-label="Coin account summary"><article className="profile-stat profile-balance"><span className="mono">Available balance</span><strong>{balance.toLocaleString()} <small>coins</small></strong><p>Use coins on eligible Karabakh experiences.</p></article><article className="profile-stat"><span className="mono">Earned</span><strong>+{earned.toLocaleString()}</strong><p>Welcome rewards and community contributions.</p></article><article className="profile-stat"><span className="mono">Spent</span><strong>-{spent.toLocaleString()}</strong><p>Used for reservations and local offers.</p></article></section><section className="profile-grid"><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Your stays & places</span><h2>Reservation history</h2></div><a href="/dashboard">Explore →</a></div>{reservationItems.length ? <div className="profile-bookings">{reservationItems.map((item) => <div className="profile-booking" key={item.id}><img src={item.image} alt="" /><div><strong>{item.name}</strong><span>{item.meta}</span></div><b>{item.status}</b></div>)}</div> : <div className="profile-empty"><span>⌂</span><p>You have no reservations yet.</p><small>Hotels, restaurants and experiences you book will appear here.</small></div>}</article><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>Activity</h2></div></div>{history.length ? <div className="profile-transactions">{history.slice(0, 6).map((item) => <div className="profile-transaction" key={item.id}><span className={item.amount > 0 ? "coin-positive" : "coin-negative"}>{item.amount > 0 ? "+" : ""}{item.amount}</span><div><strong>{item.label}</strong><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>Your coin history is empty.</p><small>Rewards and spending will be listed here.</small></div>}</article></section></main><PartnerApplicationModal open={partnerOpen} onClose={() => setPartnerOpen(false)} onSubmit={submitPartner} userName={displayName} userEmail={user.email || ""} /></div>;
 }
 
 function PartnerWorkspace({ role }) {
-  const readItems = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
-  const user = getStoredUser();
+  const [user, setUser] = useState(() => getStoredUser());
   const isPreview = new URLSearchParams(window.location.search).get("preview") === role;
   const isAllowed = isPreview || (localStorage.getItem("isLoggedIn") === "true" && user.role === role);
   const itemLabel = role === "owner" ? "business listing" : "guided tour";
   const itemTitle = role === "owner" ? "My Businesses" : "My Tours";
-  const [items, setItems] = useState(() => readItems(`karabakh${role === "owner" ? "Listings" : "Tours"}`));
-  const [requests, setRequests] = useState(() => readItems("karabakhPartnerBookingRequests"));
+  const [items, setItems] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [notice, setNotice] = useState("");
+  const [formError, setFormError] = useState("");
 
-  const addItem = (event) => {
+  useEffect(() => {
+    if (isPreview || localStorage.getItem("isLoggedIn") !== "true") return;
+    api.fetchMe().then((me) => {
+      setUser(me);
+      localStorage.setItem("karabakhUser", JSON.stringify(me));
+    }).catch(() => {});
+  }, [isPreview]);
+
+  useEffect(() => {
+    if (!isAllowed) return;
+    api.getPlaces()
+      .then((places) => setItems(places.filter((p) => p.owner_user_id === user.id)))
+      .catch(() => {});
+  }, [isAllowed, user.id]);
+
+  useEffect(() => {
+    if (!isAllowed || isPreview) return;
+    api.getOwnerBookingRequests().then(setRequests).catch(() => {});
+  }, [isAllowed, isPreview]);
+
+  const addItem = async (event) => {
     event.preventDefault();
+    setFormError("");
     const form = new FormData(event.currentTarget);
-    const item = { id: `${role}-${Date.now()}`, name: form.get("name"), region: form.get("region"), category: form.get("category"), description: form.get("description"), owner_email: user.email, created_at: new Date().toISOString() };
-    const next = [...items, item];
-    setItems(next);
-    localStorage.setItem(`karabakh${role === "owner" ? "Listings" : "Tours"}`, JSON.stringify(next));
-    event.currentTarget.reset();
-    setNotice(`Your ${itemLabel} has been saved and is ready for review.`);
+    try {
+      const place = await api.createPlace({
+        name: form.get("name"),
+        description: form.get("description"),
+        cost: Number(form.get("cost")),
+        main_photo_url: form.get("main_photo_url"),
+        is_tour: role === "guide",
+        tags: [form.get("region"), form.get("category")].filter(Boolean),
+      });
+      setItems((current) => [...current, place]);
+      event.currentTarget.reset();
+      setNotice(`Your ${itemLabel} has been published.`);
+    } catch (err) {
+      setFormError(err.message || `Could not save this ${itemLabel}.`);
+    }
   };
-  const decideRequest = (id, status) => {
-    const next = requests.map((request) => request.id === id ? { ...request, status } : request);
-    setRequests(next);
-    localStorage.setItem("karabakhPartnerBookingRequests", JSON.stringify(next));
-    const bookings = readItems("karabakhBookings").map((booking) => booking.id === id ? { ...booking, status } : booking);
-    localStorage.setItem("karabakhBookings", JSON.stringify(bookings));
-    setNotice(status === "Confirmed – payment captured" ? "Availability confirmed. The traveller's payment is now captured." : "Booking request declined. The traveller will not be charged.");
+  const decideRequest = async (id, decision) => {
+    try {
+      if (decision === "confirmed") {
+        await api.confirmBookingRequest(id);
+        setNotice("Availability confirmed. The traveller's loyalty points are credited.");
+      } else {
+        await api.declineBookingRequest(id);
+        setNotice("Booking request declined. The traveller will not be charged.");
+      }
+      setRequests((current) => current.map((r) => r.id === id ? { ...r, status: decision } : r));
+    } catch (err) {
+      setNotice(err.message || "Could not update this booking request.");
+    }
   };
   const cancelPartnership = () => {
-    const confirmed = window.confirm("Cancel your partnership? Your published entries will be removed and you will lose partner access.");
-    if (!confirmed) return;
-    const itemKey = `karabakh${role === "owner" ? "Listings" : "Tours"}`;
-    const remainingItems = readItems(itemKey).filter((item) => item.owner_email !== user.email);
-    localStorage.setItem(itemKey, JSON.stringify(remainingItems));
-    localStorage.setItem("karabakhUser", JSON.stringify({ ...user, role: "user", applicationStatus: "cancelled" }));
-    window.dispatchEvent(new CustomEvent("auth:changed"));
-    window.location.href = "/profile";
+    window.alert("Partner status can't be self-cancelled yet — this needs to go through an admin.");
   };
 
   if (!isAllowed) return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main"><section className="profile-panel glass"><h1>Partner access required</h1><p>Only approved {role === "owner" ? "business owners" : "guides"} can use this workspace.</p><a className="profile-explore-link" href="/profile">Go to profile →</a></section></main></div>;
   return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main">
     <section className="profile-hero glass"><div className="profile-avatar" aria-hidden="true">{role === "owner" ? "O" : "G"}</div><div><span className="eyebrow mono">{isPreview ? "Partner workspace preview" : "Partner workspace"}</span><h1>{itemTitle}</h1><p>Create your {itemLabel}s and manage incoming booking requests.</p></div><div style={{ display: "grid", gap: "12px", justifyItems: "end" }}><a className="profile-explore-link" href="/profile">My profile →</a>{!isPreview && <button className="profile-explore-link" type="button" onClick={cancelPartnership} style={{ color: "#ffd0c7", borderBottomColor: "#ff826b" }}>Cancel partnership</button>}</div></section>
     {notice && <p role="status" style={{ margin: "18px 0", color: "#eaffb5" }}>{notice}</p>}
-    <section className="profile-grid" style={{ marginTop: "18px" }}><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Add a new entry</span><h2>Create {role === "owner" ? "a business listing" : "a guided tour"}</h2></div></div><form className="auth-form-enhanced" onSubmit={addItem}><div className="form-group"><label className="form-label" htmlFor="partner-item-name"><span>NAME •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-name" name="name" placeholder={role === "owner" ? "Business name" : "Tour name"} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-region"><span>REGION •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-region" name="region" placeholder="e.g. Shusha" required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-category"><span>CATEGORY •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-category" name="category" placeholder={role === "owner" ? "Hotel, restaurant, activity..." : "Hiking, cultural, food..."} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-description"><span>DESCRIPTION •</span><span className="label-accent" /></label><div className="input-wrapper"><textarea id="partner-item-description" name="description" rows="4" placeholder="Tell travellers what to expect" required style={{ width: "100%", borderRadius: "12px", padding: "13px 14px", background: "rgba(15,23,42,.4)", color: "#fff" }} /></div></div><button className="button-auth-submit" type="submit">Save {role === "owner" ? "business" : "tour"} →</button></form></article>
-    <article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Published by you</span><h2>{itemTitle}</h2></div></div>{items.length ? <div className="profile-transactions">{items.map((item) => <div className="profile-transaction" key={item.id}><span>✓</span><div><strong>{item.name}</strong><small>{item.category} · {item.region}</small></div></div>)}</div> : <div className="profile-empty"><span>+</span><p>No {role === "owner" ? "businesses" : "tours"} yet.</p><small>Your saved entries will appear here.</small></div>}</article></section>
-    <section className="profile-panel glass" style={{ marginTop: "18px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Booking inbox</span><h2>Reservation requests</h2></div></div>{requests.length ? <div className="profile-bookings">{requests.map((request) => <div className="profile-booking" key={request.id}><img src={request.image} alt="" /><div><strong>{request.name}</strong><span>{request.type} · {request.guests} guest{Number(request.guests) === 1 ? "" : "s"} · {request.start_date}</span><small>{request.status}</small></div>{request.status === "Awaiting partner confirmation" ? <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Confirmed – payment captured")}>Confirm</button><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Declined – no charge")}>Decline</button></div> : <b>{request.status}</b>}</div>)}</div> : <div className="profile-empty"><span>⌂</span><p>No booking requests yet.</p><small>New traveller requests will appear here for confirmation.</small></div>}</section>
+    <section className="profile-panel glass" style={{ marginTop: "18px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Booking inbox</span><h2>Reservation requests</h2></div></div>{requests.length ? <div className="profile-bookings">{requests.map((request) => <div className="profile-booking" key={request.id}><img src={request.place_photo_url} alt="" /><div><strong>{request.place_name}</strong><span>{request.traveller_name} · {request.guests} guest{Number(request.guests) === 1 ? "" : "s"} · {request.check_in}{request.check_out ? ` – ${request.check_out}` : ""}</span><small>{request.status}</small></div>{request.status === "pending" ? <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "confirmed")}>Confirm</button><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "declined")}>Decline</button></div> : <b>{request.status}</b>}</div>)}</div> : <div className="profile-empty"><span>⌂</span><p>No booking requests yet.</p><small>New traveller requests will appear here for confirmation.</small></div>}</section>
+    <section className="profile-grid" style={{ marginTop: "18px" }}><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Add a new entry</span><h2>Create {role === "owner" ? "a business listing" : "a guided tour"}</h2></div></div><form className="auth-form-enhanced" onSubmit={addItem}><div className="form-group"><label className="form-label" htmlFor="partner-item-name"><span>NAME •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-name" name="name" placeholder={role === "owner" ? "Business name" : "Tour name"} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-region"><span>REGION •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-region" name="region" placeholder="e.g. Shusha" required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-category"><span>CATEGORY •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-category" name="category" placeholder={role === "owner" ? "Hotel, restaurant, activity..." : "Hiking, cultural, food..."} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-cost"><span>PRICE (AZN) •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-cost" name="cost" type="number" min="0" step="0.01" placeholder="50" required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-photo"><span>COVER PHOTO URL •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-photo" name="main_photo_url" type="url" placeholder="https://..." required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-description"><span>DESCRIPTION •</span><span className="label-accent" /></label><div className="input-wrapper"><textarea id="partner-item-description" name="description" rows="4" placeholder="Tell travellers what to expect" required style={{ width: "100%", borderRadius: "12px", padding: "13px 14px", background: "rgba(15,23,42,.4)", color: "#fff" }} /></div></div>{formError && <p role="alert" style={{ color: "#ff9d8a" }}>{formError}</p>}<button className="button-auth-submit" type="submit">Save {role === "owner" ? "business" : "tour"} →</button></form></article>
+    <article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Published by you</span><h2>{itemTitle}</h2></div></div>{items.length ? <div className="profile-transactions" style={{ maxHeight: "360px", overflowY: "auto" }}>{items.map((item) => <div className="profile-transaction" key={item.id}><span>✓</span><div><strong>{item.name}</strong><small>{(item.tags || []).join(" · ")} · {item.cost} AZN</small></div></div>)}</div> : <div className="profile-empty"><span>+</span><p>No {role === "owner" ? "businesses" : "tours"} yet.</p><small>Your saved entries will appear here.</small></div>}</article></section>
   </main></div>;
 }
 
@@ -544,10 +612,37 @@ function Dashboard() {
   const [bgIndex, setBgIndex] = useState(0);
   const [activeRegionTab, setActiveRegionTab] = useState("all");
   const [hoveredRegion, setHoveredRegion] = useState(null);
+  const [searchResults, setSearchResults] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
 
   const openRegionDetails = (slug) => {
     window.history.pushState({}, "", `/district/${slug}`);
     window.dispatchEvent(new PopStateEvent("popstate"));
+  };
+
+  const runSearch = async () => {
+    setSearching(true);
+    setSearchError("");
+    try {
+      const places = await api.getPlaces();
+      const query = searchQuery.trim().toLowerCase();
+      const matchesTab = (p) => {
+        if (activeTab === "stays") return !p.is_tour;
+        if (activeTab === "guides") return p.is_tour && p.owner_role === "guide";
+        return p.is_tour && p.owner_role !== "guide";
+      };
+      const matchesQuery = (p) =>
+        !query ||
+        p.name.toLowerCase().includes(query) ||
+        (p.tags || []).some((t) => t && t.toLowerCase().includes(query));
+      setSearchResults(places.filter((p) => matchesTab(p) && matchesQuery(p)));
+    } catch (err) {
+      setSearchError(err.message || "Search failed. Please try again.");
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
   };
 
   const cidirImages = [
@@ -958,6 +1053,9 @@ function Dashboard() {
               </div>
 
               <button
+                type="button"
+                onClick={runSearch}
+                disabled={searching}
                 style={{
                   background: "#0284c7",
                   color: "#ffffff",
@@ -969,9 +1067,45 @@ function Dashboard() {
                   fontSize: "15px",
                 }}
               >
-                Search Trip ↗
+                {searching ? "Searching…" : "Search Trip ↗"}
               </button>
             </div>
+            {searchError && <p role="alert" style={{ color: "#dc2626", marginTop: "12px" }}>{searchError}</p>}
+            {searchResults && (
+              <div style={{ marginTop: "24px" }}>
+                <p style={{ color: "#64748b", fontSize: "13px", fontWeight: "600", textTransform: "uppercase", marginBottom: "12px" }}>
+                  {searchResults.length} result{searchResults.length === 1 ? "" : "s"}
+                </p>
+                {searchResults.length ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "16px" }}>
+                    {searchResults.map((place) => (
+                      <a
+                        key={place.id}
+                        href={`/district/${(place.tags || [])[0] || ""}`}
+                        style={{
+                          display: "block",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "14px",
+                          overflow: "hidden",
+                          textDecoration: "none",
+                          color: "#1e293b",
+                          background: "#fff",
+                        }}
+                      >
+                        <div style={{ height: "140px", backgroundImage: `url("${encodeURI(place.main_photo_url || "")}")`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                        <div style={{ padding: "12px 14px" }}>
+                          <strong style={{ display: "block", fontSize: "14px" }}>{place.name}</strong>
+                          <span style={{ fontSize: "12px", color: "#64748b" }}>{(place.tags || [])[1] || ""}</span>
+                          <div style={{ marginTop: "6px", fontWeight: "700", color: "#0284c7" }}>{place.cost} AZN</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: "#64748b" }}>No matches yet for this search — try a different destination or category.</p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Region explorer */}
@@ -1062,7 +1196,8 @@ function Dashboard() {
               style={{
                 position: "relative",
                 width: "calc(100vw - 72px)",
-                minHeight: "680px",
+                aspectRatio: "2.1 / 1",
+                minHeight: "420px",
                 overflow: "hidden",
                 border: "1px solid rgba(56, 189, 248, 0.3)",
                 borderRadius: "24px",
@@ -1912,11 +2047,24 @@ function DistrictPage({ slug }) {
     };
     return cards[activeCategory];
   };
-  const categoryCards = slug === 'khankendi' 
-    ? (khankendisCategory[activeCategory] || [])
-    : slug === 'shusha'
-    ? (shushaCategoryCards[activeCategory] || [])
-    : (region ? buildRegionCards(region) : shushaCards) || [];
+  const [categoryCards, setCategoryCards] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    api.getPlaces()
+      .then((places) => {
+        if (cancelled) return;
+        const cards = places
+          .filter((p) => (p.tags || [])[0] === slug && (p.tags || [])[2] === activeCategory)
+          .map((p) => {
+            const match = (p.description || "").match(/^(.*?) — (.*) \(([^)]*)\)$/);
+            const [, subtitle, detail, badge] = match || [null, "", p.description || "", ""];
+            return [p.id, p.name, subtitle, detail, badge, p.main_photo_url];
+          });
+        setCategoryCards(cards);
+      })
+      .catch(() => setCategoryCards([]));
+    return () => { cancelled = true; };
+  }, [slug, activeCategory]);
   const [savedPlaces, setSavedPlaces] = useState([]);
   const [showRoutePlan, setShowRoutePlan] = useState(false);
   const [bookingPlace, setBookingPlace] = useState(null);
@@ -1927,13 +2075,19 @@ function DistrictPage({ slug }) {
     }
     setBookingPlace(place);
   };
-  const submitBooking = (request) => {
-    const booking = { id: `booking-${Date.now()}`, ...request, status: "Awaiting partner confirmation", requested_at: new Date().toISOString() };
-    const readRequests = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
-    localStorage.setItem("karabakhBookings", JSON.stringify([...readRequests("karabakhBookings"), booking]));
-    localStorage.setItem("karabakhPartnerBookingRequests", JSON.stringify([...readRequests("karabakhPartnerBookingRequests"), booking]));
-    setBookingPlace(null);
-    window.alert("Your booking request was sent to the partner. Your card will be charged only after availability is confirmed.");
+  const submitBooking = async (request) => {
+    try {
+      await api.submitBookingRequest({
+        place_id: request.place_id,
+        check_in: request.start_date,
+        check_out: request.end_date || undefined,
+        guests: Number(request.guests) || 1,
+      });
+      setBookingPlace(null);
+      window.alert("Your booking request was sent to the partner. Your card will be charged only after availability is confirmed.");
+    } catch (err) {
+      window.alert(err.message || "Could not submit your booking request.");
+    }
   };
   const routePlan = region && {
     image: region.images[0],
@@ -2145,8 +2299,8 @@ function DistrictPage({ slug }) {
               <p>{categoryDescriptions[activeCategory]}</p>
             </div>
             <div className="district-card-grid">
-              {categoryCards.map(([title, meta, detail, tag, image]) => (
-                <article className="district-card" key={title}>
+              {categoryCards.map(([id, title, meta, detail, tag, image]) => (
+                <article className="district-card" key={id}>
                   <div
                     className="district-card-image"
                     style={{ backgroundImage: `url("${toImageUrl(image)}")` }}
@@ -2176,7 +2330,7 @@ function DistrictPage({ slug }) {
                       <button
                         type="button"
                         style={{ display: "block", marginTop: "10px" }}
-                        onClick={() => openBooking({ name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
+                        onClick={() => openBooking({ place_id: id, name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
                       >
                         Book now →
                       </button>

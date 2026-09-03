@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request
 from app.models.place import Place
 from app.models.user import User
 from app.models.partner_application import PartnerApplication
+from app.models.booking_request import BookingRequest
 from app.services import facade
 from app.share import share_init
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -115,7 +116,13 @@ def update_user_route():
 
 @app.route("/api/v1/places/get")
 def get_places():
-    return jsonify([p.to_dict() for p in facade.get_places()])
+    places = []
+    for p in facade.get_places():
+        d = p.to_dict()
+        owner = facade.get_user(p.owner_user_id)
+        d["owner_role"] = owner.role if owner else None
+        places.append(d)
+    return jsonify(places)
 
 @app.route("/api/v1/places/get_id")
 def get_place_by_id():
@@ -308,6 +315,106 @@ def get_owner_stats():
         "total_revenue": total_revenue,
     }), 200
 
+# Booking requests (date-ranged, pending owner confirmation) ----------------
+
+@app.route("/api/v1/places/book_request", methods=["POST"])
+@jwt_required()
+def create_booking_request():
+    user_id = get_jwt_identity()
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
+    place_id = data.get("place_id")
+    check_in = data.get("check_in")
+    if not place_id or not check_in:
+        return jsonify({"error": "place_id and check_in are required"}), 400
+
+    place = facade.get_place(place_id)
+    if not place:
+        return jsonify({"error": "Place not found"}), 404
+
+    guests = data.get("guests", 1)
+    booking_request = BookingRequest(
+        place_id=place_id,
+        user_id=user_id,
+        check_in=check_in,
+        check_out=data.get("check_out"),
+        guests=int(guests) if guests else 1,
+        status="pending",
+    )
+    facade.create_booking_request(booking_request)
+    return jsonify(booking_request.to_dict()), 200
+
+@app.route("/api/v1/places/book_requests", methods=["GET"])
+@jwt_required()
+def list_owner_booking_requests():
+    owner_id = get_jwt_identity()
+    requests = facade.booking_requests_for_owner(owner_id)
+    result = []
+    for r in requests:
+        d = r.to_dict()
+        place = facade.get_place(r.place_id)
+        traveller = facade.get_user(r.user_id)
+        d["place_name"] = place.name if place else None
+        d["place_photo_url"] = place.main_photo_url if place else None
+        d["traveller_name"] = traveller.name if traveller else None
+        result.append(d)
+    return jsonify(result), 200
+
+@app.route("/api/v1/places/my_book_requests", methods=["GET"])
+@jwt_required()
+def list_my_booking_requests():
+    user_id = get_jwt_identity()
+    requests = facade.booking_requests_for_user(user_id)
+    result = []
+    for r in requests:
+        d = r.to_dict()
+        place = facade.get_place(r.place_id)
+        d["place_name"] = place.name if place else None
+        d["place_photo_url"] = place.main_photo_url if place else None
+        result.append(d)
+    return jsonify(result), 200
+
+@app.route("/api/v1/places/book_requests/<request_id>/confirm", methods=["POST"])
+@jwt_required()
+def confirm_booking_request(request_id):
+    owner_id = get_jwt_identity()
+    booking_request = facade.get_booking_request(request_id)
+    if not booking_request:
+        return jsonify({"error": "Booking request not found"}), 404
+
+    place = facade.get_place(booking_request.place_id)
+    if not place or place.owner_user_id != owner_id:
+        return jsonify({"error": "You are not the owner of this place"}), 403
+    if booking_request.status != "pending":
+        return jsonify({"error": "Booking request already decided"}), 400
+
+    traveller = facade.get_user(booking_request.user_id)
+    if traveller:
+        traveller.kx_count += place.cost * (config.PERCENTAGE_FEE / 100)
+        facade.commit()
+
+    facade.update_booking_request(request_id, {"status": "confirmed"})
+    return jsonify({"status": "Confirmed"}), 200
+
+@app.route("/api/v1/places/book_requests/<request_id>/decline", methods=["POST"])
+@jwt_required()
+def decline_booking_request(request_id):
+    owner_id = get_jwt_identity()
+    booking_request = facade.get_booking_request(request_id)
+    if not booking_request:
+        return jsonify({"error": "Booking request not found"}), 404
+
+    place = facade.get_place(booking_request.place_id)
+    if not place or place.owner_user_id != owner_id:
+        return jsonify({"error": "You are not the owner of this place"}), 403
+    if booking_request.status != "pending":
+        return jsonify({"error": "Booking request already decided"}), 400
+
+    facade.update_booking_request(request_id, {"status": "declined"})
+    return jsonify({"status": "Declined"}), 200
+
 # Partner applications -------------------------------------
 
 @app.route("/api/v1/partner-applications", methods=["POST"])
@@ -346,10 +453,12 @@ def create_partner_application():
 @app.route("/api/v1/partner-applications", methods=["GET"])
 @jwt_required()
 def list_partner_applications():
-    admin = facade.get_user(get_jwt_identity())
-    if not admin or admin.role != "admin":
-        return jsonify({"error": "Admin access required"}), 403
-    return jsonify([a.to_dict() for a in facade.get_partner_applications()]), 200
+    user = facade.get_user(get_jwt_identity())
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    if user.role == "admin":
+        return jsonify([a.to_dict() for a in facade.get_partner_applications()]), 200
+    return jsonify([a.to_dict() for a in facade.get_partner_applications() if a.user_id == user.id]), 200
 
 @app.route("/api/v1/partner-applications/<application_id>/approve", methods=["POST"])
 @jwt_required()

@@ -1,6 +1,7 @@
 from app.models.place import Place
 from app.models.user import User, bookings as bookings_table
 from app.models.partner_application import PartnerApplication
+from app.models.booking_request import BookingRequest
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
 
@@ -8,6 +9,7 @@ from app.database import db
 user_repository = SQLAlchemyRepository(User)
 place_repository = SQLAlchemyRepository(Place)
 partner_application_repository = SQLAlchemyRepository(PartnerApplication)
+booking_request_repository = SQLAlchemyRepository(BookingRequest)
 
 def commit():
     db.session.commit()
@@ -60,3 +62,17 @@ def get_pending_application_for_user(user_id):
         if application.user_id == user_id and application.status == "pending":
             return application
     return None
+
+# Booking requests
+
+def create_booking_request(booking_request): booking_request_repository.add(booking_request)
+def get_booking_request(id) -> BookingRequest: return booking_request_repository.get(id)
+def get_booking_requests() -> list[BookingRequest]: return booking_request_repository.get_all()
+def update_booking_request(id, data): return booking_request_repository.update(id, data)
+
+def booking_requests_for_owner(owner_id):
+    owned_place_ids = {p.id for p in places_by_owner(owner_id)}
+    return [b for b in get_booking_requests() if b.place_id in owned_place_ids]
+
+def booking_requests_for_user(user_id):
+    return [b for b in get_booking_requests() if b.user_id == user_id]

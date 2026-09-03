@@ -63,7 +63,22 @@
           "cost": {"type": "number"},
           "description": {"type": "string"},
           "main_photo_url": {"type": "string"},
-          "tags": {"type": "array", "items": {"type": "string"}}
+          "tags": {"type": "array", "items": {"type": "string"}},
+          "owner_role": {"type": "string", "description": "Only present on GET /api/v1/places/get"}
+        }
+      },
+      "BookingRequest": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "creation_date": {"type": "string", "format": "date-time"},
+          "modification_date": {"type": "string", "format": "date-time"},
+          "place_id": {"type": "string"},
+          "user_id": {"type": "string"},
+          "check_in": {"type": "string", "format": "date"},
+          "check_out": {"type": "string", "format": "date"},
+          "guests": {"type": "integer"},
+          "status": {"type": "string", "enum": ["pending", "confirmed", "declined"]}
         }
       },
       "PartnerApplication": {
@@ -347,6 +362,73 @@
         "responses": {
           "200": { "description": "Per-place and total stats", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/PlaceStats"}}}},
           "403": { "description": "Account is not a owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      }
+    },
+    "/api/v1/places/book_request": {
+      "post": {
+        "tags": ["Booking Requests"], "summary": "Request a date-ranged reservation, pending owner confirmation",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object", "required": ["place_id", "check_in"],
+            "properties": {
+              "place_id": {"type": "string"},
+              "check_in": {"type": "string", "format": "date"},
+              "check_out": {"type": "string", "format": "date"},
+              "guests": {"type": "integer", "default": 1}
+            }
+          }}}
+        },
+        "responses": {
+          "200": { "description": "Request submitted with status=pending", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/BookingRequest"}}}},
+          "400": { "description": "Missing place_id or check_in", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "404": { "description": "Place not found" }
+        }
+      }
+    },
+    "/api/v1/places/book_requests": {
+      "get": {
+        "tags": ["Booking Requests"], "summary": "List incoming booking requests for the logged-in owner's/guide's places",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Booking requests with place_name/traveller_name added", "content": { "application/json": { "schema": {"type": "array", "items": {"$ref": "#/components/schemas/BookingRequest"}}}}}
+        }
+      }
+    },
+    "/api/v1/places/my_book_requests": {
+      "get": {
+        "tags": ["Booking Requests"], "summary": "List the logged-in user's own booking requests",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Booking requests with place_name added", "content": { "application/json": { "schema": {"type": "array", "items": {"$ref": "#/components/schemas/BookingRequest"}}}}}
+        }
+      }
+    },
+    "/api/v1/places/book_requests/{id}/confirm": {
+      "post": {
+        "tags": ["Booking Requests"], "summary": "Confirm a pending booking request (place owner only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {
+          "200": { "description": "Confirmed" },
+          "400": { "description": "Already decided", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "403": { "description": "Not the owner of this place", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "404": { "description": "Booking request not found" }
+        }
+      }
+    },
+    "/api/v1/places/book_requests/{id}/decline": {
+      "post": {
+        "tags": ["Booking Requests"], "summary": "Decline a pending booking request (place owner only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {
+          "200": { "description": "Declined" },
+          "400": { "description": "Already decided", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "403": { "description": "Not the owner of this place", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "404": { "description": "Booking request not found" }
         }
       }
     },
