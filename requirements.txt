@@ -5,3 +5,5 @@ flask-jwt-extended
 python-dotenv
 flask-sqlalchemy
 flask-swagger-ui
+gunicorn
+psycopg2-binary

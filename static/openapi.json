@@ -23,7 +23,7 @@
           "month_of_birth": {"type": "integer"},
           "day_of_birth": {"type": "integer"},
           "email": {"type": "string", "format": "email"},
-          "role": {"type": "string", "enum": ["user", "business_owner", "guide"]}
+          "role": {"type": "string", "enum": ["user", "owner", "guide"]}
         }
       },
       "Booking": {
@@ -73,7 +73,7 @@
           "creation_date": {"type": "string", "format": "date-time"},
           "modification_date": {"type": "string", "format": "date-time"},
           "user_id": {"type": "string"},
-          "target_role": {"type": "string", "enum": ["business_owner", "guide"]},
+          "target_role": {"type": "string", "enum": ["owner", "guide"]},
           "company_name": {"type": "string"},
           "tax_id": {"type": "string"},
           "phone": {"type": "string"},
@@ -105,9 +105,18 @@
         },
         "responses": {
           "200": { "description": "Login successful", "content": { "application/json": { "schema": {
-            "type": "object", "properties": {"access_token": {"type": "string"}}
+            "type": "object", "properties": {"access_token": {"type": "string"}, "user": {"$ref": "#/components/schemas/User"}}
           }}}},
           "401": { "description": "Invalid email or password", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "tags": ["Users"], "summary": "Get the logged-in user's own profile",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Current user", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/User"}}}}
         }
       }
     },
@@ -124,7 +133,7 @@
               "password": {"type": "string", "format": "password", "minLength": 8},
               "about_me": {
                 "type": "object",
-                "required": ["name", "year_of_birth", "month_of_birth", "day_of_birth"],
+                "required": ["name"],
                 "properties": {
                   "name": {"type": "string"},
                   "year_of_birth": {"type": "integer"},
@@ -140,7 +149,7 @@
           }}}
         },
         "responses": {
-          "200": { "description": "User created with role=user. Use /api/v1/partner-applications to apply for business_owner/guide access." },
+          "200": { "description": "User created with role=user. Use /api/v1/partner-applications to apply for owner/guide access." },
           "400": { "description": "Missing/invalid fields, or password under 8 characters", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
           "409": { "description": "Email is already registered", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
@@ -231,7 +240,7 @@
     },
     "/api/v1/places/create": {
       "post": {
-        "tags": ["Places"], "summary": "Create a new place (tour, hotel, or guide listing). Requires a business_owner or guide account.",
+        "tags": ["Places"], "summary": "Create a new place (tour, hotel, or guide listing). Requires a owner or guide account.",
         "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
@@ -257,7 +266,7 @@
         "responses": {
           "200": { "description": "Place created", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Place"}}}},
           "400": { "description": "Missing required fields" },
-          "403": { "description": "Account is not a business_owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+          "403": { "description": "Account is not a owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
       }
     },
@@ -337,20 +346,20 @@
         "security": [{"bearerAuth": []}],
         "responses": {
           "200": { "description": "Per-place and total stats", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/PlaceStats"}}}},
-          "403": { "description": "Account is not a business_owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+          "403": { "description": "Account is not a owner or guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
       }
     },
     "/api/v1/partner-applications": {
       "post": {
-        "tags": ["Partner Applications"], "summary": "Apply to become a business_owner or guide",
+        "tags": ["Partner Applications"], "summary": "Apply to become a owner or guide",
         "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": {
             "type": "object", "required": ["target_role"],
             "properties": {
-              "target_role": {"type": "string", "enum": ["business_owner", "guide"]},
+              "target_role": {"type": "string", "enum": ["owner", "guide"]},
               "company_name": {"type": "string"},
               "tax_id": {"type": "string"},
               "phone": {"type": "string"},
@@ -361,7 +370,7 @@
         },
         "responses": {
           "200": { "description": "Application submitted with status=pending", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/PartnerApplication"}}}},
-          "400": { "description": "Invalid target_role, or account is already business_owner/guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "400": { "description": "Invalid target_role, or account is already owner/guide", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
           "409": { "description": "A pending application already exists", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
         }
       },

@@ -64,17 +64,14 @@ def create_user():
 
     password = data.get("password")
     email = data.get("email")
-    about_me = data.get("about_me")
-
-    if not about_me:
-        return jsonify({"error": "Missing 'about_me' field"}), 400
+    about_me = data.get("about_me") or {}
 
     yob = about_me.get("year_of_birth")
     mob = about_me.get("month_of_birth")
     dob = about_me.get("day_of_birth")
     name = about_me.get("name")
 
-    if not all([password, email, name, yob, mob, dob]):
+    if not all([password, email, name]):
         return jsonify({"error": "Missing required fields"}), 400
 
     if len(password) < 8:
@@ -141,7 +138,7 @@ def create_place():
         return jsonify({"error": "ID of owner was not provided"}), 400
 
     owner = facade.get_user(owner_id)
-    if not owner or owner.role not in ("business_owner", "guide"):
+    if not owner or owner.role not in ("owner", "guide"):
         return jsonify({"error": "Only business owners and guides can create listings"}), 403
 
     desc = request.json.get("description")
@@ -286,7 +283,7 @@ def get_user_bookings():
 def get_owner_stats():
     owner_id = get_jwt_identity()
     owner = facade.get_user(owner_id)
-    if not owner or owner.role not in ("business_owner", "guide"):
+    if not owner or owner.role not in ("owner", "guide"):
         return jsonify({"error": "Only business owners and guides can view stats"}), 403
 
     places = facade.places_by_owner(owner_id)
@@ -322,14 +319,14 @@ def create_partner_application():
         return jsonify({"error": "Invalid or missing JSON"}), 400
 
     target_role = data.get("target_role")
-    if target_role not in ("business_owner", "guide"):
-        return jsonify({"error": "target_role must be business_owner or guide"}), 400
+    if target_role not in ("owner", "guide"):
+        return jsonify({"error": "target_role must be owner or guide"}), 400
 
     user = facade.get_user(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
-    if user.role in ("business_owner", "guide"):
-        return jsonify({"error": "Account is already a business_owner or guide"}), 400
+    if user.role in ("owner", "guide"):
+        return jsonify({"error": "Account is already a owner or guide"}), 400
     if facade.get_pending_application_for_user(user_id):
         return jsonify({"error": "You already have a pending application"}), 409
 
@@ -402,7 +399,15 @@ def login():
         return jsonify({"error": "Invalid email or password"}), 401
 
     token = create_access_token(identity=user.id)
-    return jsonify({"access_token": token}), 200
+    return jsonify({"access_token": token, "user": user.to_dict()}), 200
+
+@app.route("/api/v1/users/me", methods=["GET"])
+@jwt_required()
+def get_current_user():
+    user = facade.get_user(get_jwt_identity())
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify(user.to_dict()), 200
 
 if __name__ == "__main__":
     app.run(debug=config.is_debugging())
