@@ -25,6 +25,8 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
       ...currentUser,
       name: mode === "signup" ? event.currentTarget.name.value : currentUser.name,
       email: event.currentTarget.email.value,
+      role: "user",
+      applicationStatus: mode === "signup" ? "none" : currentUser.applicationStatus || "none",
       createdAt: currentUser.createdAt || Date.now(),
     }));
     window.dispatchEvent(new CustomEvent("auth:changed"));
