@@ -67,6 +67,19 @@
           "owner_role": {"type": "string", "description": "Only present on GET /api/v1/places/get"}
         }
       },
+      "CommunityTrace": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "creation_date": {"type": "string", "format": "date-time"},
+          "modification_date": {"type": "string", "format": "date-time"},
+          "user_id": {"type": "string"},
+          "author_name": {"type": "string"},
+          "region_slug": {"type": "string", "enum": ["shusha", "kalbajar", "lachin", "khankendi", "aghdam", "khojaly", "khojavend", "qubadli", "zangilan"]},
+          "caption": {"type": "string"},
+          "photo_url": {"type": "string"}
+        }
+      },
       "BookingRequest": {
         "type": "object",
         "properties": {
@@ -132,6 +145,46 @@
         "security": [{"bearerAuth": []}],
         "responses": {
           "200": { "description": "Current user", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/User"}}}}
+        }
+      }
+    },
+    "/api/v1/community/traces": {
+      "post": {
+        "tags": ["Community Traces"], "summary": "Leave a trace (short note) about a region",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": {
+            "type": "object", "required": ["region_slug", "caption"],
+            "properties": {
+              "region_slug": {"type": "string", "enum": ["shusha", "kalbajar", "lachin", "khankendi", "aghdam", "khojaly", "khojavend", "qubadli", "zangilan"]},
+              "caption": {"type": "string"},
+              "photo_url": {"type": "string"}
+            }
+          }}}
+        },
+        "responses": {
+          "200": { "description": "Trace created", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/CommunityTrace"}}}},
+          "400": { "description": "Missing/invalid fields", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}}
+        }
+      },
+      "get": {
+        "tags": ["Community Traces"], "summary": "List community traces, newest first",
+        "parameters": [{"name": "region", "in": "query", "required": false, "schema": {"type": "string"}, "description": "Filter by region_slug"}],
+        "responses": {
+          "200": { "description": "Traces", "content": { "application/json": { "schema": {"type": "array", "items": {"$ref": "#/components/schemas/CommunityTrace"}}}}}
+        }
+      }
+    },
+    "/api/v1/community/traces/{id}": {
+      "delete": {
+        "tags": ["Community Traces"], "summary": "Remove a trace (its author or an admin only)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "string"}}],
+        "responses": {
+          "200": { "description": "Removed" },
+          "403": { "description": "Not the author or an admin", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/Error"}}}},
+          "404": { "description": "Trace not found" }
         }
       }
     },

@@ -2,6 +2,7 @@ from app.models.place import Place
 from app.models.user import User, bookings as bookings_table
 from app.models.partner_application import PartnerApplication
 from app.models.booking_request import BookingRequest
+from app.models.community_trace import CommunityTrace
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
 
@@ -10,6 +11,7 @@ user_repository = SQLAlchemyRepository(User)
 place_repository = SQLAlchemyRepository(Place)
 partner_application_repository = SQLAlchemyRepository(PartnerApplication)
 booking_request_repository = SQLAlchemyRepository(BookingRequest)
+community_trace_repository = SQLAlchemyRepository(CommunityTrace)
 
 def commit():
     db.session.commit()
@@ -76,3 +78,10 @@ def booking_requests_for_owner(owner_id):
 
 def booking_requests_for_user(user_id):
     return [b for b in get_booking_requests() if b.user_id == user_id]
+
+# Community traces
+
+def create_community_trace(trace): community_trace_repository.add(trace)
+def get_community_trace(id) -> CommunityTrace: return community_trace_repository.get(id)
+def get_community_traces() -> list[CommunityTrace]: return community_trace_repository.get_all()
+def delete_community_trace(id): community_trace_repository.delete(id)

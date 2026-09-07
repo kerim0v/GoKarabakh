@@ -3,6 +3,7 @@ from app.models.place import Place
 from app.models.user import User
 from app.models.partner_application import PartnerApplication
 from app.models.booking_request import BookingRequest
+from app.models.community_trace import CommunityTrace, DISTRICT_SLUGS
 from app.services import facade
 from app.share import share_init
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
@@ -517,6 +518,68 @@ def get_current_user():
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify(user.to_dict()), 200
+
+# Community traces -------------------------------------
+
+@app.route("/api/v1/community/traces", methods=["POST"])
+@jwt_required()
+def create_community_trace():
+    user_id = get_jwt_identity()
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+
+    region_slug = data.get("region_slug")
+    caption = data.get("caption")
+    if not region_slug or not caption:
+        return jsonify({"error": "region_slug and caption are required"}), 400
+    if region_slug not in DISTRICT_SLUGS:
+        return jsonify({"error": f"region_slug must be one of {DISTRICT_SLUGS}"}), 400
+
+    trace = CommunityTrace(
+        user_id=user_id,
+        region_slug=region_slug,
+        caption=caption,
+        photo_url=data.get("photo_url"),
+    )
+    facade.create_community_trace(trace)
+    d = trace.to_dict()
+    author = facade.get_user(user_id)
+    d["author_name"] = author.name if author else None
+    return jsonify(d), 200
+
+@app.route("/api/v1/community/traces", methods=["GET"])
+def list_community_traces():
+    region = request.args.get("region")
+    traces = facade.get_community_traces()
+    if region:
+        traces = [t for t in traces if t.region_slug == region]
+    traces.sort(key=lambda t: t.creation_date, reverse=True)
+
+    result = []
+    for t in traces:
+        d = t.to_dict()
+        author = facade.get_user(t.user_id)
+        d["author_name"] = author.name if author else None
+        result.append(d)
+    return jsonify(result), 200
+
+@app.route("/api/v1/community/traces/<trace_id>", methods=["DELETE"])
+@jwt_required()
+def delete_community_trace(trace_id):
+    current_user_id = get_jwt_identity()
+    trace = facade.get_community_trace(trace_id)
+    if not trace:
+        return jsonify({"error": "Trace not found"}), 404
+
+    current_user = facade.get_user(current_user_id)
+    is_owner = trace.user_id == current_user_id
+    is_admin = current_user and current_user.role == "admin"
+    if not is_owner and not is_admin:
+        return jsonify({"error": "You can't remove this trace"}), 403
+
+    facade.delete_community_trace(trace_id)
+    return "", 200
 
 if __name__ == "__main__":
     app.run(debug=config.is_debugging())

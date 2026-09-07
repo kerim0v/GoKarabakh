@@ -109,3 +109,18 @@ export function confirmBookingRequest(id) {
 export function declineBookingRequest(id) {
   return request(`/api/v1/places/book_requests/${id}/decline`, { method: "POST" });
 }
+
+export function getCommunityTraces(region) {
+  return request(`/api/v1/community/traces${region ? `?region=${encodeURIComponent(region)}` : ""}`);
+}
+
+export function createCommunityTrace(payload) {
+  return request("/api/v1/community/traces", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteCommunityTrace(id) {
+  return request(`/api/v1/community/traces/${id}`, { method: "DELETE" });
+}

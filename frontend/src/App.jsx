@@ -1374,10 +1374,23 @@ function Dashboard() {
   );
 }
 
+const TRACE_REGIONS = [
+  { slug: "shusha", label: "Shusha" },
+  { slug: "kalbajar", label: "Kalbajar" },
+  { slug: "lachin", label: "Lachin" },
+  { slug: "khankendi", label: "Khankendi" },
+  { slug: "aghdam", label: "Aghdam" },
+  { slug: "khojaly", label: "Khojaly" },
+  { slug: "khojavend", label: "Khojavend" },
+  { slug: "qubadli", label: "Qubadli" },
+  { slug: "zangilan", label: "Zangilan" },
+];
+
 function CommunityArchive() {
   const [shared, setShared] = useState(false);
   const [caption, setCaption] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [region, setRegion] = useState("shusha");
   const [uploadedMemory, setUploadedMemory] = useState(null);
   const [coins, setCoins] = useState([]);
   const [selectedMemory, setSelectedMemory] = useState(null);
@@ -1387,12 +1400,34 @@ function CommunityArchive() {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => localStorage.getItem("isLoggedIn") === "true",
   );
+  const [me, setMe] = useState(() => (() => { try { return JSON.parse(localStorage.getItem("karabakhUser") || "{}"); } catch { return {}; } })());
+  const [traces, setTraces] = useState([]);
+  const [traceError, setTraceError] = useState("");
+  const [shareError, setShareError] = useState("");
 
   useEffect(() => {
     const syncAuth = () => setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
     window.addEventListener("auth:changed", syncAuth);
     return () => window.removeEventListener("auth:changed", syncAuth);
   }, []);
+
+  const refreshTraces = () => {
+    api.getCommunityTraces().then(setTraces).catch((err) => setTraceError(err.message || "Could not load traces."));
+  };
+
+  useEffect(() => {
+    refreshTraces();
+    if (isLoggedIn) api.fetchMe().then(setMe).catch(() => {});
+  }, [isLoggedIn]);
+
+  const removeTrace = async (id) => {
+    try {
+      await api.deleteCommunityTrace(id);
+      setTraces((current) => current.filter((t) => t.id !== id));
+    } catch (err) {
+      setTraceError(err.message || "Could not remove this trace.");
+    }
+  };
 
   const memories = photos.map(([src, alt, author, place], index) => ({
     id: src,
@@ -1444,9 +1479,10 @@ function CommunityArchive() {
     return false;
   };
 
-  const share = (event) => {
+  const share = async (event) => {
     event.preventDefault();
-    if (!caption.trim() || !selectedFile) return;
+    setShareError("");
+    if (!caption.trim()) return;
     if (!isLoggedIn) {
       window.dispatchEvent(
         new CustomEvent("auth:open", {
@@ -1455,22 +1491,35 @@ function CommunityArchive() {
       );
       return;
     }
-    setShared(true);
-    const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
-    const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
-    localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
-    localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared a community memory", amount: 50, createdAt: Date.now() }, ...currentHistory]));
-    setUploadedMemory({
-      id: `user-memory-${Date.now()}`,
-      src: URL.createObjectURL(selectedFile),
-      alt: caption.trim(),
-      author: "You",
-      place: "Community partner",
-      type: "PHOTO",
-    });
-    setCaption("");
-    setSelectedFile(null);
-    setTraceOpen(false);
+    try {
+      const trace = await api.createCommunityTrace({
+        region_slug: region,
+        caption: caption.trim(),
+        photo_url: photoUrl.trim() || undefined,
+      });
+      setShared(true);
+      const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
+      const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
+      localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
+      localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared a community memory", amount: 50, createdAt: Date.now() }, ...currentHistory]));
+      if (trace.photo_url) {
+        setUploadedMemory({
+          id: trace.id,
+          src: trace.photo_url,
+          alt: trace.caption,
+          author: "You",
+          place: TRACE_REGIONS.find((r) => r.slug === trace.region_slug)?.label || trace.region_slug,
+          type: "PHOTO",
+        });
+      }
+      setTraces((current) => [trace, ...current]);
+      setCaption("");
+      setPhotoUrl("");
+      setTraceOpen(false);
+    } catch (err) {
+      setShareError(err.message || "Could not share your trace.");
+      return;
+    }
     setCoins(
       Array.from({ length: 34 }, (_, index) => ({
         id: `${Date.now()}-${index}`,
@@ -1653,19 +1702,24 @@ function CommunityArchive() {
                 </button>
               </div>
               <form className="share-form" onSubmit={share}>
-                <label
-                  className="upload-drop"
-                  htmlFor="photo-input"
+                <select
+                  value={region}
+                  onChange={(event) => setRegion(event.target.value)}
+                  aria-label="Which region is this about?"
+                  disabled={!isLoggedIn}
                   onClick={openAuthIfGuest}
+                  style={{ width: "100%" }}
                 >
-                  <span>＋</span>
-                  <span>Choose a field note</span>
-                </label>
+                  {TRACE_REGIONS.map((r) => (
+                    <option key={r.slug} value={r.slug}>{r.label}</option>
+                  ))}
+                </select>
                 <input
-                  id="photo-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
+                  value={photoUrl}
+                  onChange={(event) => setPhotoUrl(event.target.value)}
+                  type="url"
+                  placeholder="Photo URL (optional)"
+                  aria-label="Photo URL (optional)"
                   disabled={!isLoggedIn}
                   onClick={openAuthIfGuest}
                 />
@@ -1679,6 +1733,7 @@ function CommunityArchive() {
                   disabled={!isLoggedIn}
                   onClick={openAuthIfGuest}
                 />
+                {shareError && <p role="alert" style={{ color: "#ff9d8a" }}>{shareError}</p>}
                 <button
                   className="button button-primary"
                   type="submit"
@@ -1692,6 +1747,45 @@ function CommunityArchive() {
                 </button>
               </form>
             </aside>
+          )}
+        </section>
+        {/* Traveller traces feed - kept isolated from the decorative world above so this can be redesigned or reverted on its own */}
+        <section aria-label="Traveller traces" style={{ maxWidth: "1100px", margin: "48px auto 0", padding: "0 24px" }}>
+          <div style={{ marginBottom: "16px" }}>
+            <span className="eyebrow mono" style={{ color: "#38bdf8" }}>Traveller traces</span>
+            <h2 style={{ margin: "6px 0 0" }}>Notes from the road</h2>
+          </div>
+          {traceError && <p role="alert" style={{ color: "#ff9d8a" }}>{traceError}</p>}
+          {traces.length ? (
+            <div style={{ display: "flex", gap: "16px", overflowX: "auto", paddingBottom: "12px" }}>
+              {traces.map((trace) => {
+                const canRemove = me && (me.id === trace.user_id || me.role === "admin");
+                const regionLabel = TRACE_REGIONS.find((r) => r.slug === trace.region_slug)?.label || trace.region_slug;
+                return (
+                  <article key={trace.id} style={{ flex: "0 0 240px", border: "1px solid rgba(148,163,184,0.3)", borderRadius: "14px", overflow: "hidden", background: "rgba(15,23,42,0.5)", color: "#fff" }}>
+                    <a href={`/district/${trace.region_slug}`} style={{ display: "block", textDecoration: "none", color: "inherit" }}>
+                      {trace.photo_url && <img src={trace.photo_url} alt="" loading="lazy" style={{ width: "100%", height: "120px", objectFit: "cover" }} />}
+                      <div style={{ padding: "12px 14px" }}>
+                        <span className="mono" style={{ fontSize: "11px", color: "#7dd3fc" }}>{regionLabel}</span>
+                        <p style={{ margin: "6px 0", fontSize: "13px" }}>“{trace.caption}”</p>
+                        <small style={{ opacity: 0.7 }}>{trace.author_name}</small>
+                      </div>
+                    </a>
+                    {canRemove && (
+                      <button
+                        type="button"
+                        onClick={() => removeTrace(trace.id)}
+                        style={{ width: "100%", padding: "8px", background: "rgba(255,157,138,0.15)", color: "#ff9d8a", border: "none", cursor: "pointer" }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p style={{ opacity: 0.7 }}>No traces yet — be the first to leave one.</p>
           )}
         </section>
       </main>
