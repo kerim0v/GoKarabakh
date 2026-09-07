@@ -1158,3 +1158,107 @@ body:has(.profile-page)::before { background: linear-gradient(180deg, rgba(15,35
 .profile-stats { gap: 18px; margin: 24px 0; }.profile-stat { position: relative; overflow: hidden; min-height: 170px; border: 1px solid rgba(255,255,255,.3); border-radius: 22px; background: linear-gradient(145deg, rgba(255,255,255,.22), rgba(219,242,226,.09)); box-shadow: 0 18px 38px rgba(7,25,21,.2); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }.profile-stat::after { position: absolute; right: -18px; bottom: -25px; width: 100px; height: 100px; border: 1px solid rgba(255,255,255,.17); border-radius: 50%; content: ''; }.profile-stat:first-child { border-top-color: rgba(255,255,255,.3); background: linear-gradient(145deg, rgba(24,107,100,.68), rgba(20,75,68,.42)); }.profile-stat strong, .profile-balance strong { color: #fffdf2; text-shadow: 0 2px 9px rgba(0,0,0,.18); }.profile-stat:nth-child(2) strong { color: #eaffb5; }.profile-stat > span, .profile-stat p { color: rgba(255,255,255,.8); }
 .profile-grid { gap: 20px; }.profile-panel { border-color: rgba(255,255,255,.28); border-radius: 24px; background: rgba(15,47,41,.72); box-shadow: 0 20px 45px rgba(6,22,19,.22); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); }.profile-panel h2 { color: #fffdf3; }.profile-panel-heading a, .profile-empty a { color: #ffe29b; }.profile-empty { border: 1px dashed rgba(255,255,255,.22); border-radius: 16px; background: rgba(255,255,255,.055); }.profile-empty > span { color: #f4c879; }.profile-booking, .profile-transaction { border-top-color: rgba(255,255,255,.15); }.profile-booking img { width: 72px; height: 56px; border-radius: 12px; }.profile-transaction > span { width: 64px; height: 38px; border: 0; border-radius: 999px; background: rgba(199,250,131,.16); }.profile-booking b { padding: 6px 8px; border-radius: 999px; background: rgba(199,250,131,.12); }
 @media (max-width: 700px) { .profile-hero { min-height: 0; border-radius: 22px; }.profile-stats { gap: 13px; }.profile-stat, .profile-panel { border-radius: 18px; } }
+
+/* Profile uses the supplied turquoise paint texture as its only page backdrop. */
+body:has(.profile-page) {
+  background: url('/image_0.jpg') center / cover fixed no-repeat;
+}
+body:has(.profile-page)::before,
+body:has(.profile-page)::after,
+.profile-page::before,
+.profile-page::after {
+  display: none;
+}
+.profile-page,
+.profile-main,
+.profile-hero,
+.profile-stat,
+.profile-panel {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+.profile-hero,
+.profile-stat,
+.profile-panel {
+  border-color: transparent;
+}
+
+/* Final profile palette: darkened paint texture with crisp editorial type. */
+body:has(.profile-page) {
+  background-image:
+    linear-gradient(rgba(3, 13, 17, .42), rgba(3, 13, 17, .42)),
+    url('/image_0.jpg');
+  color: #f4fdff;
+}
+body:has(.profile-page) .topbar {
+  border-bottom: 1px solid rgba(225, 250, 255, .22);
+}
+body:has(.profile-page) .brand,
+body:has(.profile-page) .nav,
+body:has(.profile-page) .nav a,
+body:has(.profile-page) .profile-hero h1,
+body:has(.profile-page) .profile-panel h2,
+body:has(.profile-page) .profile-booking strong,
+body:has(.profile-page) .profile-transaction strong {
+  color: #f4fdff;
+}
+body:has(.profile-page) .nav a {
+  font-weight: 700;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, .45);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  transition: color .25s ease;
+}
+body:has(.profile-page) .nav a.active {
+  color: #7ff3ff;
+}
+body:has(.profile-page) .nav a.active::after {
+  width: 4px;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--lime);
+}
+body:has(.profile-page) .nav a:hover {
+  color: #c9fbff;
+}
+body:has(.profile-page) .profile-hero p,
+body:has(.profile-page) .profile-stat > span,
+body:has(.profile-page) .profile-stat p,
+body:has(.profile-page) .profile-booking span,
+body:has(.profile-page) .profile-transaction small,
+body:has(.profile-page) .profile-empty small {
+  color: rgba(240, 252, 255, .82);
+}
+body:has(.profile-page) .profile-hero,
+body:has(.profile-page) .profile-stat,
+body:has(.profile-page) .profile-panel,
+body:has(.profile-page) .profile-empty {
+  border-color: rgba(226, 251, 255, .26);
+  background: rgba(1, 15, 21, .52);
+  transition: border-color .25s ease, box-shadow .25s ease, background .25s ease;
+}
+body:has(.profile-page) .profile-hero:hover,
+body:has(.profile-page) .profile-stat:hover,
+body:has(.profile-page) .profile-panel:hover {
+  border-color: rgba(127, 243, 255, .72);
+  background: rgba(1, 18, 25, .62);
+  box-shadow: 0 0 0 1px rgba(127, 243, 255, .18), 0 0 24px rgba(89, 232, 255, .26);
+}
+body:has(.profile-page) .profile-explore-link,
+body:has(.profile-page) .profile-panel-heading a {
+  border-color: rgba(127, 243, 255, .62);
+  color: #a9f7ff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .42);
+}
+body:has(.profile-page) .profile-explore-link:hover {
+  background: rgba(0, 0, 0, .34);
+  color: #ffffff;
+}
+body:has(.profile-page) .profile-empty > span {
+  color: #7ff3ff;
+}

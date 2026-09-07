@@ -1,4 +1,8 @@
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
+from datetime import datetime, timezone
+from html import escape
+import json
+from pathlib import Path
 from app.models.place import Place
 from app.models.user import User
 from app.services import facade
@@ -9,10 +13,112 @@ import config
 
 app = Flask(__name__)
 share_init(app)
+GOOGLE_PLACES_FIXTURE = Path(__file__).parent / "app" / "data" / "google_places.json"
+TRIPS_FIXTURE = Path(__file__).parent / "app" / "data" / "mockData.json"
+MOCK_PHOTO_IDS = {
+    place["place_id"]
+    for place in json.loads(GOOGLE_PLACES_FIXTURE.read_text(encoding="utf-8"))
+}
+TRIPS = json.loads(TRIPS_FIXTURE.read_text(encoding="utf-8"))
+CART_ITEMS = []
 
 @app.route("/")
 def home():
     return "A server."
+
+
+@app.route("/api/v1/google-places/search")
+def search_google_places():
+    query = request.args.get("query", "").strip()
+    category = request.args.get("category", "").strip().lower()
+    district = request.args.get("district", "Karabakh").strip()
+    if not query:
+        return jsonify({"error": "A search query is required"}), 400
+
+    places = json.loads(GOOGLE_PLACES_FIXTURE.read_text(encoding="utf-8"))
+    category_filter = {
+        "hotels": "hotels",
+        "restaurants": "restaurants",
+    }.get(category)
+    query_terms = f"{query} {district}".casefold()
+    filtered_places = [
+        place for place in places
+        if (not category_filter or place["category"] == category_filter)
+        and (not district or district.casefold() in place["district"].casefold())
+        and any(term.casefold() in query_terms for term in (place["name"], place["district"], place["address"]))
+    ]
+    return jsonify(filtered_places)
+
+
+@app.route("/api/v1/google-places/photo")
+def google_place_photo():
+    photo_name = request.args.get("name", "").strip()
+    if not photo_name:
+        return jsonify({"error": "A Google photo reference is required"}), 400
+    if photo_name not in MOCK_PHOTO_IDS:
+        return jsonify({"error": "Unknown mock photo reference"}), 404
+    label = escape(photo_name.removeprefix("mock-").replace("-", " ").title())
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+<rect width="800" height="500" fill="#d9e5dc"/><path d="M0 370 190 210l120 100 130-160 360 220v130H0Z" fill="#6f9079"/>
+<circle cx="650" cy="115" r="58" fill="#f7c873"/><text x="40" y="440" fill="#17352c" font-family="sans-serif" font-size="28">{label}</text></svg>'''
+    return Response(svg, mimetype="image/svg+xml")
+
+
+@app.route("/api/v1/trips/search")
+def search_trips():
+    query = request.args.get("query", "").strip().casefold()
+    category = request.args.get("category", "").strip().casefold()
+    category_aliases = {"hotels": "hotel", "stays": "hotel", "tours": "tour", "routes": "tour"}
+    category = category_aliases.get(category, category)
+    results = [
+        trip for trip in TRIPS
+        if (not category or trip["category"] == category)
+        and (not query or query in " ".join((trip["title"], trip["category"], trip["location"], trip["address"], trip["description"])).casefold())
+    ]
+    return jsonify(results)
+
+
+@app.route("/api/v1/cart", methods=["GET"])
+def get_cart():
+    return jsonify({"items": CART_ITEMS, "count": len(CART_ITEMS)})
+
+
+@app.route("/api/v1/cart/add", methods=["POST"])
+def add_to_cart():
+    data = request.get_json(silent=True) or {}
+    item_id = str(data.get("item_id", "")).strip()
+    item = next((trip for trip in TRIPS if trip["id"] == item_id), None)
+    if not item:
+        return jsonify({"error": "Trip or hotel was not found"}), 404
+    if not any(cart_item["id"] == item_id for cart_item in CART_ITEMS):
+        CART_ITEMS.append(item)
+    return jsonify({"items": CART_ITEMS, "count": len(CART_ITEMS)}), 201
+
+
+@app.route("/api/v1/cart/<item_id>", methods=["DELETE"])
+def remove_from_cart(item_id):
+    original_count = len(CART_ITEMS)
+    CART_ITEMS[:] = [item for item in CART_ITEMS if item["id"] != item_id]
+    if len(CART_ITEMS) == original_count:
+        return jsonify({"error": "Cart item was not found"}), 404
+    return jsonify({"items": CART_ITEMS, "count": len(CART_ITEMS)})
+
+
+@app.route("/api/v1/cart/checkout", methods=["POST"])
+def checkout_cart_item():
+    data = request.get_json(silent=True) or {}
+    item_id = str(data.get("item_id", "")).strip()
+    item = next((cart_item for cart_item in CART_ITEMS if cart_item["id"] == item_id), None)
+    if not item:
+        return jsonify({"error": "Cart item was not found"}), 404
+    CART_ITEMS.remove(item)
+    return jsonify({
+        "status": "Payment completed",
+        "receipt_id": f"mock-receipt-{item_id}",
+        "item": item,
+        "items": CART_ITEMS,
+        "count": len(CART_ITEMS),
+    }), 201
 
 # API
 
@@ -55,29 +161,33 @@ def delete_user():
 
 @app.route("/api/v1/users/create", methods=["POST"])
 def create_user():
-    data = request.get_json(force=True)
+    data = request.get_json(silent=True) or {}
     if not data:
         return jsonify({"error": "Invalid or missing JSON"}), 400
 
     password = data.get("password")
     email = data.get("email")
-    about_me = data.get("about_me")
+    name = data.get("name")
 
-    if not about_me:
-        return jsonify({"error": "Missing 'about_me' field"}), 400
-
-    yob = about_me.get("year_of_birth")
-    mob = about_me.get("month_of_birth")
-    dob = about_me.get("day_of_birth")
-    name = about_me.get("name")
-
-    if not all([password, email, name, yob, mob, dob]):
+    if not all([password, email, name]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    user = User(0, name, [], yob, mob, dob, email)
+    about_me = data.get("about_me") or {}
+    user = User(
+        0,
+        name,
+        [],
+        about_me.get("year_of_birth", 0),
+        about_me.get("month_of_birth", 0),
+        about_me.get("day_of_birth", 0),
+        email,
+    )
     user.hash_pwd(password)
-    facade.create_user(user)
-    return jsonify({"status": "User created successfully"}), 200
+    try:
+        facade.create_user(user)
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 409
+    return jsonify({"status": "User created successfully", "user": user.to_dict()}), 201
 
 # Places -------------------------------------
 
@@ -101,49 +211,46 @@ def get_places_by_tags():
 @jwt_required()
 def create_place():
     owner_id = get_jwt_identity()
+    data = request.get_json(silent=True) or {}
 
     if not owner_id:
         return jsonify({"error": "ID of owner was not provided"}), 400
     
-    desc = request.json.get("description")
+    desc = data.get("description")
 
     if not desc:
         return jsonify({"error": "Description was not provided"}), 400
     
-    is_tour = request.json.get("is_tour")
+    is_tour = data.get("is_tour", False)
 
-    if not is_tour:
-        is_tour = False    # default value
-    
-    cost = request.json.get("cost")
+    cost = data.get("cost")
 
     if cost is None:
         return jsonify({"error": "Cost was not provided"}), 400
     
-    name = request.json.get("name")
+    name = data.get("name")
 
     if not name:
         return jsonify({"error": "Name was not provided"}), 400
     
-    main_photo = request.json.get("main_photo_url")
+    main_photo = data.get("main_photo_url")
 
     if not main_photo:
         return jsonify({"error": "Link to main photo was not provided"}), 400
     
-    tags = request.json.get("tags")
-
-    if not tags:
-        tags = []    # default
+    tags = data.get("tags", [])
+    if not isinstance(tags, list):
+        return jsonify({"error": "Tags must be a list"}), 400
     
     place = Place(owner_id, name, is_tour, cost, desc, main_photo, tags)
     facade.create_place(place)
-    return 200
+    return jsonify({"status": "Place created successfully", "place": place.to_dict()}), 201
 
 @app.route("/api/v1/places/book", methods=["POST"])
 @jwt_required()
 def book_place():
     user_id = get_jwt_identity()
-    data = request.get_json(force=True)
+    data = request.get_json(silent=True) or {}
     use_kx = data.get("use_kx", False)
     place_id = data.get("place_id")
 
@@ -151,11 +258,24 @@ def book_place():
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    place = facade.get_place(place_id)
-    if not place:
+    place = facade.get_place(place_id) if place_id else None
+    venue_name = data.get("venue_name")
+    if not place and not venue_name:
         return jsonify({"error": "Place not found"}), 404
 
-    cost = place.cost
+    try:
+        guests = int(data.get("guests", 1))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Guests must be a positive integer"}), 400
+    if guests < 1:
+        return jsonify({"error": "Guests must be a positive integer"}), 400
+
+    try:
+        arrival_date = datetime.fromisoformat(data.get("start_date", "")).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return jsonify({"error": "A valid start date is required"}), 400
+
+    cost = place.cost if place else float(data.get("amount", 0))
     if use_kx:
         discount = min(user.kx_count, cost)
         real_cost = cost - discount
@@ -164,30 +284,25 @@ def book_place():
         real_cost = cost
         user.kx_count += cost * (config.PERCENTAGE_FEE / 100)
 
-    user.bought_places.append(place)
-    # no facade update call needed MemoryRepository stores objects by
-    # reference, so mutating `user` here already updates the stored copy.
-    # update this if we use a REAL database
-
-    return jsonify({"status": "Booked", "amount_charged": real_cost}), 200
+    if place:
+        user.bought_places.append(place)
+    facade.update_user(user)
+    booking_id = facade.booking_repository.create(user_id, place_id, guests, arrival_date, real_cost, venue_name)
+    return jsonify({"status": "Booked", "booking_id": booking_id, "amount_charged": real_cost}), 201
 
 @app.route("/api/v1/auth/login", methods=["POST"])
 def login():
-    data = request.get_json(force=True)
+    data = request.get_json(silent=True) or {}
     email = data.get("email")
     password = data.get("password")
 
-    user = None
-    for u in facade.get_users():
-        if u.email == email:
-            user = u
-            break
+    user = facade.get_user_by_email(email) if email else None
 
     if not user or not user.check_pwd(password):
         return jsonify({"error": "Invalid email or password"}), 401
 
     token = create_access_token(identity=user.id)
-    return jsonify({"access_token": token}), 200
+    return jsonify({"access_token": token, "user": user.to_dict()}), 200
 
 if __name__ == "__main__":
     app.run(debug=config.is_debugging())

@@ -1,20 +1,19 @@
 from app.models.place import Place
 from app.models.user import User
 from app.repository.base import *
-from app.repository.memory import *
+from app.repository.postgres import PostgresBookingRepository, PostgresPlaceRepository, PostgresUserRepository
 
 
-FACTORY = RepositoryFactory(lambda: MemoryRepository())
-
-
-user_repository = FACTORY.create_repository()
-place_repository = FACTORY.create_repository()
+user_repository = PostgresUserRepository()
+place_repository = PostgresPlaceRepository()
+booking_repository = PostgresBookingRepository()
 
 # Users
 
 def get_user(id) -> User: return user_repository.get(id)
 def create_user(user): user_repository.add(user)
 def get_users() -> list[User]: return user_repository.get_all()
+def get_user_by_email(email) -> User: return user_repository.get_by_email(email)
 # added a missing function update_user
 def update_user(user): 
     user_repository.update(user.id, user.__dict__)
@@ -39,3 +38,6 @@ def places_by_tag(tag):
         if all(item in place.tags for item in tag):
             places.append(place)
     return places 
+
+def create_booking(user_id, place_id, guests, arrival_date, amount):
+    return booking_repository.create(user_id, place_id, guests, arrival_date, amount)

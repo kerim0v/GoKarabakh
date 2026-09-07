@@ -4,6 +4,7 @@ import Globe from "globe.gl";
 import * as THREE from "three";
 import VanillaTilt from "vanilla-tilt";
 import AuthModal from "./components/AuthModal.jsx";
+import { useCart } from "./context/CartContext.jsx";
 
 const destination = { lat: 40.1431, lng: 47.5769, altitude: 0.72 };
 const photos = [
@@ -59,6 +60,24 @@ const getPartnerApplications = () => {
 
 const savePartnerApplications = (applications) => {
   localStorage.setItem("karabakhPartnerApplications", JSON.stringify(applications));
+};
+
+const readStoredList = (key) => {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "[]");
+  } catch {
+    return [];
+  }
+};
+
+const saveCoinReward = (label, amount) => {
+  const history = readStoredList("karabakhCoinHistory");
+  const balance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
+  localStorage.setItem("karabakhCoinBalance", String(balance + amount));
+  localStorage.setItem("karabakhCoinHistory", JSON.stringify([
+    { id: `coin-${Date.now()}`, label, amount, createdAt: Date.now() },
+    ...history,
+  ]));
 };
 
 function PartnerApplicationModal({ open, onClose, onSubmit, userName, userEmail }) {
@@ -195,11 +214,42 @@ function BookingModal({ booking, onClose, onSubmit }) {
   </div>;
 }
 
+function PaymentModal({ item, onClose, onSubmit }) {
+  if (!item) return null;
+  const submit = (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    onSubmit((formData.get("card_number")?.toString() || "").replace(/\D/g, "").slice(-4));
+  };
+  return <div className="auth-backdrop-enhanced booking-backdrop" style={{ zIndex: 2100 }} onClick={(event) => event.target === event.currentTarget && onClose()}>
+    <div className="auth-card-enhanced glass booking-card" style={{ maxWidth: "580px", width: "min(92vw, 580px)" }} role="dialog" aria-modal="true" aria-labelledby="payment-title">
+      <button className="button-auth-close" type="button" onClick={onClose} aria-label="Close payment form">×</button>
+      <div className="auth-content-enhanced">
+        <img src="/lacin/khari-bulbul1.png" alt="Xarıbülbül" style={{ display: "block", width: "74px", height: "74px", objectFit: "contain", margin: "0 auto 10px" }} />
+        <span className="eyebrow mono auth-eyebrow">SECURE MOCK CHECKOUT •</span>
+        <h2 id="payment-title" className="auth-title-enhanced" style={{ marginTop: "8px" }}>Pay for {item.title}</h2>
+        <p className="auth-subtitle-enhanced">{item.price} AZN · {item.location}. This is a mock payment and no real charge will be made.</p>
+        <form className="auth-form-enhanced" onSubmit={submit}>
+          <div className="form-group"><label className="form-label" htmlFor="cart-payment-card"><span>CARD NUMBER •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="cart-payment-card" name="card_number" type="text" inputMode="numeric" autoComplete="cc-number" placeholder="4242 4242 4242 4242" minLength="12" required /></div></div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}><input name="expiry" type="text" inputMode="numeric" placeholder="MM / YY" required /><input name="cvc" type="text" inputMode="numeric" placeholder="CVC" minLength="3" maxLength="4" required /></div>
+          <motion.button className="button-auth-submit" type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: .98 }}><span>Complete payment</span><span className="button-arrow">→</span></motion.button>
+        </form>
+      </div>
+    </div>
+  </div>;
+}
+
 function Header({ active }) {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => localStorage.getItem("isLoggedIn") === "true",
   );
   const [accountOpen, setAccountOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [coinsOpen, setCoinsOpen] = useState(false);
+  const [coinHistory, setCoinHistory] = useState(() => readStoredList("karabakhCoinHistory"));
+  const [paymentItem, setPaymentItem] = useState(null);
+  const [paymentNotice, setPaymentNotice] = useState("");
+  const { items, itemCount, removeFromCart, checkout } = useCart();
 
   useEffect(() => {
     const syncAuth = () =>
@@ -207,6 +257,7 @@ function Header({ active }) {
     window.addEventListener("auth:changed", syncAuth);
     return () => window.removeEventListener("auth:changed", syncAuth);
   }, []);
+
 
   const handleAuthClick = () => {
     if (isLoggedIn) setAccountOpen((open) => !open);
@@ -221,8 +272,45 @@ function Header({ active }) {
   };
 
   const userRole = getUserRole();
+  const coinBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
+  const toggleCoins = () => {
+    setCartOpen(false);
+    setCoinsOpen((open) => {
+      if (!open) setCoinHistory(readStoredList("karabakhCoinHistory"));
+      return !open;
+    });
+  };
+  const openPayment = (item) => {
+    setCartOpen(false);
+    setPaymentNotice("");
+    setPaymentItem(item);
+  };
+  const completePayment = async (cardLast4) => {
+    try {
+      await checkout(paymentItem.id, cardLast4);
+      const bookings = readStoredList("karabakhBookings");
+      localStorage.setItem("karabakhBookings", JSON.stringify([
+        {
+          id: `paid-${paymentItem.id}-${Date.now()}`,
+          name: paymentItem.title,
+          location: paymentItem.location,
+          type: paymentItem.category,
+          amount: paymentItem.price,
+          paid: true,
+          status: "Paid",
+          createdAt: Date.now(),
+        },
+        ...bookings,
+      ]));
+      setPaymentItem(null);
+      setPaymentNotice("Payment completed successfully.");
+    } catch (error) {
+      setPaymentNotice(error.message);
+    }
+  };
 
   return (
+    <>
     <header className="topbar">
       <a className="brand" href="/">
         <span className="brand-mark" style={{ background: "#38bdf8" }}>
@@ -244,13 +332,54 @@ function Header({ active }) {
         ) : (
           isLoggedIn && (
             <div className="wallet">
-              <span className="wallet-icon" style={{ color: "#38bdf8" }}>
+                  <button type="button" className="wallet-icon" onClick={toggleCoins} aria-expanded={coinsOpen} aria-label="Show coin earnings" title="Coin earnings" style={{ color: "#38bdf8", border: 0, background: "transparent", cursor: "pointer" }}>
                 ◈
-              </span>
-              <b>0</b>
-              <span className="mono">coins</span>
+                  </button>
+              <button type="button" onClick={toggleCoins} className="mono" style={{ border: 0, background: "transparent", color: "inherit", cursor: "pointer" }}>{coinBalance}</button>
+                  <button type="button" onClick={toggleCoins} className="mono" style={{ border: 0, background: "transparent", color: "inherit", cursor: "pointer" }}>coins</button>
             </div>
           )
+        )}
+        <div className="account-control">
+          <button
+            className="auth-trigger"
+            type="button"
+            onClick={() => setCartOpen((open) => !open)}
+            aria-expanded={cartOpen}
+            aria-label={`Open cart with ${itemCount} item${itemCount === 1 ? "" : "s"}`}
+            title="Cart"
+            style={{ position: "relative", fontSize: "22px" }}
+          >
+            🛒
+            {itemCount > 0 && <span style={{ position: "absolute", top: "-4px", right: "-6px", minWidth: "18px", height: "18px", borderRadius: "50%", background: "#38bdf8", color: "#082f49", fontSize: "11px", fontWeight: 800, display: "grid", placeItems: "center" }}>{itemCount}</span>}
+          </button>
+          {cartOpen && (
+            <div className="account-menu" style={{ width: "280px", right: 0 }}>
+              <strong>Cart ({itemCount})</strong>
+              {items.length === 0 ? <p style={{ margin: "12px 0 4px", color: "#64748b" }}>Your cart is empty.</p> : items.map((item) => (
+                <div key={item.id} role="button" tabIndex="0" onClick={() => openPayment(item)} onKeyDown={(event) => event.key === "Enter" && openPayment(item)} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 0", borderBottom: "1px solid rgba(148,163,184,.2)", cursor: "pointer" }}>
+                  <img src={item.image_url} alt="" style={{ width: "42px", height: "36px", objectFit: "cover", borderRadius: "6px" }} />
+                  <span style={{ flex: 1, fontSize: "12px" }}>{item.title}</span>
+                  <button type="button" onClick={(event) => { event.stopPropagation(); removeFromCart(item.id); }} aria-label={`Remove ${item.title}`} title="Remove from cart" style={{ border: 0, background: "transparent", cursor: "pointer" }}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {coinsOpen && (
+          <div className="account-control">
+            <div className="account-menu coin-menu" style={{ width: "290px", right: 0 }}>
+              <strong>Coin earnings · {coinBalance}</strong>
+              <p style={{ margin: "10px 0", color: "#64748b", fontSize: "12px" }}>Earn coins by sharing eligible travel memories and completing welcome activities.</p>
+              {coinHistory.length ? coinHistory.slice(0, 5).map((entry) => (
+                <div key={entry.id} style={{ display: "flex", gap: "8px", alignItems: "center", padding: "8px 0", borderTop: "1px solid rgba(148,163,184,.2)" }}>
+                  <span style={{ color: "#16a34a", fontWeight: 800 }}>+{entry.amount}</span>
+                  <span style={{ flex: 1, fontSize: "12px" }}>{entry.label}</span>
+                </div>
+              )) : <p style={{ margin: "10px 0 4px", color: "#64748b" }}>No coin earnings yet.</p>}
+              <a href="/profile" style={{ display: "block", marginTop: "10px", color: "#0284c7", fontSize: "12px", fontWeight: 700 }}>View profile →</a>
+            </div>
+          </div>
         )}
         <div className="account-control">
           <button
@@ -281,7 +410,11 @@ function Header({ active }) {
           )}
         </div>
       </div>
+      {paymentNotice && <p role="status" style={{ position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)", zIndex: 2200, color: "#eaffb5" }}>{paymentNotice}</p>}
+      <PaymentModal item={paymentItem} onClose={() => setPaymentItem(null)} onSubmit={completePayment} />
     </header>
+    {active === "profile" && <main className="profile-main"><ProfileCartPanel items={items} onRemove={removeFromCart} /></main>}
+    </>
   );
 }
 
@@ -317,12 +450,34 @@ function AuthShell({ children }) {
   );
 }
 
+function ProfileCartPanel({ items, onRemove }) {
+  return (
+    <section className="profile-panel glass" style={{ marginBottom: "18px" }}>
+      <div className="profile-panel-heading"><div><span className="eyebrow mono">Your basket</span><h2>Saved trips and stays</h2></div><a href="/dashboard">Add more →</a></div>
+      {items.length ? <div className="profile-bookings">{items.map((item) => <div className="profile-booking" key={item.id}><img src={item.image_url} alt="" /><div><strong>{item.title}</strong><span>{item.category} · {item.location} · {item.price} AZN</span><small>{item.rating} rating</small></div><button type="button" onClick={() => onRemove(item.id)} className="profile-explore-link">Remove</button></div>)}</div> : <div className="profile-empty"><span>🛒</span><p>Your basket is empty.</p><small>Add a hotel or tour from Trip Search.</small></div>}
+    </section>
+  );
+}
+
+function CoinHistory() {
+  const history = readStoredList("karabakhCoinHistory");
+  const balance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
+  return <div className="page-shell profile-page"><Header active="profile" /><main className="profile-main">
+    <section className="profile-panel glass" style={{ maxWidth: "760px", margin: "0 auto" }}>
+      <div className="profile-panel-heading"><div><span className="eyebrow mono">Karabakh coins</span><h2>How you earned them</h2></div><strong style={{ color: "#7ff3ff" }}>{balance} coins</strong></div>
+      {history.length ? <div className="profile-transactions">{history.map((entry) => <div className="profile-transaction" key={entry.id}><span className="coin-positive">+{entry.amount}</span><div><strong>{entry.label}</strong><small>{new Date(entry.createdAt).toLocaleString()}</small></div></div>)}</div> : <div className="profile-empty"><span>◈</span><p>No coin earnings yet.</p><small>Complete eligible activities to earn coins.</small></div>}
+      <a className="profile-explore-link" href="/profile">← Back to profile</a>
+    </section>
+  </main></div>;
+}
+
 function Profile() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
   const readJson = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } };
   const [user, setUser] = useState(() => readJson("karabakhUser", {}));
   const [history, setHistory] = useState(() => readJson("karabakhCoinHistory", []));
   const [partnerOpen, setPartnerOpen] = useState(false);
+  const { items: cartItems, removeFromCart } = useCart();
   useEffect(() => {
     const sync = () => { setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true"); setUser(readJson("karabakhUser", {})); setHistory(readJson("karabakhCoinHistory", [])); };
     window.addEventListener("auth:changed", sync);
@@ -541,9 +696,35 @@ function Landing() {
 function Dashboard() {
   const [activeTab, setActiveTab] = useState("stays");
   const [searchQuery, setSearchQuery] = useState("");
+  const [tripResults, setTripResults] = useState([]);
+  const [tripSearchLoading, setTripSearchLoading] = useState(false);
+  const [tripSearchError, setTripSearchError] = useState("");
+  const { addToCart, items: cartItems } = useCart();
   const [bgIndex, setBgIndex] = useState(0);
   const [activeRegionTab, setActiveRegionTab] = useState("all");
   const [hoveredRegion, setHoveredRegion] = useState(null);
+
+  const searchTrips = async () => {
+    setTripSearchLoading(true);
+    setTripSearchError("");
+    const category = activeTab === "stays" ? "hotel" : activeTab === "restaurants" ? "restaurant" : "tour";
+    try {
+      const params = new URLSearchParams({ query: searchQuery, category });
+      const response = await fetch(`/api/v1/trips/search?${params}`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Trip search failed");
+      setTripResults(result);
+    } catch (error) {
+      setTripSearchError(error.message);
+      setTripResults([]);
+    } finally {
+      setTripSearchLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    searchTrips();
+  }, [activeTab]);
 
   const openRegionDetails = (slug) => {
     window.history.pushState({}, "", `/district/${slug}`);
@@ -855,6 +1036,29 @@ function Dashboard() {
 
               <button
                 type="button"
+                onClick={() => setActiveTab("restaurants")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  outline: "none",
+                  cursor: "pointer",
+                  fontSize: "15px",
+                  fontWeight: activeTab === "restaurants" ? "700" : "500",
+                  color: activeTab === "restaurants" ? "#0284c7" : "#64748b",
+                  borderBottom: activeTab === "restaurants" ? "3px solid #0284c7" : "3px solid transparent",
+                  paddingBottom: "12px",
+                  marginBottom: "-1px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                🍽️ Restaurants
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveTab("guides")}
                 style={{
                   background: "none",
@@ -912,6 +1116,7 @@ function Dashboard() {
                   placeholder="Shusha, Lachin, Kalbajar..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && searchTrips()}
                   style={{
                     width: "100%",
                     border: "none",
@@ -958,6 +1163,7 @@ function Dashboard() {
               </div>
 
               <button
+                onClick={searchTrips}
                 style={{
                   background: "#0284c7",
                   color: "#ffffff",
@@ -973,6 +1179,32 @@ function Dashboard() {
               </button>
             </div>
           </div>
+
+          <section aria-live="polite" style={{ margin: "28px auto 0", maxWidth: "920px" }}>
+            {tripSearchLoading && <p style={{ color: "#fff", textAlign: "center" }}>Searching the mock catalogue...</p>}
+            {tripSearchError && <p style={{ color: "#fecaca", textAlign: "center" }}>{tripSearchError}</p>}
+            {!tripSearchLoading && !tripSearchError && tripResults.length === 0 && <p style={{ color: "rgba(255,255,255,.72)", textAlign: "center" }}>No matching {activeTab === "stays" ? "hotels" : activeTab === "restaurants" ? "restaurants" : "tours"} found.</p>}
+            {tripResults.length > 0 && (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+                {tripResults.map((trip) => {
+                  const inCart = cartItems.some((item) => item.id === trip.id);
+                  return (
+                    <article key={trip.id} style={{ overflow: "hidden", borderRadius: "16px", background: "rgba(255,255,255,.94)", color: "#172033", boxShadow: "0 16px 35px rgba(0,0,0,.25)" }}>
+                      <img src={trip.image_url} alt={trip.title} style={{ width: "100%", height: "140px", objectFit: "cover" }} />
+                      <div style={{ padding: "15px" }}>
+                        <span style={{ color: "#0284c7", fontSize: "11px", fontWeight: 800, textTransform: "uppercase" }}>{trip.category}</span>
+                        <h3 style={{ margin: "5px 0", fontSize: "18px" }}>{trip.title}</h3>
+                        <p style={{ margin: "4px 0", color: "#475569", fontSize: "13px" }}>★ {trip.rating.toFixed(1)} · {trip.location} · {trip.address}</p>
+                        <p style={{ margin: "8px 0", color: "#475569", fontSize: "13px" }}>{trip.description}</p>
+                        <strong style={{ display: "block", margin: "12px 0" }}>{trip.price} AZN</strong>
+                        <button type="button" disabled={inCart} onClick={() => addToCart(trip)} style={{ width: "100%", border: 0, borderRadius: "9px", padding: "10px", background: inCart ? "#cbd5e1" : "#0284c7", color: inCart ? "#475569" : "#fff", cursor: inCart ? "default" : "pointer", fontWeight: 700 }}>{inCart ? "In Cart" : "Add to Cart"}</button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
 
           {/* Region explorer */}
           <div
@@ -1247,6 +1479,8 @@ function CommunityArchive() {
   const [selectedMemory, setSelectedMemory] = useState(null);
   const [activeCluster, setActiveCluster] = useState(null);
   const [traceOpen, setTraceOpen] = useState(false);
+  const [traceLocation, setTraceLocation] = useState("");
+  const [traceNotice, setTraceNotice] = useState("");
   const [worldTilt, setWorldTilt] = useState({ x: 0, y: 0 });
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => localStorage.getItem("isLoggedIn") === "true",
@@ -1257,6 +1491,7 @@ function CommunityArchive() {
     window.addEventListener("auth:changed", syncAuth);
     return () => window.removeEventListener("auth:changed", syncAuth);
   }, []);
+
 
   const memories = photos.map(([src, alt, author, place], index) => ({
     id: src,
@@ -1310,7 +1545,7 @@ function CommunityArchive() {
 
   const share = (event) => {
     event.preventDefault();
-    if (!caption.trim() || !selectedFile) return;
+    if (!caption.trim() || !selectedFile || !traceLocation) return;
     if (!isLoggedIn) {
       window.dispatchEvent(
         new CustomEvent("auth:open", {
@@ -1319,11 +1554,21 @@ function CommunityArchive() {
       );
       return;
     }
+    const paidBooking = readStoredList("karabakhBookings").find((booking) => booking.paid === true && booking.location?.toLowerCase() === traceLocation.toLowerCase());
+    if (!paidBooking) {
+      setTraceNotice("You need a paid booking for this location before earning coins.");
+      return;
+    }
+    const rewardedLocations = readStoredList("karabakhCoinHistory").filter((entry) => entry.type === "trace").map((entry) => entry.location?.toLowerCase());
+    if (rewardedLocations.includes(traceLocation.toLowerCase())) {
+      setTraceNotice("This booking has already received its trace reward.");
+      return;
+    }
+    setTraceNotice("");
     setShared(true);
-    const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
-    const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
-    localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
-    localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared a community memory", amount: 50, createdAt: Date.now() }, ...currentHistory]));
+    saveCoinReward(`Paid booking trace: ${traceLocation}`, 20);
+    const history = readStoredList("karabakhCoinHistory");
+    localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ ...history[0], type: "trace", location: traceLocation }, ...history.slice(1)]));
     setUploadedMemory({
       id: `user-memory-${Date.now()}`,
       src: URL.createObjectURL(selectedFile),
@@ -1334,6 +1579,7 @@ function CommunityArchive() {
     });
     setCaption("");
     setSelectedFile(null);
+    setTraceLocation("");
     setTraceOpen(false);
     setCoins(
       Array.from({ length: 34 }, (_, index) => ({
@@ -1496,9 +1742,10 @@ function CommunityArchive() {
               <h3>Leave a trace.</h3>
               <p>
                 {isLoggedIn
-                  ? "Share one frame from your route and receive 50 GoKarabakh coins."
+                  ? "Choose your booked location, upload a trace, and receive 20 GoKarabakh coins after payment verification."
                   : "Share one frame from your route with the community."}
               </p>
+              {traceNotice && <p role="alert" style={{ color: "#ffd0c7" }}>{traceNotice}</p>}
               <div className="trace-types">
                 <button type="button" onClick={openAuthIfGuest}>
                   Memory
@@ -1517,6 +1764,11 @@ function CommunityArchive() {
                 </button>
               </div>
               <form className="share-form" onSubmit={share}>
+                <label htmlFor="trace-location">Where was this photo taken?</label>
+                <select id="trace-location" value={traceLocation} onChange={(event) => setTraceLocation(event.target.value)} required disabled={!isLoggedIn}>
+                  <option value="">Select a booked location</option>
+                  {[...new Set(readStoredList("karabakhBookings").filter((booking) => booking.paid === true).map((booking) => booking.location).filter(Boolean))].map((location) => <option key={location} value={location}>{location}</option>)}
+                </select>
                 <label
                   className="upload-drop"
                   htmlFor="photo-input"
@@ -1551,7 +1803,7 @@ function CommunityArchive() {
                   {shared
                     ? "Shared"
                     : isLoggedIn
-                      ? "Share / earn 50 ↗"
+                      ? "Share / earn 20 ↗"
                       : "Sign in to share ↗"}
                 </button>
               </form>
@@ -1803,6 +2055,32 @@ function DistrictPage({ slug }) {
     tagline: "Discover the landscapes, stays, and stories of Karabakh.",
   };
   const [activeCategory, setActiveCategory] = useState("Hotels");
+  const [liveCards, setLiveCards] = useState(null);
+  const [placesLoading, setPlacesLoading] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    setPlacesLoading(true);
+    setLiveCards(null);
+    fetch(`/api/v1/google-places/search?query=${encodeURIComponent(district.name)}&district=${encodeURIComponent(district.name)}&category=${encodeURIComponent(activeCategory)}`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Google Places unavailable")))
+      .then((result) => {
+        const cards = (Array.isArray(result) ? result : result.places || []).map((place) => [
+          place.name,
+          `${place.rating?.toFixed(1) || "No"} rating`,
+          place.address,
+          place.category === "hotels" ? "Hotel" : "Restaurant",
+          place.photo_url || place.photo_urls?.[0] || district.image,
+          null,
+          null,
+        ]);
+        setLiveCards(cards.length ? cards : null);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") setLiveCards(null);
+      })
+      .finally(() => setPlacesLoading(false));
+    return () => controller.abort();
+  }, [activeCategory, district.image, district.name]);
   const toImageUrl = (image) => (image ? encodeURI(image) : "");
 
   const categories = [
@@ -1823,7 +2101,7 @@ function DistrictPage({ slug }) {
   };
   const shushaCategoryCards = {
     Hotels: [
-      ["Shusha Hotel", "Mərkəz • 2 nəfər üçün", "Tarixi mərkəzə piyada yaxın, səhər şəhər mənzərəsi ilə.", "Gecəlik 140 AZN-dən", "/shusha/shusha otel.jpg"],
+      ["Shusha Hotel & Congress Centre", "Mərkəz • 5 ulduzlu hotel", "Tarixi Şuşanın mərkəzində 154 otaq, spa, restoran və tədbir məkanları.", "Gecəlik 140 AZN-dən", "/shusha_hotels/TIMA4309.webp"],
       ["Cıdır View House", "Cıdır düzü • mənzərəli otaqlar", "Gün batımını izləmək və sakit bir gecə üçün seçilmiş ünvan.", "Mənzərəli seçim", "/cidir-1.jpg"],
       ["Karvansara Guest Rooms", "Şuşa qalası yaxınlığı", "Klassik atmosfer və əsas dayanacaqlara rahat çıxış.", "Mərkəzdə yerləşir", "/shusha/shusha2.JPG"],
     ],
@@ -1912,11 +2190,12 @@ function DistrictPage({ slug }) {
     };
     return cards[activeCategory];
   };
-  const categoryCards = slug === 'khankendi' 
+  const staticCategoryCards = slug === 'khankendi' 
     ? (khankendisCategory[activeCategory] || [])
     : slug === 'shusha'
     ? (shushaCategoryCards[activeCategory] || [])
     : (region ? buildRegionCards(region) : shushaCards) || [];
+  const categoryCards = liveCards || staticCategoryCards;
   const [savedPlaces, setSavedPlaces] = useState([]);
   const [showRoutePlan, setShowRoutePlan] = useState(false);
   const [bookingPlace, setBookingPlace] = useState(null);
@@ -1927,13 +2206,46 @@ function DistrictPage({ slug }) {
     }
     setBookingPlace(place);
   };
-  const submitBooking = (request) => {
-    const booking = { id: `booking-${Date.now()}`, ...request, status: "Awaiting partner confirmation", requested_at: new Date().toISOString() };
-    const readRequests = (key) => { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch { return []; } };
-    localStorage.setItem("karabakhBookings", JSON.stringify([...readRequests("karabakhBookings"), booking]));
-    localStorage.setItem("karabakhPartnerBookingRequests", JSON.stringify([...readRequests("karabakhPartnerBookingRequests"), booking]));
-    setBookingPlace(null);
-    window.alert("Your booking request was sent to the partner. Your card will be charged only after availability is confirmed.");
+  const submitBooking = async (request) => {
+    try {
+      const response = await fetch("/api/v1/places/book", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+        body: JSON.stringify({
+          place_id: request.placeId || null,
+          venue_name: request.name,
+          guests: Number(request.guests),
+          start_date: request.start_date,
+          amount: Number(request.cost || 0),
+          location: request.location || request.name,
+          card_last4: request.card_last4,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Booking request failed");
+      const bookings = readStoredList("karabakhBookings");
+      localStorage.setItem("karabakhBookings", JSON.stringify([
+        {
+          id: result.booking_id,
+          name: request.name,
+          location: request.location || request.name,
+          type: request.type,
+          amount: Number(request.cost || 0),
+          paid: false,
+          status: "Awaiting payment confirmation",
+          start_date: request.start_date,
+          createdAt: Date.now(),
+        },
+        ...bookings,
+      ]));
+      setBookingPlace(null);
+      window.alert(`Booking request sent. Reference: ${result.booking_id}`);
+    } catch (error) {
+      window.alert(error.message);
+    }
   };
   const routePlan = region && {
     image: region.images[0],
@@ -2145,7 +2457,7 @@ function DistrictPage({ slug }) {
               <p>{categoryDescriptions[activeCategory]}</p>
             </div>
             <div className="district-card-grid">
-              {categoryCards.map(([title, meta, detail, tag, image]) => (
+              {categoryCards.map(([title, meta, detail, tag, image, placeId, cost]) => (
                 <article className="district-card" key={title}>
                   <div
                     className="district-card-image"
@@ -2176,7 +2488,7 @@ function DistrictPage({ slug }) {
                       <button
                         type="button"
                         style={{ display: "block", marginTop: "10px" }}
-                        onClick={() => openBooking({ name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
+                        onClick={() => openBooking({ name: title, image: toImageUrl(image), placeId, cost, location: district.name, type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
                       >
                         Book now →
                       </button>
@@ -2284,6 +2596,7 @@ export default function App() {
     if (hash === "#community" || hash === "#inter-karabakh") return "community";
     if (path === "/dashboard" || path === "/dashboard.html") return "dashboard";
     if (path === "/profile" || path === "/profile.html") return "profile";
+    if (path === "/coins" || path === "/coins.html") return "coins";
     if (path === "/owner-dashboard") return "owner-dashboard";
     if (path === "/guide-dashboard") return "guide-dashboard";
     if (path === "/community" || path === "/community.html") return "community";
@@ -2306,6 +2619,7 @@ export default function App() {
   let page = <Landing />;
   if (route === "dashboard") page = <Dashboard />;
   if (route === "profile") page = <Profile />;
+  if (route === "coins") page = <CoinHistory />;
   if (route === "owner-dashboard") page = <PartnerWorkspace role="owner" />;
   if (route === "guide-dashboard") page = <PartnerWorkspace role="guide" />;
   if (route === "community") page = <CommunityArchive />;

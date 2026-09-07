@@ -60,6 +60,7 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+gokarabakh.db
 
 # Flask stuff:
 instance/
@@ -218,4 +219,3 @@ __marimo__/
 .streamlit/secrets.toml
 node_modules/
 dist/
-.env

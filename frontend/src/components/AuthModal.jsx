@@ -16,20 +16,49 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
     return undefined;
   }, [open]);
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     const isNewAccount = mode === "signup";
-    localStorage.setItem("isLoggedIn", "true");
-    const currentUser = JSON.parse(localStorage.getItem("karabakhUser") || "{}");
-    localStorage.setItem("karabakhUser", JSON.stringify({
-      ...currentUser,
-      name: mode === "signup" ? event.currentTarget.name.value : currentUser.name,
-      email: event.currentTarget.email.value,
-      role: "user",
-      applicationStatus: mode === "signup" ? "none" : currentUser.applicationStatus || "none",
-      createdAt: currentUser.createdAt || Date.now(),
-    }));
-    window.dispatchEvent(new CustomEvent("auth:changed"));
+    const formData = new FormData(event.currentTarget);
+    const payload = {
+      email: formData.get("email"),
+      password: formData.get("password"),
+    };
+    if (isNewAccount) payload.name = formData.get("name");
+
+    try {
+      const response = await fetch(isNewAccount ? "/api/v1/users/create" : "/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const responseText = await response.text();
+      let result = {};
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText);
+        } catch {
+          result = { error: responseText };
+        }
+      }
+      if (!response.ok) throw new Error(result.error || "Authentication failed");
+
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("authToken", result.access_token || "");
+      const currentUser = JSON.parse(localStorage.getItem("karabakhUser") || "{}");
+      localStorage.setItem("karabakhUser", JSON.stringify({
+        ...currentUser,
+        ...result.user,
+        role: "user",
+        applicationStatus: isNewAccount ? "none" : currentUser.applicationStatus || "none",
+      }));
+      window.dispatchEvent(new CustomEvent("auth:changed"));
+      setNotice("");
+    } catch (error) {
+      setNotice(error.message);
+      return;
+    }
+
     if (isNewAccount && !localStorage.getItem("signupRewardClaimed")) {
       localStorage.setItem("signupRewardClaimed", "true");
       localStorage.setItem("karabakhCoinBalance", "100");

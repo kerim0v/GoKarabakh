@@ -1,0 +1,18 @@
+{
+  "name": "gokarabakh-gulustan",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"python server.py\" \"npm run dev --prefix frontend\"",
+    "seed": "prisma db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prisma": "^6.16.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3"
+  }
+}

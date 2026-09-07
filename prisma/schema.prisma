@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Booking {
+  id              String        @id
+  userId          String
+  stayId          String?
+  guideId         String?
+  arrivalDate     DateTime
+  guests          Int
+  status          BookingStatus @default(PENDING)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime
+  restaurantId    String?
+  date            DateTime?
+  time            String?
+  specialRequests String?
+  placeId         String?
+  venueName       String?
+  Guide           Guide?        @relation(fields: [guideId], references: [id])
+  Restaurant      Restaurant?   @relation(fields: [restaurantId], references: [id])
+  Stay            Stay?         @relation(fields: [stayId], references: [id])
+  User            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Notification    Notification?
+
+  @@index([guideId, status])
+  @@index([placeId, status])
+  @@index([restaurantId, status])
+  @@index([stayId, status])
+  @@index([userId, createdAt])
+}
+
+model CoinTransaction {
+  id          String          @id
+  userId      String
+  amount      Int
+  type        TransactionType
+  description String
+  referenceId String?
+  createdAt   DateTime        @default(now())
+  User        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, referenceId])
+  @@index([userId, createdAt])
+}
+
+model CommunityPost {
+  id             String   @id
+  idempotencyKey String?  @unique
+  authorId       String
+  imageUrl       String
+  caption        String
+  location       String?
+  status         String   @default("PUBLISHED")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  User           User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Destination {
+  id          String   @id
+  name        String
+  slug        String   @unique
+  latitude    Float
+  longitude   Float
+  description String
+  region      String
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Guide       Guide[]
+  Stay        Stay[]
+
+  @@index([region])
+}
+
+model Guide {
+  id            String      @id
+  ownerId       String
+  destinationId String
+  name          String
+  bio           String
+  languages     String[]
+  pricePerDay   Int
+  active        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime
+  Booking       Booking[]
+  Destination   Destination @relation(fields: [destinationId], references: [id])
+  User          User        @relation(fields: [ownerId], references: [id])
+
+  @@index([destinationId, active])
+}
+
+model Hotel {
+  id          String   @id
+  name        String   @unique
+  city        String
+  address     String
+  description String
+  rating      Float    @default(0)
+  priceRange  String   @default("$$")
+  imageUrl    String?
+  amenities   String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+
+  @@index([city])
+}
+
+model Notification {
+  id        String    @id
+  userId    String
+  bookingId String?   @unique
+  message   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  Booking   Booking?  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  User      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+model Restaurant {
+  id          String    @id
+  name        String    @unique
+  city        String
+  address     String
+  description String
+  rating      Float     @default(0)
+  priceRange  String    @default("$$")
+  imageUrl    String?
+  cuisine     String[]  @default([])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  Booking     Booking[]
+
+  @@index([city])
+}
+
+model Stay {
+  id            String      @id
+  ownerId       String
+  destinationId String
+  title         String
+  description   String
+  location      String
+  pricePerNight Int
+  maxGuests     Int         @default(4)
+  imageUrl      String?
+  active        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime
+  Booking       Booking[]
+  Destination   Destination @relation(fields: [destinationId], references: [id])
+  User          User        @relation(fields: [ownerId], references: [id])
+
+  @@unique([ownerId, title])
+  @@index([destinationId, active])
+  @@index([ownerId])
+}
+
+model User {
+  id              String            @id
+  email           String            @unique
+  name            String
+  passwordHash    String
+  role            Role              @default(USER)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  Booking         Booking[]
+  CoinTransaction CoinTransaction[]
+  CommunityPost   CommunityPost[]
+  Guide           Guide[]
+  Notification    Notification[]
+  Place           Place[]
+  Stay            Stay[]
+  Wallet          Wallet?
+
+  @@index([role])
+}
+
+model Place {
+  id            String   @id
+  ownerUserId   String   @map("owner_user_id")
+  name          String
+  isTour        Boolean  @default(false) @map("is_tour")
+  cost          Float
+  description   String
+  mainPhotoUrl  String   @map("main_photo_url")
+  tags          String[]
+  createdAt     DateTime @default(now()) @map("creation_date")
+  updatedAt     DateTime @updatedAt @map("modification_date")
+  owner         User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id        String   @id
+  userId    String   @unique
+  balance   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum Role {
+  USER
+  BUSINESS_OWNER
+  ADMIN
+}
+
+enum TransactionType {
+  SIGNUP_REWARD
+  COMMUNITY_POST_REWARD
+  BOOKING_REWARD
+  SPENDING
+  REFERRAL_REWARD
+  ADMIN_ADJUSTMENT
+}

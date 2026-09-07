@@ -1,0 +1,72 @@
+[
+  {
+    "id": "trip-shusha-grand-hotel",
+    "name": "Shusha Grand Hotel",
+    "category": "hotel",
+    "rating": 4.8,
+    "address": "8 Nizami Ganjavi Street, Shusha",
+    "price": 140,
+    "currency": "AZN/night",
+    "image": "/shusha/shusha otel.jpg"
+  },
+  {
+    "id": "trip-cidir-view-guesthouse",
+    "name": "Cidir View Guesthouse",
+    "category": "hotel",
+    "rating": 4.7,
+    "address": "Cidir Plain Road, Shusha",
+    "price": 95,
+    "currency": "AZN/night",
+    "image": "/shusha/shusha2.JPG"
+  },
+  {
+    "id": "trip-kalbajar-mountain-lodge",
+    "name": "Kalbajar Mountain Lodge",
+    "category": "hotel",
+    "rating": 4.9,
+    "address": "Istisu Road, Kalbajar",
+    "price": 175,
+    "currency": "AZN/night",
+    "image": "/kelbecer/kelbecer.jpg"
+  },
+  {
+    "id": "trip-shusha-heritage-walk",
+    "name": "Shusha Heritage Walk",
+    "category": "tour",
+    "rating": 4.9,
+    "address": "Shusha historic centre",
+    "price": 45,
+    "currency": "AZN/person",
+    "image": "/shusha/shusha3.JPG"
+  },
+  {
+    "id": "trip-lachin-valley-route",
+    "name": "Lachin Valley Route",
+    "category": "tour",
+    "rating": 4.8,
+    "address": "Lachin forest corridor",
+    "price": 70,
+    "currency": "AZN/person",
+    "image": "/lacin/lacin.jpg"
+  },
+  {
+    "id": "trip-kalbajar-istisu-day",
+    "name": "Istisu Springs Day Trip",
+    "category": "tour",
+    "rating": 4.7,
+    "address": "Istisu, Kalbajar",
+    "price": 60,
+    "currency": "AZN/person",
+    "image": "/kelbecer/kelbecer2.jpg"
+  },
+  {
+    "id": "trip-khankendi-cultural-route",
+    "name": "Khankendi Cultural Route",
+    "category": "tour",
+    "rating": 4.6,
+    "address": "Khankendi city centre",
+    "price": 40,
+    "currency": "AZN/person",
+    "image": "/khankendi/khankendi.jpeg"
+  }
+]

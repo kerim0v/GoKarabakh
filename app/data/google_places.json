@@ -1,0 +1,90 @@
+[
+  {
+    "place_id": "mock-shusha-grand-hotel",
+    "name": "Shusha Grand Hotel",
+    "rating": 4.8,
+    "address": "8 Nizami Ganjavi Street, Shusha, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-shusha-grand-hotel",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-shusha-grand-hotel"],
+    "category": "hotels",
+    "district": "Shusha",
+    "google_maps_url": "https://maps.google.com/?q=Shusha+Grand+Hotel"
+  },
+  {
+    "place_id": "mock-cidir-view-guesthouse",
+    "name": "Cidir View Guesthouse",
+    "rating": 4.7,
+    "address": "Cidir Plain Road, Shusha, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-cidir-view-guesthouse",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-cidir-view-guesthouse"],
+    "category": "hotels",
+    "district": "Shusha",
+    "google_maps_url": "https://maps.google.com/?q=Cidir+View+Guesthouse"
+  },
+  {
+    "place_id": "mock-khankendi-central-hotel",
+    "name": "Khankendi Central Hotel",
+    "rating": 4.6,
+    "address": "1 Renaissance Square, Khankendi, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-khankendi-central-hotel",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-khankendi-central-hotel"],
+    "category": "hotels",
+    "district": "Khankendi",
+    "google_maps_url": "https://maps.google.com/?q=Khankendi+Central+Hotel"
+  },
+  {
+    "place_id": "mock-kalbajar-mountain-lodge",
+    "name": "Kalbajar Mountain Lodge",
+    "rating": 4.9,
+    "address": "Istisu Road, Kalbajar, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-kalbajar-mountain-lodge",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-kalbajar-mountain-lodge"],
+    "category": "hotels",
+    "district": "Kalbajar",
+    "google_maps_url": "https://maps.google.com/?q=Kalbajar+Mountain+Lodge"
+  },
+  {
+    "place_id": "mock-shusha-saray-kitchen",
+    "name": "Saray Kitchen",
+    "rating": 4.8,
+    "address": "Mirza Fatali Street, Shusha, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-shusha-saray-kitchen",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-shusha-saray-kitchen"],
+    "category": "restaurants",
+    "district": "Shusha",
+    "google_maps_url": "https://maps.google.com/?q=Saray+Kitchen+Shusha"
+  },
+  {
+    "place_id": "mock-khankendi-qarabag-table",
+    "name": "Qarabag Table",
+    "rating": 4.7,
+    "address": "Freedom Avenue, Khankendi, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-khankendi-qarabag-table",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-khankendi-qarabag-table"],
+    "category": "restaurants",
+    "district": "Khankendi",
+    "google_maps_url": "https://maps.google.com/?q=Qarabag+Table+Khankendi"
+  },
+  {
+    "place_id": "mock-agdam-white-city-cafe",
+    "name": "White City Cafe",
+    "rating": 4.5,
+    "address": "Agdam Cultural Quarter, Agdam, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-agdam-white-city-cafe",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-agdam-white-city-cafe"],
+    "category": "restaurants",
+    "district": "Agdam",
+    "google_maps_url": "https://maps.google.com/?q=White+City+Cafe+Agdam"
+  },
+  {
+    "place_id": "mock-lachin-aras-terrace",
+    "name": "Aras Terrace Restaurant",
+    "rating": 4.6,
+    "address": "Aras Riverside Road, Lachin, Azerbaijan",
+    "photo_url": "/api/v1/google-places/photo?name=mock-lachin-aras-terrace",
+    "photo_urls": ["/api/v1/google-places/photo?name=mock-lachin-aras-terrace"],
+    "category": "restaurants",
+    "district": "Lachin",
+    "google_maps_url": "https://maps.google.com/?q=Aras+Terrace+Restaurant+Lachin"
+  }
+]

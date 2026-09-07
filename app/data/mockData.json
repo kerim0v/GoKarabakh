@@ -1,0 +1,113 @@
+[
+  {
+    "id": "trip-shusha-grand-hotel",
+    "title": "Shusha Hotel & Congress Centre",
+    "category": "hotel",
+    "location": "Shusha",
+    "price": 140,
+    "rating": 4.8,
+    "address": "Aslan Qaraşov Street, Shusha, Azerbaijan",
+    "image_url": "/shusha_hotels/TIMA4309.webp",
+    "description": "A five-star hotel and congress centre in the historic heart of Shusha, with 154 rooms, Azerbaijani cuisine, spa facilities, and event spaces.",
+    "website_url": "https://www.shushahotel.com/az"
+  },
+  {
+    "id": "trip-cidir-view-guesthouse",
+    "title": "Cidir View Guesthouse",
+    "category": "hotel",
+    "location": "Shusha",
+    "price": 95,
+    "rating": 4.7,
+    "address": "Cidir Plain Road, Shusha, Azerbaijan",
+    "image_url": "/shusha/shusha2.JPG",
+    "description": "A warm guesthouse close to Cidir Plain, ideal for travellers who want quiet mornings and wide valley views."
+  },
+  {
+    "id": "trip-kalbajar-mountain-lodge",
+    "title": "Kalbajar Mountain Lodge",
+    "category": "hotel",
+    "location": "Kalbajar",
+    "price": 175,
+    "rating": 4.9,
+    "address": "Istisu Road, Kalbajar, Azerbaijan",
+    "image_url": "/kelbecer/kelbecer.jpg",
+    "description": "A peaceful alpine lodge near Istisu springs with comfortable rooms and direct access to mountain routes."
+  },
+  {
+    "id": "trip-shusha-christy-hotel",
+    "title": "Christy Hotel Shusha",
+    "category": "hotel",
+    "location": "Shusha",
+    "price": 120,
+    "rating": 4.6,
+    "address": "Shusha historic centre, Shusha, Azerbaijan",
+    "image_url": "/shusha_hotels/christy.jpg",
+    "description": "A characterful stone hotel in Shusha with warm interiors, a quiet setting, and easy access to the historic centre."
+  },
+  {
+    "id": "trip-shusha-heritage-walk",
+    "title": "Shusha Heritage Walk",
+    "category": "tour",
+    "location": "Shusha",
+    "price": 45,
+    "rating": 4.9,
+    "address": "Shusha historic centre, Azerbaijan",
+    "image_url": "/shusha/shusha3.JPG",
+    "description": "A guided walk through Shusha's historic streets, viewpoints, music heritage, and remarkable architecture."
+  },
+  {
+    "id": "trip-lachin-valley-route",
+    "title": "Lachin Valley Route",
+    "category": "tour",
+    "location": "Lachin",
+    "price": 70,
+    "rating": 4.8,
+    "address": "Lachin forest corridor, Azerbaijan",
+    "image_url": "/lacin/lacin.jpg",
+    "description": "A full-day mountain journey through green valleys, forest paths, and quiet riverside viewpoints."
+  },
+  {
+    "id": "trip-kalbajar-istisu-day",
+    "title": "Istisu Springs Day Trip",
+    "category": "tour",
+    "location": "Kalbajar",
+    "price": 60,
+    "rating": 4.7,
+    "address": "Istisu, Kalbajar, Azerbaijan",
+    "image_url": "/kelbecer/kelbecer2.jpg",
+    "description": "A restorative day around Istisu's mineral springs, highland scenery, and local stories."
+  },
+  {
+    "id": "trip-khankendi-cultural-route",
+    "title": "Khankendi Cultural Route",
+    "category": "tour",
+    "location": "Khankendi",
+    "price": 40,
+    "rating": 4.6,
+    "address": "Khankendi city centre, Azerbaijan",
+    "image_url": "/khankendi/khankendi.jpeg",
+    "description": "A relaxed cultural route connecting city landmarks, local food, and the surrounding Karabakh landscape."
+  },
+  {
+    "id": "trip-shusha-isa-bulagi",
+    "title": "Isa Bulagi Restaurant",
+    "category": "restaurant",
+    "location": "Shusha",
+    "price": 35,
+    "rating": 4.8,
+    "address": "Isa Bulagi, Shusha, Azerbaijan",
+    "image_url": "/shusha_hotels/restaurants/isa_bulagi.png",
+    "description": "A scenic Shusha restaurant and istirahət kompleksi serving local flavours beside the historic Isa Bulagi spring."
+  },
+  {
+    "id": "trip-shusha-qala-restaurant",
+    "title": "Susa Qala Restaurant",
+    "category": "restaurant",
+    "location": "Shusha",
+    "price": 40,
+    "rating": 4.7,
+    "address": "Shusha qala district, Shusha, Azerbaijan",
+    "image_url": "/shusha_hotels/restaurants/susa-qala.jpg",
+    "description": "A welcoming stone-built restaurant for Azerbaijani cuisine, tea, and a relaxed meal near Shusha's cultural landmarks."
+  }
+]
