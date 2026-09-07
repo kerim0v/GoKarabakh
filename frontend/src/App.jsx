@@ -262,8 +262,8 @@ function Header({ active }) {
           {isLoggedIn && accountOpen && (
             <div className="account-menu">
               <a href="/profile">My profile</a>
-              {userRole === "owner" && <a href="/profile">My Listings</a>}
-              {userRole === "guide" && <a href="/profile">My Tours</a>}
+              {userRole === "owner" && <a href="/owner-dashboard">My Listings</a>}
+              {userRole === "guide" && <a href="/guide-dashboard">My Tours</a>}
               <button type="button" onClick={logout}>
                 Log out
               </button>
