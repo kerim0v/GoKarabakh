@@ -2489,8 +2489,25 @@ function DistrictPage({ slug }) {
                     {(activeCategory === "Hotels" || activeCategory === "Restaurants") && (
                       <button
                         type="button"
-                        style={{ display: "block", marginTop: "10px" }}
                         onClick={() => openBooking({ place_id: id, name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          marginTop: "10px",
+                          border: "none",
+                          borderRadius: "999px",
+                          padding: "9px 16px",
+                          background: "#38bdf8",
+                          color: "#04202b",
+                          fontWeight: "800",
+                          fontSize: "13px",
+                          cursor: "pointer",
+                          boxShadow: "0 8px 20px rgba(56,189,248,0.35)",
+                          transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                        }}
+                        onMouseEnter={(event) => { event.currentTarget.style.transform = "scale(1.05)"; }}
+                        onMouseLeave={(event) => { event.currentTarget.style.transform = "scale(1)"; }}
                       >
                         Book now →
                       </button>
