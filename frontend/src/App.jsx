@@ -1502,9 +1502,9 @@ function CommunityArchive() {
   };
 
   const openAuthIfGuest = (event) => {
-    if (event && typeof event.preventDefault === "function")
-      event.preventDefault();
     if (!isLoggedIn) {
+      if (event && typeof event.preventDefault === "function")
+        event.preventDefault();
       window.dispatchEvent(new CustomEvent("auth:open"));
       return true;
     }
