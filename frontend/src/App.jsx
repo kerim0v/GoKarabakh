@@ -2481,47 +2481,51 @@ function DistrictPage({ slug }) {
                     <p className="district-card-meta">{meta}</p>
                     <h3>{title}</h3>
                     <p>{detail}</p>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSavedPlaces((places) =>
-                          places.includes(title)
-                            ? places.filter((place) => place !== title)
-                            : [...places, title],
-                        )
-                      }
-                    >
-                      {savedPlaces.includes(title)
-                        ? "Added to itinerary"
-                        : "Add to itinerary"}{" "}
-                      <span aria-hidden="true">→</span>
-                    </button>
-                    {(activeCategory === "Hotels" || activeCategory === "Restaurants") && (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginTop: "16px" }}>
                       <button
                         type="button"
-                        onClick={() => openBooking({ place_id: id, name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          marginTop: "10px",
-                          border: "none",
-                          borderRadius: "999px",
-                          padding: "9px 16px",
-                          background: "#38bdf8",
-                          color: "#04202b",
-                          fontWeight: "800",
-                          fontSize: "13px",
-                          cursor: "pointer",
-                          boxShadow: "0 8px 20px rgba(56,189,248,0.35)",
-                          transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                        }}
-                        onMouseEnter={(event) => { event.currentTarget.style.transform = "scale(1.05)"; }}
-                        onMouseLeave={(event) => { event.currentTarget.style.transform = "scale(1)"; }}
+                        style={{ marginTop: 0 }}
+                        onClick={() =>
+                          setSavedPlaces((places) =>
+                            places.includes(title)
+                              ? places.filter((place) => place !== title)
+                              : [...places, title],
+                          )
+                        }
                       >
-                        Book now →
+                        {savedPlaces.includes(title)
+                          ? "Added to itinerary"
+                          : "Add to itinerary"}{" "}
+                        <span aria-hidden="true">→</span>
                       </button>
-                    )}
+                      {(activeCategory === "Hotels" || activeCategory === "Restaurants") && (
+                        <button
+                          type="button"
+                          onClick={() => openBooking({ place_id: id, name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            marginTop: 0,
+                            marginLeft: "auto",
+                            border: "none",
+                            borderRadius: "999px",
+                            padding: "9px 16px",
+                            background: "#38bdf8",
+                            color: "#04202b",
+                            fontWeight: "800",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            boxShadow: "0 8px 20px rgba(56,189,248,0.35)",
+                            transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                          }}
+                          onMouseEnter={(event) => { event.currentTarget.style.transform = "scale(1.05)"; }}
+                          onMouseLeave={(event) => { event.currentTarget.style.transform = "scale(1)"; }}
+                        >
+                          Book now →
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </article>
               ))}
