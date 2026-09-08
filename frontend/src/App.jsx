@@ -1417,7 +1417,10 @@ const TRACE_REGIONS = [
 ];
 
 function CommunityArchive() {
-  const [shared, setShared] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [rewardClaimed, setRewardClaimed] = useState(
+    () => localStorage.getItem("communityShareRewardClaimed") === "true",
+  );
   const [caption, setCaption] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
   const [compressing, setCompressing] = useState(false);
@@ -1523,17 +1526,30 @@ function CommunityArchive() {
       );
       return;
     }
+    setSubmitting(true);
     try {
       const trace = await api.createCommunityTrace({
         region_slug: region,
         caption: caption.trim(),
         photo_url: photoUrl.trim() || undefined,
       });
-      setShared(true);
-      const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
-      const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
-      localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
-      localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared a community memory", amount: 50, createdAt: Date.now() }, ...currentHistory]));
+      if (!rewardClaimed) {
+        const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
+        const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
+        localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
+        localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared your first community trace", amount: 50, createdAt: Date.now() }, ...currentHistory]));
+        localStorage.setItem("communityShareRewardClaimed", "true");
+        setRewardClaimed(true);
+        setCoins(
+          Array.from({ length: 34 }, (_, index) => ({
+            id: `${Date.now()}-${index}`,
+            left: Math.random() * 100,
+            delay: Math.random() * 0.7,
+            drift: (Math.random() - 0.5) * 180,
+          })),
+        );
+        window.setTimeout(() => setCoins([]), 2800);
+      }
       if (trace.photo_url) {
         setUploadedMemory({
           id: trace.id,
@@ -1550,17 +1566,9 @@ function CommunityArchive() {
       setTraceOpen(false);
     } catch (err) {
       setShareError(err.message || "Could not share your trace.");
-      return;
+    } finally {
+      setSubmitting(false);
     }
-    setCoins(
-      Array.from({ length: 34 }, (_, index) => ({
-        id: `${Date.now()}-${index}`,
-        left: Math.random() * 100,
-        delay: Math.random() * 0.7,
-        drift: (Math.random() - 0.5) * 180,
-      })),
-    );
-    window.setTimeout(() => setCoins([]), 2800);
   };
 
   return (
@@ -1713,7 +1721,9 @@ function CommunityArchive() {
               <h3>Leave a trace.</h3>
               <p>
                 {isLoggedIn
-                  ? "Share one frame from your route and receive 50 GoKarabakh coins."
+                  ? rewardClaimed
+                    ? "Share another frame from your route."
+                    : "Share one frame from your route and receive 50 GoKarabakh coins."
                   : "Share one frame from your route with the community."}
               </p>
               <div className="trace-types">
@@ -1789,15 +1799,15 @@ function CommunityArchive() {
                 <button
                   className="button button-primary"
                   type="submit"
-                  disabled={compressing}
+                  disabled={compressing || submitting}
                   onClick={openAuthIfGuest}
                 >
-                  {shared
-                    ? "Shared"
+                  {submitting
+                    ? "Sharing…"
                     : compressing
                       ? "Processing photo…"
                       : isLoggedIn
-                        ? "Share / earn 50 ↗"
+                        ? (rewardClaimed ? "Share ↗" : "Share / earn 50 ↗")
                         : "Sign in to share ↗"}
                 </button>
               </form>
