@@ -14,4 +14,4 @@ class CommunityTrace(ModelBase):
     user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
     region_slug = db.Column(db.String(50), nullable=False)
     caption = db.Column(db.Text, nullable=False)
-    photo_url = db.Column(db.String(500))
+    photo_url = db.Column(db.Text)

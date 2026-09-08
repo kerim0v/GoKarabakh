@@ -1374,6 +1374,36 @@ function Dashboard() {
   );
 }
 
+function compressImageFile(file, maxDimension = 1200, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        } else {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read this image."));
+    };
+    img.src = url;
+  });
+}
+
 const TRACE_REGIONS = [
   { slug: "shusha", label: "Shusha" },
   { slug: "kalbajar", label: "Kalbajar" },
@@ -1390,6 +1420,8 @@ function CommunityArchive() {
   const [shared, setShared] = useState(false);
   const [caption, setCaption] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
+  const [compressing, setCompressing] = useState(false);
+  const [compressError, setCompressError] = useState("");
   const [region, setRegion] = useState("shusha");
   const [uploadedMemory, setUploadedMemory] = useState(null);
   const [coins, setCoins] = useState([]);
@@ -1714,15 +1746,35 @@ function CommunityArchive() {
                     <option key={r.slug} value={r.slug}>{r.label}</option>
                   ))}
                 </select>
+                <label
+                  className="upload-drop"
+                  htmlFor="trace-photo-input"
+                  onClick={openAuthIfGuest}
+                >
+                  <span>＋</span>
+                  <span>{compressing ? "Compressing…" : photoUrl ? "Photo attached" : "Add a photo (optional)"}</span>
+                </label>
                 <input
-                  value={photoUrl}
-                  onChange={(event) => setPhotoUrl(event.target.value)}
-                  type="url"
-                  placeholder="Photo URL (optional)"
-                  aria-label="Photo URL (optional)"
+                  id="trace-photo-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={async (event) => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    setCompressError("");
+                    setCompressing(true);
+                    try {
+                      setPhotoUrl(await compressImageFile(file));
+                    } catch (err) {
+                      setCompressError(err.message || "Could not process this photo.");
+                    } finally {
+                      setCompressing(false);
+                    }
+                  }}
                   disabled={!isLoggedIn}
                   onClick={openAuthIfGuest}
                 />
+                {compressError && <p role="alert" style={{ color: "#ff9d8a" }}>{compressError}</p>}
                 <input
                   value={caption}
                   onChange={(event) => setCaption(event.target.value)}
@@ -1737,13 +1789,16 @@ function CommunityArchive() {
                 <button
                   className="button button-primary"
                   type="submit"
+                  disabled={compressing}
                   onClick={openAuthIfGuest}
                 >
                   {shared
                     ? "Shared"
-                    : isLoggedIn
-                      ? "Share / earn 50 ↗"
-                      : "Sign in to share ↗"}
+                    : compressing
+                      ? "Processing photo…"
+                      : isLoggedIn
+                        ? "Share / earn 50 ↗"
+                        : "Sign in to share ↗"}
                 </button>
               </form>
             </aside>
