@@ -278,6 +278,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                 <span className="button-arrow">↗</span>
               </motion.button>
             </motion.form>
+            <p className="auth-consent">By continuing, you join the GoKarabakh travel community and accept the platform terms.</p>
             </div>
             {notice && (
               <motion.div

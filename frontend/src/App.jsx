@@ -163,16 +163,35 @@ function PartnerApplicationModal({ open, onClose, onSubmit, userName, userEmail 
 }
 
 function BookingModal({ booking, onClose, onSubmit }) {
+  const [formValues, setFormValues] = useState({ guests: "2", start_date: "", end_date: "" });
+  useEffect(() => {
+    if (booking) setFormValues({ guests: "2", start_date: "", end_date: "" });
+  }, [booking]);
   if (!booking) return null;
   const isHotel = booking.type === "Hotel";
+  const pricePerGuest = booking.price_per_guest || 40;
+  const start = formValues.start_date ? new Date(`${formValues.start_date}T00:00:00`) : null;
+  const end = formValues.end_date ? new Date(`${formValues.end_date}T00:00:00`) : null;
+  const nights = isHotel && start && end && end > start ? Math.round((end - start) / 86400000) : 1;
+  const totalPrice = Number(formValues.guests || 0) * pricePerGuest * (isHotel ? nights : 1);
   const submit = (event) => {
     event.preventDefault();
+    if (isHotel && (!start || !end || end <= start)) {
+      window.alert("Check-out date must be after the check-in date.");
+      return;
+    }
     const form = new FormData(event.currentTarget);
     onSubmit({
       ...booking,
+      first_name: form.get("first_name"),
+      last_name: form.get("last_name"),
+      phone: form.get("phone"),
       guests: form.get("guests"),
       start_date: form.get("start_date"),
       end_date: isHotel ? form.get("end_date") : "",
+      price_per_guest: pricePerGuest,
+      nights: isHotel ? nights : 0,
+      total_price: totalPrice,
       card_last4: (form.get("card_number")?.toString() || "").replace(/\D/g, "").slice(-4),
     });
   };
@@ -184,9 +203,13 @@ function BookingModal({ booking, onClose, onSubmit }) {
         <h2 id="booking-title" className="auth-title-enhanced" style={{ marginTop: "8px" }}>Book {booking.name}</h2>
         <p className="auth-subtitle-enhanced">Your request will be sent to the {booking.partnerLabel}. Your card is charged only after they confirm availability.</p>
         <form className="auth-form-enhanced" onSubmit={submit}>
-          <div className="form-group"><label className="form-label" htmlFor="booking-guests"><span>GUESTS •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-guests" name="guests" type="number" min="1" defaultValue="2" required /></div></div>
-          <div className="form-group"><label className="form-label" htmlFor="booking-start"><span>{isHotel ? "CHECK-IN DATE" : "RESERVATION DATE"} •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-start" name="start_date" type="date" required /></div></div>
-          {isHotel && <div className="form-group"><label className="form-label" htmlFor="booking-end"><span>CHECK-OUT DATE •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-end" name="end_date" type="date" required /></div></div>}
+          <div className="form-group"><label className="form-label" htmlFor="booking-first-name"><span>FIRST NAME •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-first-name" name="first_name" autoComplete="given-name" required /></div></div>
+          <div className="form-group"><label className="form-label" htmlFor="booking-last-name"><span>LAST NAME •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-last-name" name="last_name" autoComplete="family-name" required /></div></div>
+          <div className="form-group"><label className="form-label" htmlFor="booking-phone"><span>PHONE NUMBER •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="+994 00 000 00 00" required /></div></div>
+          <div className="form-group"><label className="form-label" htmlFor="booking-guests"><span>GUESTS •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-guests" name="guests" type="number" min="1" value={formValues.guests} onChange={(event) => setFormValues((values) => ({ ...values, guests: event.target.value }))} required /></div></div>
+          <div className="form-group"><label className="form-label" htmlFor="booking-start"><span>{isHotel ? "CHECK-IN DATE" : "RESERVATION DATE"} •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-start" name="start_date" type="date" value={formValues.start_date} onChange={(event) => setFormValues((values) => ({ ...values, start_date: event.target.value }))} required /></div></div>
+          {isHotel && <div className="form-group"><label className="form-label" htmlFor="booking-end"><span>CHECK-OUT DATE •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-end" name="end_date" type="date" value={formValues.end_date} onChange={(event) => setFormValues((values) => ({ ...values, end_date: event.target.value }))} required /></div></div>}
+          <div role="status" style={{ border: "1px solid rgba(244,214,109,.45)", borderRadius: "12px", padding: "13px 14px", background: "rgba(244,214,109,.08)", color: "#fff" }}><strong>Total: {totalPrice.toLocaleString()} AZN</strong><small style={{ display: "block", marginTop: "5px", color: "rgba(255,255,255,.75)" }}>{pricePerGuest} AZN × {formValues.guests || 0} guest{Number(formValues.guests) === 1 ? "" : "s"}{isHotel ? ` × ${nights} night${nights === 1 ? "" : "s"}` : ""}. Your card is charged after confirmation.</small></div>
           <div className="form-group"><label className="form-label" htmlFor="booking-card"><span>PAYMENT CARD •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="booking-card" name="card_number" type="text" inputMode="numeric" autoComplete="cc-number" placeholder="Card number" minLength="12" required /></div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "10px" }}><input name="card_expiry" type="text" inputMode="numeric" autoComplete="cc-exp" placeholder="MM / YY" required /><input name="card_cvc" type="text" inputMode="numeric" autoComplete="cc-csc" placeholder="CVC" minLength="3" maxLength="4" required /></div></div>
           <motion.button className="button-auth-submit" type="submit" whileHover={{ scale: 1.02 }} whileTap={{ scale: .98 }}><span>Send booking request</span><span className="button-arrow">→</span></motion.button>
         </form>
@@ -225,9 +248,7 @@ function Header({ active }) {
   return (
     <header className="topbar">
       <a className="brand" href="/">
-        <span className="brand-mark" style={{ background: "#38bdf8" }}>
-          G
-        </span>
+        <span className="brand-mark" aria-hidden="true"><i /><b /></span>
         <span>GOKARABAKH</span>
       </a>
       <nav className="nav" aria-label="Primary navigation">
@@ -236,6 +257,9 @@ function Header({ active }) {
         </a>
         <a className={active === "trip" ? "active" : ""} href="/dashboard">
           Trip
+        </a>
+        <a className={active === "about" ? "active" : ""} href="/about">
+          About
         </a>
       </nav>
       <div className="header-actions">
@@ -394,7 +418,7 @@ function PartnerWorkspace({ role }) {
     {notice && <p role="status" style={{ margin: "18px 0", color: "#eaffb5" }}>{notice}</p>}
     <section className="profile-grid" style={{ marginTop: "18px" }}><article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Add a new entry</span><h2>Create {role === "owner" ? "a business listing" : "a guided tour"}</h2></div></div><form className="auth-form-enhanced" onSubmit={addItem}><div className="form-group"><label className="form-label" htmlFor="partner-item-name"><span>NAME •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-name" name="name" placeholder={role === "owner" ? "Business name" : "Tour name"} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-region"><span>REGION •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-region" name="region" placeholder="e.g. Shusha" required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-category"><span>CATEGORY •</span><span className="label-accent" /></label><div className="input-wrapper"><input id="partner-item-category" name="category" placeholder={role === "owner" ? "Hotel, restaurant, activity..." : "Hiking, cultural, food..."} required /></div></div><div className="form-group"><label className="form-label" htmlFor="partner-item-description"><span>DESCRIPTION •</span><span className="label-accent" /></label><div className="input-wrapper"><textarea id="partner-item-description" name="description" rows="4" placeholder="Tell travellers what to expect" required style={{ width: "100%", borderRadius: "12px", padding: "13px 14px", background: "rgba(15,23,42,.4)", color: "#fff" }} /></div></div><button className="button-auth-submit" type="submit">Save {role === "owner" ? "business" : "tour"} →</button></form></article>
     <article className="profile-panel glass"><div className="profile-panel-heading"><div><span className="eyebrow mono">Published by you</span><h2>{itemTitle}</h2></div></div>{items.length ? <div className="profile-transactions">{items.map((item) => <div className="profile-transaction" key={item.id}><span>✓</span><div><strong>{item.name}</strong><small>{item.category} · {item.region}</small></div></div>)}</div> : <div className="profile-empty"><span>+</span><p>No {role === "owner" ? "businesses" : "tours"} yet.</p><small>Your saved entries will appear here.</small></div>}</article></section>
-    <section className="profile-panel glass" style={{ marginTop: "18px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Booking inbox</span><h2>Reservation requests</h2></div></div>{requests.length ? <div className="profile-bookings">{requests.map((request) => <div className="profile-booking" key={request.id}><img src={request.image} alt="" /><div><strong>{request.name}</strong><span>{request.type} · {request.guests} guest{Number(request.guests) === 1 ? "" : "s"} · {request.start_date}</span><small>{request.status}</small></div>{request.status === "Awaiting partner confirmation" ? <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Confirmed – payment captured")}>Confirm</button><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Declined – no charge")}>Decline</button></div> : <b>{request.status}</b>}</div>)}</div> : <div className="profile-empty"><span>⌂</span><p>No booking requests yet.</p><small>New traveller requests will appear here for confirmation.</small></div>}</section>
+    <section className="profile-panel glass" style={{ marginTop: "18px" }}><div className="profile-panel-heading"><div><span className="eyebrow mono">Booking inbox</span><h2>Reservation requests</h2></div></div>{requests.length ? <div className="profile-bookings">{requests.map((request) => <div className="profile-booking" key={request.id}><img src={request.image} alt="" /><div><strong>{request.name}</strong><span>{request.type} · {request.guests} guest{Number(request.guests) === 1 ? "" : "s"} · {request.start_date}</span>{request.first_name && <small>Booked by: {request.first_name} {request.last_name} · {request.phone}</small>}<small>{request.status}</small></div>{request.status === "Awaiting partner confirmation" ? <div style={{ display: "flex", gap: "8px", marginLeft: "auto" }}><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Confirmed – payment captured")}>Confirm</button><button type="button" className="profile-explore-link" onClick={() => decideRequest(request.id, "Declined – no charge")}>Decline</button></div> : <b>{request.status}</b>}</div>)}</div> : <div className="profile-empty"><span>⌂</span><p>No booking requests yet.</p><small>New traveller requests will appear here for confirmation.</small></div>}</section>
   </main></div>;
 }
 
@@ -462,13 +486,13 @@ function Landing() {
     const instance = Globe()(mount.current)
       .backgroundColor("rgba(0,0,0,0)")
       .globeImageUrl(
-        "https://unpkg.com/three-globe/example/img/earth-night.jpg",
+        "https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg",
       )
       .bumpImageUrl(
         "https://unpkg.com/three-globe/example/img/earth-topology.png",
       )
       .showAtmosphere(true)
-      .atmosphereColor("#38bdf8")
+      .atmosphereColor("#8ee7f0")
       .atmosphereAltitude(0.16)
       .pointOfView({ lat: 22, lng: 20, altitude: 2.35 });
     instance.controls().autoRotate = true;
@@ -1241,7 +1265,7 @@ function Dashboard() {
 function CommunityArchive() {
   const [shared, setShared] = useState(false);
   const [caption, setCaption] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [capturedImage, setCapturedImage] = useState(null);
   const [uploadedMemory, setUploadedMemory] = useState(null);
   const [coins, setCoins] = useState([]);
   const [selectedMemory, setSelectedMemory] = useState(null);
@@ -1251,6 +1275,11 @@ function CommunityArchive() {
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => localStorage.getItem("isLoggedIn") === "true",
   );
+  const [locationStatus, setLocationStatus] = useState("idle");
+  const [locationMessage, setLocationMessage] = useState("");
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const videoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
 
   useEffect(() => {
     const syncAuth = () => setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
@@ -1258,13 +1287,41 @@ function CommunityArchive() {
     return () => window.removeEventListener("auth:changed", syncAuth);
   }, []);
 
-  const memories = photos.map(([src, alt, author, place], index) => ({
-    id: src,
+  useEffect(() => () => cameraStreamRef.current?.getTracks().forEach((track) => track.stop()), []);
+
+  const isInKarabakh = ({ latitude, longitude }) => latitude >= 38.55 && latitude <= 40.85 && longitude >= 45.55 && longitude <= 48.05;
+  const requestKarabakhLocation = () => new Promise((resolve) => {
+    if (!navigator.geolocation) { setLocationStatus("error"); setLocationMessage("Location services are not available in this browser."); resolve(false); return; }
+    setLocationStatus("checking"); setLocationMessage("Checking your current location…");
+    navigator.geolocation.getCurrentPosition((position) => {
+      if (isInKarabakh(position.coords)) { setLocationStatus("verified"); setLocationMessage("Karabakh location verified. You can capture a memory."); resolve(true); }
+      else { setLocationStatus("outside"); setLocationMessage("Photo sharing is available only while you are in a Karabakh region."); resolve(false); }
+    }, () => { setLocationStatus("error"); setLocationMessage("Allow location access to capture and share a photo."); resolve(false); }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  });
+  const closeCamera = () => { cameraStreamRef.current?.getTracks().forEach((track) => track.stop()); cameraStreamRef.current = null; setCameraOpen(false); };
+  const openCamera = async () => {
+    if (!isLoggedIn) { window.dispatchEvent(new CustomEvent("auth:open")); return; }
+    const allowed = locationStatus === "verified" || await requestKarabakhLocation();
+    if (!allowed) return;
+    try { const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }); cameraStreamRef.current = stream; setCameraOpen(true); window.setTimeout(() => { if (videoRef.current) videoRef.current.srcObject = stream; }, 0); }
+    catch { setLocationMessage("Camera access is required to take a photo now."); }
+  };
+  const capturePhoto = () => { const video = videoRef.current; if (!video?.videoWidth) return; const canvas = document.createElement("canvas"); canvas.width = video.videoWidth; canvas.height = video.videoHeight; canvas.getContext("2d").drawImage(video, 0, 0); setCapturedImage(canvas.toDataURL("image/jpeg", 0.9)); closeCamera(); };
+
+  const hotelMemories = [
+    ["/shusha/shusha otel.jpg", "Shusha Hotel", "Buradakı sakit atmosfer və şəhər mənzərəsi çox xoşuma gəldi. Yenə gəlmək istəyərəm.", "Aysel M."],
+    ["/khankendi/cahanotel.jpg", "Cahan Hotel", "Dağ mənzərəsi möhtəşəmdir, otaqlar isə çox rahat və səliqəlidir.", "Murad R."],
+    ["/khankendi/xankendiotel.jpg", "Karvansaray", "Mərkəzi yerləşməsi səyahətimiz üçün ideal oldu. Personal da çox mehriban idi.", "Leyla A."],
+    ["/shusha/shusha2.JPG", "Karvansara Guest Rooms", "Tarixi ab-havasını sevdim; səhər yeməyi və qonaqpərvərlik əla idi.", "Nigar H."],
+    ["/khankendi/khankendi.jpeg", "Valley House", "Ailə ilə qalmaq üçün çox rahat seçimdir. Təbiətə yaxın, sakit bir ünvan.", "Elvin K."],
+  ];
+  const memories = hotelMemories.map(([src, place, alt, author], index) => ({
+    id: `hotel-memory-${index}`,
     src,
     alt,
     author,
     place,
-    type: ["PHOTO", "STORY", "PLACE", "HERITAGE", "COMMUNITY MEMORY"][index],
+    type: "PHOTO",
     position: [
       { left: "21%", top: "27%" },
       { left: "47%", top: "20%" },
@@ -1310,7 +1367,7 @@ function CommunityArchive() {
 
   const share = (event) => {
     event.preventDefault();
-    if (!caption.trim() || !selectedFile) return;
+    if (!caption.trim() || !capturedImage || locationStatus !== "verified") return;
     if (!isLoggedIn) {
       window.dispatchEvent(
         new CustomEvent("auth:open", {
@@ -1322,18 +1379,18 @@ function CommunityArchive() {
     setShared(true);
     const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
     const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
-    localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
-    localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared a community memory", amount: 50, createdAt: Date.now() }, ...currentHistory]));
+    localStorage.setItem("karabakhCoinBalance", String(currentBalance + 20));
+    localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared a community memory", amount: 20, createdAt: Date.now() }, ...currentHistory]));
     setUploadedMemory({
       id: `user-memory-${Date.now()}`,
-      src: URL.createObjectURL(selectedFile),
+      src: capturedImage,
       alt: caption.trim(),
       author: "You",
       place: "Community partner",
       type: "PHOTO",
     });
     setCaption("");
-    setSelectedFile(null);
+    setCapturedImage(null);
     setTraceOpen(false);
     setCoins(
       Array.from({ length: 34 }, (_, index) => ({
@@ -1494,11 +1551,7 @@ function CommunityArchive() {
             <aside className="trace-form-space glass">
               <span className="eyebrow mono">Add to the atlas</span>
               <h3>Leave a trace.</h3>
-              <p>
-                {isLoggedIn
-                  ? "Share one frame from your route and receive 50 GoKarabakh coins."
-                  : "Share one frame from your route with the community."}
-              </p>
+              <p>Capture a moment now and receive 20 GoKarabakh coins. Sharing is available only from a verified Karabakh location.</p>
               <div className="trace-types">
                 <button type="button" onClick={openAuthIfGuest}>
                   Memory
@@ -1517,22 +1570,12 @@ function CommunityArchive() {
                 </button>
               </div>
               <form className="share-form" onSubmit={share}>
-                <label
-                  className="upload-drop"
-                  htmlFor="photo-input"
-                  onClick={openAuthIfGuest}
-                >
-                  <span>＋</span>
-                  <span>Choose a field note</span>
-                </label>
-                <input
-                  id="photo-input"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
-                  disabled={!isLoggedIn}
-                  onClick={openAuthIfGuest}
-                />
+                <button className="upload-drop capture-now" type="button" onClick={openCamera} disabled={!isLoggedIn}>
+                  <span>{capturedImage ? "✓" : "◉"}</span>
+                  <span>{capturedImage ? "Photo captured" : "Verify location & take a photo"}</span>
+                </button>
+                {capturedImage && <img className="trace-photo-preview" src={capturedImage} alt="Your captured memory" />}
+                {locationMessage && <p className={`trace-location-status ${locationStatus}`}>{locationMessage}</p>}
                 <input
                   value={caption}
                   onChange={(event) => setCaption(event.target.value)}
@@ -1547,16 +1590,18 @@ function CommunityArchive() {
                   className="button button-primary"
                   type="submit"
                   onClick={openAuthIfGuest}
+                  disabled={!capturedImage || locationStatus !== "verified"}
                 >
                   {shared
                     ? "Shared"
                     : isLoggedIn
-                      ? "Share / earn 50 ↗"
+                      ? "Share / earn 20 ↗"
                       : "Sign in to share ↗"}
                 </button>
               </form>
             </aside>
           )}
+          {cameraOpen && <div className="camera-capture" role="dialog" aria-modal="true" aria-label="Take a photo"><video ref={videoRef} autoPlay playsInline muted /><div className="camera-actions"><button type="button" onClick={closeCamera}>Cancel</button><button className="camera-shutter" type="button" onClick={capturePhoto} aria-label="Take photo" /></div></div>}
         </section>
       </main>
       <div className="coin-rain" aria-hidden="true">
@@ -1917,9 +1962,24 @@ function DistrictPage({ slug }) {
     : slug === 'shusha'
     ? (shushaCategoryCards[activeCategory] || [])
     : (region ? buildRegionCards(region) : shushaCards) || [];
-  const [savedPlaces, setSavedPlaces] = useState([]);
   const [showRoutePlan, setShowRoutePlan] = useState(false);
   const [bookingPlace, setBookingPlace] = useState(null);
+  const hotelRates = {
+    "Shusha Hotel": 70,
+    "Cıdır View House": 85,
+    "Karvansara Guest Rooms": 60,
+    Karvansaray: 73,
+    "Cahan Hotel": 90,
+    "Valley House": 65,
+  };
+  const priceForBooking = (title, category) => {
+    if (category === "Restaurants") return 40;
+    if (hotelRates[title]) return hotelRates[title];
+    if (title.includes("Panorama Stay")) return 70;
+    if (title.includes("Guesthouse")) return 55;
+    if (title.includes("Mountain Lodge")) return 75;
+    return 65;
+  };
   const openBooking = (place) => {
     if (localStorage.getItem("isLoggedIn") !== "true") {
       window.dispatchEvent(new CustomEvent("auth:open", { detail: { onSuccess: () => setBookingPlace(place) } }));
@@ -1933,7 +1993,7 @@ function DistrictPage({ slug }) {
     localStorage.setItem("karabakhBookings", JSON.stringify([...readRequests("karabakhBookings"), booking]));
     localStorage.setItem("karabakhPartnerBookingRequests", JSON.stringify([...readRequests("karabakhPartnerBookingRequests"), booking]));
     setBookingPlace(null);
-    window.alert("Your booking request was sent to the partner. Your card will be charged only after availability is confirmed.");
+    window.alert(`Your booking request was sent to the partner. ${booking.total_price.toLocaleString()} AZN will be charged only after availability is confirmed.`);
   };
   const routePlan = region && {
     image: region.images[0],
@@ -2157,28 +2217,13 @@ function DistrictPage({ slug }) {
                     <p className="district-card-meta">{meta}</p>
                     <h3>{title}</h3>
                     <p>{detail}</p>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSavedPlaces((places) =>
-                          places.includes(title)
-                            ? places.filter((place) => place !== title)
-                            : [...places, title],
-                        )
-                      }
-                    >
-                      {savedPlaces.includes(title)
-                        ? "Added to itinerary"
-                        : "Add to itinerary"}{" "}
-                      <span aria-hidden="true">→</span>
-                    </button>
                     {(activeCategory === "Hotels" || activeCategory === "Restaurants") && (
                       <button
                         type="button"
                         style={{ display: "block", marginTop: "10px" }}
-                        onClick={() => openBooking({ name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner" })}
+                        onClick={() => openBooking({ name: title, image: toImageUrl(image), type: activeCategory === "Hotels" ? "Hotel" : "Restaurant", partnerLabel: activeCategory === "Hotels" ? "property owner" : "restaurant owner", price_per_guest: priceForBooking(title, activeCategory) })}
                       >
-                        Book now →
+                        Book now · {priceForBooking(title, activeCategory)} AZN{activeCategory === "Hotels" ? " / guest / night" : " / guest"} →
                       </button>
                     )}
                   </div>
@@ -2277,6 +2322,59 @@ function DistrictPage({ slug }) {
   );
 }
 
+function AboutPage() {
+  const coinSteps = [
+    ["01", "Earn as you explore", "Receive GoKarabakh Coins when you book stays, tours, and services; share genuine reviews and photos; invite friends; or complete special travel tasks."],
+    ["02", "Keep every journey valuable", "Your activity becomes value in an internal digital reward system designed around the places and experiences you discover."],
+    ["03", "Spend where it matters", "Use Coins for instant booking discounts, partner perks at hotels and cafés, or exclusive souvenirs and guided tours."],
+  ];
+  const partnershipBenefits = [
+    ["↗", "Direct customer flow", "Help travellers find your service and place prepaid bookings with confidence."],
+    ["◈", "Coin-powered repeat sales", "Guests can choose your business first when you welcome GoKarabakh Coin benefits."],
+    ["✦", "Digital marketing support", "Be featured in our social channels and in-app recommendations."],
+    ["◌", "Transparent management", "Follow orders, revenue, and customer reviews from one dashboard."],
+  ];
+
+  return <div className="page-shell about-page">
+    <Header active="about" />
+    <main className="about-main">
+      <section className="about-hero">
+        <div className="about-hero-copy">
+          <span className="eyebrow mono">A NEW WAY TO DISCOVER KARABAKH</span>
+          <h1>Every road has a<br /><em>story to return to.</em></h1>
+          <p>GoKarabakh brings the region’s living heritage, magnificent nature, and emerging tourism scene into one thoughtful travel experience.</p>
+          <div className="about-hero-actions"><a className="button button-primary" href="/dashboard">Start your journey <span>→</span></a><a className="about-text-link" href="#coin">Discover the Coin <span>↓</span></a></div>
+        </div>
+        <div className="about-hero-visual" aria-label="Shusha landscape">
+          <img src="/shusha/shusha3.JPG" alt="Karabakh landscape" />
+          <div className="about-map-pin"><span>✦</span><div><b>Karabakh</b><small>40.14° N, 47.58° E</small></div></div>
+          <p className="about-visual-caption">Reborn paradise<br /><span>since the first step</span></p>
+        </div>
+      </section>
+
+      <section className="about-intro about-section">
+        <span className="about-section-number mono">01 / WHO WE ARE</span>
+        <div><h2>A digital gateway to a<br />remarkable region.</h2><p>GoKarabakh is a digital travel and experience ecosystem for domestic and international travellers. We make booking, route planning, and discovering unforgettable local experiences seamless—while contributing digitally to Karabakh’s economic and social revitalization.</p></div>
+        <div className="about-intro-stat"><strong>One</strong><span>platform for stays, routes, stories, and local connection.</span></div>
+      </section>
+
+      <section id="coin" className="about-coin about-section">
+        <div className="about-coin-header"><span className="about-section-number mono">02 / THE COIN ECOSYSTEM</span><div><span className="eyebrow mono">TRAVEL THAT GIVES BACK</span><h2>Your curiosity has<br /><em>real value.</em></h2></div><p>An internal digital reward system that recognizes every meaningful interaction with GoKarabakh.</p></div>
+        <div className="about-coin-layout"><div className="about-coin-orb"><div className="about-orb-ring ring-one" /><div className="about-orb-ring ring-two" /><div className="about-coin-face"><span>G</span><small>COIN</small></div><p>GO<br />KARABAKH</p></div><div className="about-coin-steps">{coinSteps.map(([number, title, text]) => <article key={number}><span className="mono">{number}</span><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></div>
+      </section>
+
+      <section className="about-partner about-section">
+        <div className="about-partner-image"><img src="/khankendi/cahanotel.jpg" alt="Karabakh hospitality" /><span className="mono">GROW LOCALLY · REACH GLOBALLY</span></div>
+        <div className="about-partner-content"><span className="about-section-number mono">03 / PARTNER WITH US</span><h2>Your local business,<br /><em>in every traveller’s plan.</em></h2><p>For Karabakh’s hotel, restaurant, transport, and guiding businesses, GoKarabakh is a digital growth partner built for the region.</p><ol className="about-partner-steps"><li><b>Apply</b><span>Fill out the “Become a Business Partner” form.</span></li><li><b>Verify</b><span>Our team verifies your business and activates your dashboard.</span></li><li><b>Grow</b><span>Present your services and pricing to active travellers.</span></li></ol><a href="/profile" className="button button-primary">Become a partner <span>→</span></a></div>
+        <div className="about-benefit-grid">{partnershipBenefits.map(([icon, title, text]) => <article key={title}><span>{icon}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
+      </section>
+
+      <section className="about-closing"><div><span className="eyebrow mono">04 / REBORN PARADISE</span><h2>Karabakh is more than<br />a destination.</h2><p>It is the heart of a culture, music, and heroic heritage shaped over centuries. From Shusha’s Jidir Plain and Lachin’s forests to Kalbajar’s Istisu springs and the rebuilt streets of Aghdam, every place holds a story waiting to be rediscovered.</p><a className="about-text-link" href="/">Explore the map <span>→</span></a></div><div className="about-closing-quote"><span>“</span><p>We are proud to be part of this story.</p><small>GO KARABAKH</small></div></section>
+      <section className="about-signup"><span className="eyebrow mono">YOUR KARABAKH STORY STARTS HERE</span><h2>Ready to see it<br /><em>for yourself?</em></h2><p>Create your GoKarabakh account to plan, book, and earn rewards along the way.</p><button className="button button-primary" type="button" onClick={() => window.dispatchEvent(new CustomEvent("auth:open"))}>Register on GoKarabakh <span>→</span></button></section>
+    </main>
+  </div>;
+}
+
 export default function App() {
   const getRoute = () => {
     const path = window.location.pathname.replace(/\/$/, "");
@@ -2284,6 +2382,7 @@ export default function App() {
     if (hash === "#community" || hash === "#inter-karabakh") return "community";
     if (path === "/dashboard" || path === "/dashboard.html") return "dashboard";
     if (path === "/profile" || path === "/profile.html") return "profile";
+    if (path === "/about" || path === "/about.html") return "about";
     if (path === "/owner-dashboard") return "owner-dashboard";
     if (path === "/guide-dashboard") return "guide-dashboard";
     if (path === "/community" || path === "/community.html") return "community";
@@ -2306,6 +2405,7 @@ export default function App() {
   let page = <Landing />;
   if (route === "dashboard") page = <Dashboard />;
   if (route === "profile") page = <Profile />;
+  if (route === "about") page = <AboutPage />;
   if (route === "owner-dashboard") page = <PartnerWorkspace role="owner" />;
   if (route === "guide-dashboard") page = <PartnerWorkspace role="guide" />;
   if (route === "community") page = <CommunityArchive />;
