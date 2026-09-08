@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoKarabakh — 3D Glassmorphism Cards</title>
+    <!-- VanillaTilt JS CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(330deg, #0f172a, #1e293b, #065f46, #047857);
+            padding: 20px;
+        }
+
+        .container {
+            position: relative;
+            width: 1100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 50px 20px;
+            transform-style: preserve-3d;
+        }
+
+        .container .card {
+            position: relative;
+            width: 300px;
+            height: 260px;
+            margin: 40px 20px;
+            /* Həqiqi Glassmorphism effekti */
+            background: rgba(255, 255, 255, 0.08);
+            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            transform-style: preserve-3d;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            transition: height 0.5s ease, background 0.3s ease;
+            cursor: pointer;
+        }
+
+        .container .card:hover {
+            height: 420px;
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .container .card .imgBox {
+            position: relative;
+            top: 15px;
+            left: 15px;
+            width: 270px;
+            height: 180px;
+            border-radius: 12px;
+            overflow: hidden;
+            z-index: 1;
+            transform-style: preserve-3d;
+            transition: 0.5s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .container .card:hover .imgBox {
+            top: -50px;
+            left: 20px;
+            width: 260px;
+            height: 170px;
+            transform: translate3d(0, 0, 60px);
+        }
+
+        .container .card .imgBox img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tag {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(16, 185, 129, 0.85);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .container .card .content {
+            position: relative;
+            padding: 0 20px 20px;
+            text-align: center;
+            color: #fff;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, transform 0.5s ease, visibility 0.4s;
+            transform: translateY(-20px) translate3d(0, 0, 30px);
+        }
+
+        .container .card:hover .content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-30px) translate3d(0, 0, 40px);
+        }
+
+        .container .card .content h2 {
+            font-size: 20px;
+            margin-bottom: 6px;
+            color: #f8fafc;
+        }
+
+        .container .card .content .meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #cbd5e1;
+            margin-bottom: 10px;
+        }
+
+        .container .card .content p {
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+
+        .btn-book {
+            display: inline-block;
+            width: 100%;
+            padding: 10px 0;
+            background: #10b981;
+            color: #020617;
+            font-weight: bold;
+            font-size: 13px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: background 0.2s ease;
+        }
+
+        .btn-book:hover {
+            background: #34d399;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Card 1: Tarixi Abidə -->
+        <div class="card">
+            <div class="imgBox">
+                <span class="tag">🏰 Tarixi Abidə</span>
+                <img src="https://images.unsplash.com/photo-1731902062588-4dce45ccc0cb?q=80&w=1470&auto=format&fit=crop" alt="Şuşa Qalası">
+            </div>
+            <div class="content">
+                <h2>Şuşa Qalası</h2>
+                <div class="meta">
+                    <span>📍 Şuşa şəhəri</span>
+                    <span>⭐ 4.9</span>
+                </div>
+                <p>1751-ci ildə Pənahəli xan tərəfindən tikilmiş tarixi qala divarları. 3D xəritədə virtual gəzinti mövcuddur.</p>
+                <a href="#" class="btn-book">🗺️ 3D Xəritədə Bax</a>
+            </div>
+        </div>
+
+        <!-- Card 2: Otel -->
+        <div class="card">
+            <div class="imgBox">
+                <span class="tag">🏨 Otel</span>
+                <img src="https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?q=80&w=1470&auto=format&fit=crop" alt="Karabakh Palace">
+            </div>
+            <div class="content">
+                <h2>Karabakh Palace</h2>
+                <div class="meta">
+                    <span>🪙 +50 Coin Qazan</span>
+                    <span>💰 120 AZN / gecə</span>
+                </div>
+                <p>Müasir rahatlıq və lüks xidmət. KarabakhCoin ilə bron edənlərə 10% xüsusi endirim tətbiq olunur.</p>
+                <a href="#" class="btn-book">⚡ 1-Click Bron Et</a>
+            </div>
+        </div>
+
+        <!-- Card 3: Restoran -->
+        <div class="card">
+            <div class="imgBox">
+                <span class="tag">🍽️ Restoran</span>
+                <img src="https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=1632&auto=format&fit=crop" alt="Cıdır Düzü Restoranı">
+            </div>
+            <div class="content">
+                <h2>Cıdır Düzü Restoranı</h2>
+                <div class="meta">
+                    <span>📍 Şuşa</span>
+                    <span>🪙 +20 Coin Qazan</span>
+                </div>
+                <p>Qarabağın milli mətbəx nümunələri və Cıdır düzünün füsunkar mənzərəsi fonunda unudulmaz şam yeməyi.</p>
+                <a href="#" class="btn-book">🍷 Masa Rezerv Et</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {  
+            VanillaTilt.init(document.querySelectorAll(".card"), {  
+                max: 20,          // 3D meyl bucağı
+                speed: 400,       // Keçid sürəti
+                glare: true,      // Parıltı effekti
+                "max-glare": 0.4, // Maksimum parıltı şəffaflığı
+                scale: 1.03       // Hover zamanı yüngül böyümə
+            });  
+        });
+    </script>
+</body>
+</html>

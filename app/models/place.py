@@ -1,13 +1,27 @@
-from app.models.base import ModelBase
+from __future__ import annotations
 
 
-class Place(ModelBase):
-    def __init__(self, owner_user_id: str, name: str, is_tour: bool, cost: float, description: str, main_photo_url: str, tags: list[str]):
-        super().__init__()
-        self.owner_user_id = owner_user_id
-        self.is_tour = is_tour
-        self.cost = cost
+class Place:
+    """Compatibility model representing a listing/place."""
+
+    def __init__(self, owner_id, name, is_tour, cost, desc, main_photo_url, tags=None, place_id=None):
+        self.id = place_id
+        self.owner_id = owner_id
         self.name = name
-        self.description = description
+        self.is_tour = bool(is_tour)
+        self.cost = cost
+        self.description = desc
         self.main_photo_url = main_photo_url
-        self.tags = tags
+        self.tags = tags or []
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "owner_id": self.owner_id,
+            "name": self.name,
+            "is_tour": self.is_tour,
+            "cost": self.cost,
+            "description": self.description,
+            "main_photo_url": self.main_photo_url,
+            "tags": self.tags,
+        }
