@@ -189,12 +189,21 @@ function Header({ active }) {
     () => localStorage.getItem("isLoggedIn") === "true",
   );
   const [accountOpen, setAccountOpen] = useState(false);
+  const [balance, setBalance] = useState(
+    () => Number(localStorage.getItem("karabakhCoinBalance") || 0),
+  );
 
   useEffect(() => {
     const syncAuth = () =>
       setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+    const syncCoins = () =>
+      setBalance(Number(localStorage.getItem("karabakhCoinBalance") || 0));
     window.addEventListener("auth:changed", syncAuth);
-    return () => window.removeEventListener("auth:changed", syncAuth);
+    window.addEventListener("coins:changed", syncCoins);
+    return () => {
+      window.removeEventListener("auth:changed", syncAuth);
+      window.removeEventListener("coins:changed", syncCoins);
+    };
   }, []);
 
   const handleAuthClick = () => {
@@ -237,7 +246,7 @@ function Header({ active }) {
               <span className="wallet-icon" style={{ color: "#38bdf8" }}>
                 ◈
               </span>
-              <b>0</b>
+              <b>{balance}</b>
               <span className="mono">coins</span>
             </div>
           )
@@ -1537,6 +1546,7 @@ function CommunityArchive() {
         const currentBalance = Number(localStorage.getItem("karabakhCoinBalance") || 0);
         const currentHistory = (() => { try { return JSON.parse(localStorage.getItem("karabakhCoinHistory") || "[]"); } catch { return []; } })();
         localStorage.setItem("karabakhCoinBalance", String(currentBalance + 50));
+        window.dispatchEvent(new CustomEvent("coins:changed"));
         localStorage.setItem("karabakhCoinHistory", JSON.stringify([{ id: `memory-${Date.now()}`, label: "Shared your first community trace", amount: 50, createdAt: Date.now() }, ...currentHistory]));
         localStorage.setItem("communityShareRewardClaimed", "true");
         setRewardClaimed(true);
