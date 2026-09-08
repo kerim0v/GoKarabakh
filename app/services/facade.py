@@ -3,6 +3,7 @@ from app.models.user import User, bookings as bookings_table
 from app.models.partner_application import PartnerApplication
 from app.models.booking_request import BookingRequest
 from app.models.community_trace import CommunityTrace
+from app.models.kx_transaction import KxTransaction
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
 
@@ -12,6 +13,7 @@ place_repository = SQLAlchemyRepository(Place)
 partner_application_repository = SQLAlchemyRepository(PartnerApplication)
 booking_request_repository = SQLAlchemyRepository(BookingRequest)
 community_trace_repository = SQLAlchemyRepository(CommunityTrace)
+kx_transaction_repository = SQLAlchemyRepository(KxTransaction)
 
 def commit():
     db.session.commit()
@@ -85,3 +87,20 @@ def create_community_trace(trace): community_trace_repository.add(trace)
 def get_community_trace(id) -> CommunityTrace: return community_trace_repository.get(id)
 def get_community_traces() -> list[CommunityTrace]: return community_trace_repository.get_all()
 def delete_community_trace(id): community_trace_repository.delete(id)
+
+# Kx transactions
+
+def get_kx_transactions() -> list[KxTransaction]: return kx_transaction_repository.get_all()
+
+def kx_transactions_for_user(user_id):
+    txs = [t for t in get_kx_transactions() if t.user_id == user_id]
+    txs.sort(key=lambda t: t.creation_date, reverse=True)
+    return txs
+
+def has_kx_transaction_reason(user_id, reason):
+    return any(t.user_id == user_id and t.reason == reason for t in get_kx_transactions())
+
+def grant_kx(user, amount, reason):
+    user.kx_count += amount
+    kx_transaction_repository.add(KxTransaction(user_id=user.id, amount=amount, reason=reason))
+    commit()

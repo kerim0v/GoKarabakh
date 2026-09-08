@@ -67,6 +67,17 @@
           "owner_role": {"type": "string", "description": "Only present on GET /api/v1/places/get"}
         }
       },
+      "KxTransaction": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "creation_date": {"type": "string", "format": "date-time"},
+          "modification_date": {"type": "string", "format": "date-time"},
+          "user_id": {"type": "string"},
+          "amount": {"type": "number", "description": "Positive = earned, negative = spent"},
+          "reason": {"type": "string"}
+        }
+      },
       "CommunityTrace": {
         "type": "object",
         "properties": {
@@ -145,6 +156,15 @@
         "security": [{"bearerAuth": []}],
         "responses": {
           "200": { "description": "Current user", "content": { "application/json": { "schema": {"$ref": "#/components/schemas/User"}}}}
+        }
+      }
+    },
+    "/api/v1/users/kx_transactions": {
+      "get": {
+        "tags": ["Users"], "summary": "List the logged-in user's kx (loyalty points) transaction history, newest first",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Transactions", "content": { "application/json": { "schema": {"type": "array", "items": {"$ref": "#/components/schemas/KxTransaction"}}}}}
         }
       }
     },

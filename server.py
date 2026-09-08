@@ -93,6 +93,7 @@ def create_user():
     )
     user.hash_pwd(password)
     facade.create_user(user)
+    facade.grant_kx(user, 100, "Welcome bonus")
     return jsonify({"status": "User created successfully"}), 200
 
 @app.route("/api/v1/users/update", methods=["PUT"])
@@ -264,10 +265,12 @@ def book_place():
     if use_kx:
         discount = min(user.kx_count, cost)
         real_cost = cost - discount
-        user.kx_count -= discount
+        if discount > 0:
+            facade.grant_kx(user, -discount, f"Used on booking {place.name}")
     else:
         real_cost = cost
-        user.kx_count += cost * (config.PERCENTAGE_FEE / 100)
+        earned = cost * (config.PERCENTAGE_FEE / 100)
+        facade.grant_kx(user, earned, f"Booked {place.name}")
 
     user.bought_places.append(place)
     facade.commit()
@@ -519,6 +522,12 @@ def get_current_user():
         return jsonify({"error": "User not found"}), 404
     return jsonify(user.to_dict()), 200
 
+@app.route("/api/v1/users/kx_transactions", methods=["GET"])
+@jwt_required()
+def get_kx_transactions():
+    txs = facade.kx_transactions_for_user(get_jwt_identity())
+    return jsonify([t.to_dict() for t in txs]), 200
+
 # Community traces -------------------------------------
 
 @app.route("/api/v1/community/traces", methods=["POST"])
@@ -543,8 +552,13 @@ def create_community_trace():
         photo_url=data.get("photo_url"),
     )
     facade.create_community_trace(trace)
-    d = trace.to_dict()
+
     author = facade.get_user(user_id)
+    reward_reason = "Shared your first community trace"
+    if author and not facade.has_kx_transaction_reason(user_id, reward_reason):
+        facade.grant_kx(author, 50, reward_reason)
+
+    d = trace.to_dict()
     d["author_name"] = author.name if author else None
     return jsonify(d), 200
 

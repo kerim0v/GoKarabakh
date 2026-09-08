@@ -50,6 +50,10 @@ export function fetchMe() {
   return request("/api/v1/users/me");
 }
 
+export function getKxTransactions() {
+  return request("/api/v1/users/kx_transactions");
+}
+
 export function getBookingHistory() {
   return request("/api/v1/users/bookings");
 }

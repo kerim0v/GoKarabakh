@@ -38,16 +38,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
       localStorage.setItem("karabakhUser", JSON.stringify(user));
       window.dispatchEvent(new CustomEvent("auth:changed"));
 
-      if (isNewAccount && !localStorage.getItem("signupRewardClaimed")) {
-        localStorage.setItem("signupRewardClaimed", "true");
-        localStorage.setItem("karabakhCoinBalance", "100");
-        window.dispatchEvent(new CustomEvent("coins:changed"));
-        localStorage.setItem("karabakhCoinHistory", JSON.stringify([{
-          id: `welcome-${Date.now()}`,
-          label: "Welcome to GoKarabakh",
-          amount: 100,
-          createdAt: Date.now(),
-        }]));
+      if (isNewAccount) {
         setNotice(rewardText);
         setCoins(
           Array.from({ length: 30 }, (_, index) => ({
