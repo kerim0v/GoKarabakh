@@ -8,7 +8,7 @@ APPLICATION_STATUSES = ("pending", "approved", "rejected")
 class PartnerApplication(ModelBase):
     __tablename__ = "partner_applications"
 
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     target_role = db.Column(db.String(20), nullable=False)
     company_name = db.Column(db.String(255))
     tax_id = db.Column(db.String(100))

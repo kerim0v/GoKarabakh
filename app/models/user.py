@@ -5,8 +5,8 @@ import datetime
 
 bookings = db.Table(
     "bookings",
-    db.Column("user_id", db.String(36), db.ForeignKey("users.id"), primary_key=True),
-    db.Column("place_id", db.String(36), db.ForeignKey("places.id"), primary_key=True),
+    db.Column("user_id", db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    db.Column("place_id", db.String(36), db.ForeignKey("places.id", ondelete="CASCADE"), primary_key=True),
     db.Column("booked_at", db.DateTime, default=datetime.datetime.now)
 )
 

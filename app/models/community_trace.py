@@ -11,7 +11,7 @@ DISTRICT_SLUGS = (
 class CommunityTrace(ModelBase):
     __tablename__ = "community_traces"
 
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     region_slug = db.Column(db.String(50), nullable=False)
     caption = db.Column(db.Text, nullable=False)
     photo_url = db.Column(db.Text)
