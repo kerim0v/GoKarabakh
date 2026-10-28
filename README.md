@@ -6,13 +6,15 @@ GoKarabakh is a full-stack booking platform built as our final project at Holber
 
 ## What it does
 
-- Browse hotels, restaurants, sights and tours in nine districts, on an interactive map or by search
+- Browse hotels, restaurants, sights and tours in nine districts, on a map of Azerbaijan or by search
+- Plan a trip with AI: describe what you like and get a day-by-day plan built from real, bookable listings
 - Request a booking: the partner confirms, then both sides get each other's contact details by email
-- Save places to a multi-day itinerary
+- Save places to an itinerary with dates and approximate times
 - Rate and review places after a confirmed visit
 - Earn Karabakh coins (welcome bonus, first community photo, 2% of every booking) and spend them on bookings (1 coin = 1 AZN)
 - Share photos and notes from the road in the community archive
-- Businesses and guides apply to become partners, then publish listings and answer requests from their workspace
+- Businesses and guides apply to become partners, then publish listings and answer requests from their workspace; admins can mark partners "ID checked" or "Licensed guide"
+- Short history and culture notes on every district page
 - Admin page for partner applications, user roles and listings
 - Azerbaijani, English and Russian; prices shown in AZN, USD or EUR
 
@@ -51,6 +53,8 @@ npm run dev                        # http://localhost:5173
 | `flask --app server db migrate -m "..."` | Create a migration after changing a model |
 | `flask --app server seed` | Add the district content (safe to run again) |
 | `flask --app server create-admin EMAIL` | Make an account an admin (creates it if needed) |
+| `python scripts/build_openapi.py` | Rebuild `static/openapi.json` after changing the API (a test checks every route is documented) |
+| `node frontend/scripts/build-map.mjs` | Rebuild the atlas map from `frontend/scripts/data/azerbaijan-districts.geojson` |
 
 > Databases created before migrations were added (with `db.create_all()`) have an older schema.
 > Drop the old tables, or start from an empty database, then run `db upgrade` and `seed`.
@@ -62,7 +66,25 @@ npm run dev                        # http://localhost:5173
 - Uploaded photos are saved to `UPLOAD_FOLDER` (default `instance/uploads`) — use a persistent disk.
 - Set the `SMTP_*` variables to send real emails; without them, emails are written to the server log.
 - The frontend is a single-page app: configure the host to serve `index.html` for unknown paths (e.g. `/district/shusha`).
+- Run gunicorn with a longer timeout (`gunicorn --timeout 120 server:app`): an AI plan can take up to a minute.
 - See `.env.example` for every setting.
+
+## AI trip planner
+
+The planner sends Claude (Anthropic) the list of active listings plus the traveller's wishes, and gets back a day-by-day plan that may only use those listings — the server drops anything else.
+
+- Set `ANTHROPIC_API_KEY` (from console.anthropic.com) to switch it on; without it the planner is hidden.
+- `AI_MODEL` defaults to `claude-opus-5-5`. `claude-haiku-5-5` costs about 40 times less per token if you want to cut costs.
+- Each user gets `AI_DAILY_LIMIT` plans per day (default 10). Every request is logged in `ai_plan_logs` with its token usage.
+- The listing catalogue is sent as a cached prompt prefix, so repeated plans cost less while listings don't change.
+
+## Content to check before launch
+
+- District history texts (`frontend/src/data/history.js`) are a draft — have someone who knows the region check them.
+- Azerbaijani and Russian translations (`frontend/src/i18n/`) should be proofread by native speakers.
+- Many seeded listings are placeholders (e.g. "Kalbajar Panorama Stay"); replace them with real partners.
+
+Map boundaries: [geoBoundaries](https://www.geoboundaries.org), CC BY 4.0.
 
 ## Project layout
 
@@ -85,8 +107,8 @@ frontend/src/
 
 # Ideas for later
 
-📖 Short cultural/historical background on each site\
-🧭 Guide verification badges (ID-checked, licensed, etc.)\
+🗺️ Pins for individual sights on the map (needs coordinates for each place)\
+🔔 In-app notifications for new requests and confirmations\
 💳 Online payment (bookings are currently confirmed by the partner and paid directly)\
 🗺️ Translated listing descriptions (place content is stored in one language)
 
