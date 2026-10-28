@@ -1,9 +1,15 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import az from "./az.js";
 import en from "./en.js";
+import ru from "./ru.js";
 
 // Each language is a nested object with the same keys as en.js. A value can be a
 // string with {placeholders} or a function of the variables (for plurals).
-export const LANGUAGES = { en: { label: "EN", name: "English", locale: "en-GB", strings: en } };
+export const LANGUAGES = {
+  az: { label: "AZ", name: "Azərbaycanca", locale: "az-Latn-AZ", strings: az },
+  en: { label: "EN", name: "English", locale: "en-GB", strings: en },
+  ru: { label: "RU", name: "Русский", locale: "ru-RU", strings: ru },
+};
 const STORAGE_KEY = "gk.lang";
 
 function lookup(strings, key) {

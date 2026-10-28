@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import * as api from "./api.js";
 import AuthModal from "./components/AuthModal.jsx";
 import { I18nProvider } from "./i18n/index.jsx";
+import { CurrencyProvider } from "./lib/currency.jsx";
 import { useLocation } from "./lib/router.jsx";
 import { isLoggedIn } from "./lib/session.js";
 
@@ -76,11 +77,13 @@ function AuthShell({ children }) {
 export default function App() {
   return (
     <I18nProvider>
-      <AuthShell>
-        <Suspense fallback={<div className="page-loading" aria-busy="true" />}>
-          <Page />
-        </Suspense>
-      </AuthShell>
+      <CurrencyProvider>
+        <AuthShell>
+          <Suspense fallback={<div className="page-loading" aria-busy="true" />}>
+            <Page />
+          </Suspense>
+        </AuthShell>
+      </CurrencyProvider>
     </I18nProvider>
   );
 }

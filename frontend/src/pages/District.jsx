@@ -10,6 +10,7 @@ import { requireLogin, useSession } from "../lib/session.js";
 import { useAsync } from "../lib/useAsync.js";
 import { useItinerary } from "../lib/useItinerary.js";
 import NotFound from "./NotFound.jsx";
+import Switchers from "../components/Switchers.jsx";
 
 const TABS = [
   ["hotel", "🏨"],
@@ -49,7 +50,10 @@ export default function District({ slug }) {
       <section className="district-hero">
         <div className="district-hero-overlay" aria-hidden="true" />
         <div className="district-hero-inner">
-          <Link className="back-link" href="/dashboard">← {t("district.back")}</Link>
+          <div className="district-topline">
+            <Link className="back-link" href="/dashboard">← {t("district.back")}</Link>
+            <Switchers />
+          </div>
           <p className="mono district-crumb">{t("district.crumb", { name })}</p>
           <h1>{name}</h1>
           <p className="district-tagline">{t(`regions.${slug}.tagline`)}</p>

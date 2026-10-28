@@ -3,6 +3,7 @@ import * as api from "../api.js";
 import { useI18n } from "../i18n/index.jsx";
 import { Link } from "../lib/router.jsx";
 import { requireLogin, useSession } from "../lib/session.js";
+import Switchers from "./Switchers.jsx";
 
 export default function Header({ active }) {
   const { t } = useI18n();
@@ -39,6 +40,7 @@ export default function Header({ active }) {
         ))}
       </nav>
       <div className="header-actions">
+        <Switchers />
         {loggedIn && (
           <Link className="wallet" href="/profile" title={t("header.coinsTitle")}>
             <span className="wallet-icon wallet-icon-sky">◈</span>

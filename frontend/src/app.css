@@ -209,3 +209,27 @@ body.has-modal { overflow: hidden; }
 @media (min-width: 801px) {
   .atlas { width: calc(100vw - 72px); margin-left: calc(50% - 50vw + 36px); }
 }
+
+/* Language and currency pickers */
+.header-switchers { display: flex; gap: 6px; }
+.header-switchers select { border: 1px solid rgba(255,255,255,.22); border-radius: 8px; padding: 7px 6px; background: rgba(5,12,10,.55); color: var(--ink); font: 11px var(--mono); letter-spacing: .06em; cursor: pointer; }
+.header-switchers select:focus-visible { outline: 2px solid var(--sky); outline-offset: 1px; }
+.header-switchers option { background: #0b1712; }
+.district-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 22px; }
+.district-topline .back-link { padding-top: 0; }
+@media (max-width: 800px) {
+  .header-actions { gap: 6px; }
+  .wallet .mono { display: none; }
+  .header-switchers select { padding: 6px 3px; font-size: 10px; }
+}
+@media (max-width: 520px) {
+  .topbar { gap: 8px; }
+  .brand > span:last-child { display: none; }
+  .nav { gap: 8px; font-size: 11px; }
+  .header-actions .auth-trigger { padding: 4px; }
+}
+.admin-tabs { flex-wrap: wrap; }
+@media (max-width: 520px) {
+  .stage-copy h1 { font-size: clamp(40px, 13vw, 62px); }
+  .memory-world-shell { overflow-x: hidden; }
+}
