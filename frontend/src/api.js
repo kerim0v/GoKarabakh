@@ -117,9 +117,13 @@ export const deleteReview = (id) => del(`/api/v1/reviews/${id}`);
 // Itinerary
 
 export const getItinerary = () => request("/api/v1/itinerary");
-export const addToItinerary = (place_id, day) => post("/api/v1/itinerary", { place_id, day });
+export const addToItinerary = (place_id, date, time) => post("/api/v1/itinerary", { place_id, date, time });
 export const updateItineraryItem = (id, fields) => put(`/api/v1/itinerary/${id}`, fields);
 export const removeFromItinerary = (id) => del(`/api/v1/itinerary/${id}`);
+
+// AI planner
+
+export const planTrip = (payload) => post("/api/v1/ai/plan", payload);
 
 // Partners & admin
 

@@ -259,3 +259,18 @@ body.has-modal { overflow: hidden; }
   .trip-stop { grid-template-columns: 1fr; gap: 6px; }
   .trip-stop-card > img { display: none; }
 }
+
+/* AI planner */
+.ai-cta { display: inline-block; margin-top: 14px; border: 1px solid rgba(244,200,121,.7); border-radius: 999px; padding: 9px 16px; background: rgba(244,200,121,.14); color: #ffe7a8; font-size: 13px; font-weight: 800; }
+.ai-cta:hover { background: rgba(244,200,121,.26); }
+.planner-form { gap: 14px; }
+.planner-ideas, .planner-budget { display: flex; flex-wrap: wrap; gap: 8px; }
+.planner-ideas button { border: 1px dashed rgba(244,200,121,.6); border-radius: 999px; padding: 6px 12px; background: transparent; color: #ffe7a8; font-size: 12px; }
+.planner-budget button { flex: 1 1 110px; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 10px; background: rgba(255,255,255,.06); color: #fff; font-weight: 700; }
+.planner-budget button.is-active { border-color: #f4c879; background: #f4c879; color: #173029; }
+.planner-wait { margin: 0; text-align: center; }
+.planner-result { display: grid; gap: 0; margin-top: 18px; }
+.planner-summary { margin: 0 0 10px; color: rgba(255,255,255,.88); font-size: 15px; line-height: 1.6; }
+.planner-tips { margin: 0 0 12px; padding-left: 18px; color: rgba(255,255,255,.8); line-height: 1.6; }
+.planner-reason { margin: 2px 0 0; color: rgba(255,255,255,.82); font-size: 13px; line-height: 1.5; }
+.planner-result .profile-panel { min-height: 0; }

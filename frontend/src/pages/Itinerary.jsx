@@ -4,11 +4,12 @@ import BookingModal from "../components/BookingModal.jsx";
 import Header from "../components/Header.jsx";
 import Price from "../components/Price.jsx";
 import { useI18n } from "../i18n/index.jsx";
+import { useMeta } from "../lib/meta.jsx";
 import { Link } from "../lib/router.jsx";
 import { requireLogin, useSession } from "../lib/session.js";
 import { useAsync } from "../lib/useAsync.js";
+import { localToday } from "../lib/dates.js";
 
-const today = () => new Date().toISOString().slice(0, 10);
 
 function Stop({ item, onUpdate, onRemove, onBook }) {
   const { t } = useI18n();
@@ -26,7 +27,7 @@ function Stop({ item, onUpdate, onRemove, onBook }) {
           <div className="trip-stop-fields">
             <label>
               <span>{t("itinerary.dateLabel")}</span>
-              <input type="date" min={today()} value={item.visit_date || ""} onChange={(event) => onUpdate({ date: event.target.value || null })} />
+              <input type="date" min={localToday()} value={item.visit_date || ""} onChange={(event) => onUpdate({ date: event.target.value || null })} />
             </label>
             <label>
               <span>{t("itinerary.timeLabel")}</span>
@@ -53,6 +54,7 @@ function Stop({ item, onUpdate, onRemove, onBook }) {
 export default function Itinerary() {
   const { t, errorText, formatDay } = useI18n();
   const { loggedIn } = useSession();
+  const meta = useMeta();
   const items = useAsync(() => (loggedIn ? api.getItinerary() : Promise.resolve([])), [loggedIn]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -102,6 +104,7 @@ export default function Itinerary() {
             <span>✦</span>
             <p>{t("itinerary.empty")}</p>
             <Link href="/dashboard">{t("itinerary.browse")} →</Link>
+            {meta?.ai?.enabled && <Link href="/plan">✦ {t("itinerary.planWithAi")} →</Link>}
           </div>
         )}
         {dates.map((date) => {

@@ -6,8 +6,8 @@ import { readTripDraft } from "../lib/tripDraft.js";
 import Field from "./Field.jsx";
 import Modal from "./Modal.jsx";
 import Price from "./Price.jsx";
+import { localToday } from "../lib/dates.js";
 
-const today = () => new Date().toISOString().slice(0, 10);
 
 function nightsBetween(start, end) {
   if (!start || !end) return 0;
@@ -21,7 +21,7 @@ export default function BookingModal({ place, initialDate, onClose, onBooked }) 
   const isHotel = place?.category === "hotel";
   const [form, setForm] = useState(() => ({
     guests: draft.guests || 2,
-    check_in: [initialDate, draft.checkIn].find((d) => d && d >= today()) || "",
+    check_in: [initialDate, draft.checkIn].find((d) => d && d >= localToday()) || "",
     check_out: "",
     contact_phone: "",
     message: "",
@@ -72,11 +72,11 @@ export default function BookingModal({ place, initialDate, onClose, onBooked }) 
       <form className="auth-form-enhanced" onSubmit={submit}>
         <div className="form-row">
           <Field id="booking-start" label={isHotel ? t("booking.checkIn") : t("booking.date")}>
-            <input id="booking-start" type="date" min={today()} value={form.check_in} onChange={set("check_in")} required />
+            <input id="booking-start" type="date" min={localToday()} value={form.check_in} onChange={set("check_in")} required />
           </Field>
           {isHotel && (
             <Field id="booking-end" label={t("booking.checkOut")}>
-              <input id="booking-end" type="date" min={form.check_in || today()} value={form.check_out} onChange={set("check_out")} required />
+              <input id="booking-end" type="date" min={form.check_in || localToday()} value={form.check_out} onChange={set("check_out")} required />
             </Field>
           )}
         </div>

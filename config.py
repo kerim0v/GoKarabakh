@@ -42,6 +42,12 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_USE_TLS = _env_bool("SMTP_USE_TLS", "True")
 MAIL_FROM = os.getenv("MAIL_FROM", "GoKarabakh <no-reply@gokarabakh.local>")
 
+# AI trip planner (Claude). Without an API key the feature is switched off.
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+AI_MODEL = os.getenv("AI_MODEL", "claude-opus-5-5")
+AI_EFFORT = os.getenv("AI_EFFORT", "medium")            # low | medium | high
+AI_DAILY_LIMIT = int(os.getenv("AI_DAILY_LIMIT", "10"))  # plans per user per day
+
 # Prices are stored in AZN; other currencies are shown as approximations
 AZN_PER_USD = float(os.getenv("AZN_PER_USD", "1.70"))
 AZN_PER_EUR = float(os.getenv("AZN_PER_EUR", "1.98"))

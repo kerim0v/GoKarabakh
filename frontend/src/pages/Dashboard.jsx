@@ -6,9 +6,11 @@ import Price from "../components/Price.jsx";
 import Stars from "../components/Stars.jsx";
 import { REGIONS } from "../data/regions.js";
 import { useI18n } from "../i18n/index.jsx";
+import { useMeta } from "../lib/meta.jsx";
 import { Link, navigate } from "../lib/router.jsx";
 import { readTripDraft, saveTripDraft } from "../lib/tripDraft.js";
 import { useAsync } from "../lib/useAsync.js";
+import { localToday } from "../lib/dates.js";
 
 const BACKGROUNDS = ["/cidir-1.jpg", "/cidir-2.jpg", "/cidir-3.jpg"];
 const TABS = [
@@ -47,6 +49,7 @@ export default function Dashboard() {
   const [bgIndex, setBgIndex] = useState(0);
   const [focusRegion, setFocusRegion] = useState("all");
   const [hovered, setHovered] = useState(null);
+  const meta = useMeta();
   const popular = useAsync(() => api.getPlaces({ sort: "popular", limit: 6 }), []);
 
   useEffect(() => {
@@ -97,6 +100,7 @@ export default function Dashboard() {
             <span>✉ {t("trip.badgeRequest")}</span>
             <span>◈ {t("trip.badgeCoins")}</span>
           </div>
+          {meta?.ai?.enabled && <Link className="ai-cta" href="/plan">✦ {t("trip.aiCta")}</Link>}
         </section>
 
         <form className="search-panel" onSubmit={search}>
@@ -114,7 +118,7 @@ export default function Dashboard() {
             </label>
             <label className="search-field">
               <span>{t("trip.date")}</span>
-              <input type="date" min={new Date().toISOString().slice(0, 10)} value={checkIn} onChange={(event) => setCheckIn(event.target.value)} />
+              <input type="date" min={localToday()} value={checkIn} onChange={(event) => setCheckIn(event.target.value)} />
             </label>
             <label className="search-field search-field-small">
               <span>{t("trip.guests")}</span>

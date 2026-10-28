@@ -505,10 +505,14 @@
           "place_id": {
             "type": "string"
           },
-          "day": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 14,
+          "visit_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "start_time": {
+            "type": "string",
+            "example": "14:30",
             "nullable": true
           },
           "note": {
@@ -2616,8 +2620,13 @@
                   "place_id": {
                     "type": "string"
                   },
-                  "day": {
-                    "type": "integer"
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "time": {
+                    "type": "string",
+                    "example": "14:30"
                   }
                 }
               }
@@ -2683,7 +2692,7 @@
         "tags": [
           "Itinerary"
         ],
-        "summary": "Set day or note",
+        "summary": "Set date, approximate time or note",
         "security": [
           {
             "bearerAuth": []
@@ -2707,8 +2716,14 @@
                 "type": "object",
                 "required": [],
                 "properties": {
-                  "day": {
-                    "type": "integer",
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "time": {
+                    "type": "string",
+                    "example": "14:30",
                     "nullable": true
                   },
                   "note": {
@@ -3718,6 +3733,191 @@
                   "items": {
                     "$ref": "#/components/schemas/Place"
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ai/plan": {
+      "post": {
+        "tags": [
+          "AI planner"
+        ],
+        "summary": "Plan a trip with AI",
+        "description": "Claude builds a day-by-day plan from the active listings only. Off (503 ai_disabled) without ANTHROPIC_API_KEY; limited per user per day (429 ai_limit).",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "start_date"
+                ],
+                "properties": {
+                  "start_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "days": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 7
+                  },
+                  "guests": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                  },
+                  "budget": {
+                    "type": "string",
+                    "enum": [
+                      "economy",
+                      "balanced",
+                      "premium"
+                    ]
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "az",
+                      "ru"
+                    ]
+                  },
+                  "wishes": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "type": "string"
+                    },
+                    "tips": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "remaining_today": {
+                      "type": "integer"
+                    },
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "stops": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "place_id": {
+                                  "type": "string"
+                                },
+                                "time": {
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "reason": {
+                                  "type": "string"
+                                },
+                                "place": {
+                                  "$ref": "#/components/schemas/Place"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The AI declined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }

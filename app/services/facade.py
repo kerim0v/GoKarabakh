@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import func
 
 from app.models.place import Place
@@ -8,6 +10,8 @@ from app.models.community_trace import CommunityTrace
 from app.models.kx_transaction import KxTransaction
 from app.models.review import Review
 from app.models.itinerary_item import ItineraryItem
+from app.models.ai_plan_log import AiPlanLog
+from app.models.ai_plan_log import AiPlanLog
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
 
@@ -284,3 +288,14 @@ def overview_counts():
         "traces": CommunityTrace.query.count(),
         "reviews": Review.query.count(),
     }
+
+# AI planner
+
+def ai_plans_today(user_id):
+    """Plans requested since midnight UTC, failed ones included (they cost tokens too)."""
+    midnight = datetime.datetime.now(datetime.UTC).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+    return AiPlanLog.query.filter(AiPlanLog.user_id == user_id, AiPlanLog.creation_date >= midnight).count()
+
+def log_ai_plan(entry):
+    db.session.add(entry)
+    commit()

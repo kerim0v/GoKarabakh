@@ -6,3 +6,4 @@ from app.models.community_trace import CommunityTrace
 from app.models.kx_transaction import KxTransaction
 from app.models.review import Review
 from app.models.itinerary_item import ItineraryItem
+from app.models.ai_plan_log import AiPlanLog

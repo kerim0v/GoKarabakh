@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import * as api from "../api.js";
 import { useI18n } from "../i18n/index.jsx";
 import { Link } from "../lib/router.jsx";
+import { useMeta } from "../lib/meta.jsx";
 import { requireLogin, useSession } from "../lib/session.js";
 import Switchers from "./Switchers.jsx";
 
 export default function Header({ active }) {
   const { t } = useI18n();
   const { user, loggedIn } = useSession();
+  const meta = useMeta();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -23,6 +25,7 @@ export default function Header({ active }) {
     ["explore", "/", t("nav.explore")],
     ["trip", "/dashboard", t("nav.trip")],
     ["community", "/community", t("nav.community")],
+    ...(meta?.ai?.enabled ? [["plan", "/plan", t("nav.plan")]] : []),
     ...(loggedIn ? [["itinerary", "/itinerary", t("nav.itinerary")]] : []),
   ];
 

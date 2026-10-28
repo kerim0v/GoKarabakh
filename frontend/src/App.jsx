@@ -3,6 +3,7 @@ import * as api from "./api.js";
 import AuthModal from "./components/AuthModal.jsx";
 import { I18nProvider } from "./i18n/index.jsx";
 import { CurrencyProvider } from "./lib/currency.jsx";
+import { MetaProvider } from "./lib/meta.jsx";
 import { useLocation } from "./lib/router.jsx";
 import { isLoggedIn } from "./lib/session.js";
 
@@ -14,6 +15,7 @@ const Itinerary = lazy(() => import("./pages/Itinerary.jsx"));
 const Landing = lazy(() => import("./pages/Landing.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 const PartnerWorkspace = lazy(() => import("./pages/PartnerWorkspace.jsx"));
+const Planner = lazy(() => import("./pages/Planner.jsx"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
 
@@ -23,6 +25,7 @@ const ROUTES = {
   "/community": Community,
   "/profile": Profile,
   "/itinerary": Itinerary,
+  "/plan": Planner,
   "/admin": Admin,
   "/reset-password": ResetPassword,
   "/owner-dashboard": () => <PartnerWorkspace role="owner" />,
@@ -77,13 +80,15 @@ function AuthShell({ children }) {
 export default function App() {
   return (
     <I18nProvider>
-      <CurrencyProvider>
-        <AuthShell>
-          <Suspense fallback={<div className="page-loading" aria-busy="true" />}>
-            <Page />
-          </Suspense>
-        </AuthShell>
-      </CurrencyProvider>
+      <MetaProvider>
+        <CurrencyProvider>
+          <AuthShell>
+            <Suspense fallback={<div className="page-loading" aria-busy="true" />}>
+              <Page />
+            </Suspense>
+          </AuthShell>
+        </CurrencyProvider>
+      </MetaProvider>
     </I18nProvider>
   );
 }

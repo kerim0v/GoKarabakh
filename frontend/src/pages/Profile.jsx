@@ -9,8 +9,8 @@ import { useI18n } from "../i18n/index.jsx";
 import { Link, navigate } from "../lib/router.jsx";
 import { requireLogin, useSession } from "../lib/session.js";
 import { useAsync } from "../lib/useAsync.js";
+import { localToday } from "../lib/dates.js";
 
-const today = () => new Date().toISOString().slice(0, 10);
 
 // Coin reasons come from the API in English; known ones are shown translated
 const REASONS = [
@@ -33,8 +33,8 @@ function reasonText(reason, t) {
 function Booking({ booking, onCancel, onReview }) {
   const { t, formatDate } = useI18n();
   const dates = formatDate(booking.check_in) + (booking.check_out ? ` – ${formatDate(booking.check_out)}` : "");
-  const canCancel = booking.status === "pending" || (booking.status === "confirmed" && booking.check_in > today());
-  const canReview = booking.status === "confirmed" && booking.check_in <= today();
+  const canCancel = booking.status === "pending" || (booking.status === "confirmed" && booking.check_in > localToday());
+  const canReview = booking.status === "confirmed" && booking.check_in <= localToday();
   return (
     <div className="profile-booking">
       <img src={api.mediaUrl(booking.place_photo_url)} alt="" />

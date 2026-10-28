@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify
 import config
 from app.models.place import BOOKABLE_CATEGORIES, CATEGORIES
 from app.models.regions import REGIONS
+from app.services import trip_planner
 
 bp = Blueprint("meta", __name__, url_prefix="/api/v1")
 
@@ -19,6 +20,7 @@ def meta():
             "first_trace_bonus": config.FIRST_TRACE_BONUS,
             "percentage_fee": config.PERCENTAGE_FEE,
         },
+        "ai": {"enabled": trip_planner.is_enabled(), "daily_limit": config.AI_DAILY_LIMIT},
         "currency": {
             "base": "AZN",
             # how many units of each currency one AZN buys
