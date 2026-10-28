@@ -6,7 +6,7 @@ GoKarabakh is a full-stack booking platform built as our final project at Holber
 
 ## What it does
 
-- Browse hotels, restaurants, sights and tours in nine districts, on a map of Azerbaijan or by search
+- Browse hotels, restaurants, sights and tours in nine districts, on a map of Azerbaijan or by search with dates and group size (partners mark the dates they're closed or full)
 - Plan a trip with AI: describe what you like and get a day-by-day plan built from real, bookable listings
 - Request a booking: the partner confirms, then both sides get each other's contact details by email
 - Save places to an itinerary with dates and approximate times
@@ -73,8 +73,9 @@ npm run dev                        # http://localhost:5173
 
 The planner sends Claude (Anthropic) the list of active listings plus the traveller's wishes, and gets back a day-by-day plan that may only use those listings — the server drops anything else.
 
-- Set `ANTHROPIC_API_KEY` (from console.anthropic.com) to switch it on; without it the planner is hidden.
-- `AI_MODEL` defaults to `claude-opus-5-5`. `claude-haiku-5-5` costs about 40 times less per token if you want to cut costs.
+- **No key needed for a demo:** without `ANTHROPIC_API_KEY` a free rule-based planner (`app/services/demo_planner.py`) builds the plans and the page shows "demo mode". It also steps in if Claude can't be reached.
+- Set `ANTHROPIC_API_KEY` (from console.anthropic.com, pay per use) to switch on real AI plans.
+- `AI_MODEL` defaults to `claude-haiku-5-5` (a fraction of a cent per plan). `claude-opus-5-5` plans better at about 40 times the price.
 - Each user gets `AI_DAILY_LIMIT` plans per day (default 10). Every request is logged in `ai_plan_logs` with its token usage.
 - The listing catalogue is sent as a cached prompt prefix, so repeated plans cost less while listings don't change.
 
