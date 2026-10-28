@@ -258,3 +258,31 @@ def test_seed_is_idempotent_and_content_account_cannot_log_in(app, client):
     assert res.status_code == 401
     shusha_hotels = client.get("/api/v1/places/get?region=shusha&category=hotel").get_json()
     assert len(shusha_hotels) == 3
+
+
+def test_rate_limit_uses_real_ip_behind_a_proxy(client, make_user, monkeypatch):
+    import config
+    monkeypatch.setattr(config, "TRUST_PROXY", True)
+    make_user()
+    for _ in range(10):
+        client.post("/api/v1/auth/login", json={"email": "traveller@example.com", "password": "wrong"},
+                    headers={"X-Real-IP": "203.0.113.5"})
+    blocked = client.post("/api/v1/auth/login", json={"email": "traveller@example.com", "password": "password123"},
+                          headers={"X-Real-IP": "203.0.113.5"})
+    other = client.post("/api/v1/auth/login", json={"email": "traveller@example.com", "password": "password123"},
+                        headers={"X-Real-IP": "198.51.100.7"})
+    assert blocked.status_code == 429 and other.status_code == 200
+
+
+def test_demo_data_command(app, client):
+    from seed_places import seed
+    seed()
+    runner = app.test_cli_runner()
+    result = runner.invoke(args=["demo-data", "--password", "Shusha-sunset-77"])
+    assert result.exit_code == 0, result.output
+    res = client.post("/api/v1/auth/login", json={"email": "owner@example.com", "password": "Shusha-sunset-77"})
+    assert res.status_code == 200
+    headers = {"Authorization": f"Bearer {res.get_json()['access_token']}"}
+    assert len(client.get("/api/v1/places/book_requests", headers=headers).get_json()) == 2
+    assert runner.invoke(args=["demo-data", "--password", "Shusha-sunset-77"]).exit_code != 0  # only once
+    assert runner.invoke(args=["demo-data", "--password", "password123"]).exit_code != 0

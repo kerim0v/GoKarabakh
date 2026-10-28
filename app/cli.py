@@ -11,6 +11,19 @@ def register_commands(app):
         from seed_places import seed
         click.echo(f"Seeded {seed()} places.")
 
+    @app.cli.command("demo-data")
+    @click.option("--password", prompt="Password for the demo accounts (8+ characters)", hide_input=True,
+                  confirmation_prompt=True, help="Shared by all demo accounts.")
+    def demo_data_command(password):
+        """Add demo accounts, bookings, a review and a trace for showing the site."""
+        from app.services.passwords import problem
+        from demo_data import ACCOUNTS, create_demo_data
+        if len(password) < 8 or problem(password):
+            raise click.ClickException("Choose a longer, less common password.")
+        if not create_demo_data(password):
+            raise click.ClickException("Demo data already exists.")
+        click.echo("Demo accounts: " + ", ".join(email for email, *_ in ACCOUNTS))
+
     @app.cli.command("create-admin")
     @click.argument("email")
     @click.option("--name", default="Admin", help="Name for a new account.")

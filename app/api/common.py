@@ -5,6 +5,7 @@ from decimal import Decimal, InvalidOperation
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
 
+import config
 from app.services import facade, passwords
 from app.services.ratelimit import limiter
 
@@ -47,8 +48,16 @@ def require_role(user, *roles):
         raise ApiError("You don't have access to this", 403, "forbidden")
 
 
+def client_ip():
+    """The visitor's address. Behind a proxy every request comes from the proxy, which passes the
+    real one in X-Real-IP (PythonAnywhere, nginx) or X-Forwarded-For (handled by ProxyFix)."""
+    if config.TRUST_PROXY and request.headers.get("X-Real-IP"):
+        return request.headers["X-Real-IP"]
+    return request.remote_addr
+
+
 def rate_limit(name, limit, window_seconds):
-    if not limiter.hit(f"{name}:{request.remote_addr}", limit, window_seconds):
+    if not limiter.hit(f"{name}:{client_ip()}", limit, window_seconds):
         raise ApiError("Too many attempts. Please wait a few minutes and try again.", 429, "rate_limited")
 
 

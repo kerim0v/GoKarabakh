@@ -1,6 +1,6 @@
 # GoKarabakh - development notes
 
-How to run, test and deploy the project. The project overview is in [README.md](README.md).
+How to run, test and deploy the project. The project overview is in [README.md](README.md); step-by-step hosting of the free demo is in [DEPLOY.md](DEPLOY.md).
 
 ## Running it locally
 
@@ -36,6 +36,7 @@ npm run dev                        # http://localhost:5173
 | `flask --app server db upgrade` | Apply database migrations |
 | `flask --app server db migrate -m "..."` | Create a migration after changing a model |
 | `flask --app server seed` | Add the district content (safe to run again) |
+| `flask --app server demo-data` | Add demo accounts, bookings, a review and a trace (asks for their password) |
 | `flask --app server create-admin EMAIL` | Make an account an admin (creates it if needed) |
 | `python scripts/build_openapi.py` | Rebuild `static/openapi.json` after changing the API (a test checks every route is documented) |
 | `node frontend/scripts/build-map.mjs` | Rebuild the atlas map from `frontend/scripts/data/azerbaijan-districts.geojson` |
