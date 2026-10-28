@@ -60,17 +60,27 @@ export function I18nProvider({ children }) {
       const translated = err?.code && lookup(strings, `errors.${err.code}`);
       return translated || err?.message || t("errors.generic");
     };
+    const names = (key) => lookup(strings, `dates.${key}`) || lookup(en, `dates.${key}`);
+    // "2026-05-31" is a calendar date, not UTC midnight; full timestamps are shown in local time
+    const toDate = (value) => (/^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value));
+    const capitalize = (text) => text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
+    const weekday = (date) => (date.getDay() + 6) % 7; // Monday = 0
+    // "7 Nov 2026"
     const formatDate = (value) => {
       if (!value) return "";
-      // "2026-05-31" is a calendar date, not UTC midnight
-      const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value);
-      return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(date);
+      const date = toDate(value);
+      return `${date.getDate()} ${names("monthsShort")[date.getMonth()]} ${date.getFullYear()}`;
     };
-    // "Tuesday, 3 November" - headings for itinerary days
-    const formatDay = (value) =>
-      new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${value}T00:00:00`));
+    // "Saturday, 7 November" - headings for itinerary days
+    const formatDay = (value) => {
+      const date = toDate(value);
+      return capitalize(`${names("weekdaysLong")[weekday(date)]}, ${date.getDate()} ${names("monthsLong")[date.getMonth()]}`);
+    };
+    // "November 2026" - calendar heading
+    const formatMonth = (date) => `${names("monthsStandalone")[date.getMonth()]} ${date.getFullYear()}`;
+    const weekdayNames = () => names("weekdaysShort");
     const formatNumber = (value, options) => new Intl.NumberFormat(locale, options).format(value);
-    return { lang, setLang, t, errorText, formatDate, formatDay, formatNumber, locale };
+    return { lang, setLang, t, errorText, formatDate, formatDay, formatMonth, weekdayNames, formatNumber, locale };
   }, [lang, setLang]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

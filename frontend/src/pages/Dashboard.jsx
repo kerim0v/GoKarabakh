@@ -13,7 +13,8 @@ import { Link, navigate } from "../lib/router.jsx";
 import { requireLogin, useSession } from "../lib/session.js";
 import { readTripDraft, saveTripDraft } from "../lib/tripDraft.js";
 import { useAsync } from "../lib/useAsync.js";
-import { localToday } from "../lib/dates.js";
+import { addDays, localToday } from "../lib/dates.js";
+import DatePicker from "../components/DatePicker.jsx";
 
 const BACKGROUNDS = ["/cidir-1.jpg", "/cidir-2.jpg", "/cidir-3.jpg"];
 const TABS = [
@@ -24,12 +25,6 @@ const TABS = [
 
 function nightsBetween(checkIn, checkOut) {
   return checkIn && checkOut ? Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000) : 0;
-}
-
-function dayAfter(date) {
-  const next = new Date(`${date}T00:00:00`);
-  next.setDate(next.getDate() + 1);
-  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
 }
 
 // `trip` is the search that produced the result: with dates and guests it shows the total for the whole stay.
@@ -100,7 +95,7 @@ export default function Dashboard() {
   const changeCheckIn = (value) => {
     setCheckIn(value);
     // Keep check-out after check-in: default to one night
-    if (value && (!checkOut || checkOut <= value)) setCheckOut(dayAfter(value));
+    if (value && (!checkOut || checkOut <= value)) setCheckOut(addDays(value, 1));
   };
 
   const search = async (event) => {
@@ -165,15 +160,15 @@ export default function Dashboard() {
               <span>{t("trip.destination")}</span>
               <input type="text" placeholder={t("trip.destinationPlaceholder")} value={query} onChange={(event) => setQuery(event.target.value)} />
             </label>
-            <label className="search-field">
+            <div className="search-field">
               <span>{isStay ? t("booking.checkIn") : t("trip.date")}</span>
-              <input type="date" min={localToday()} value={checkIn} onChange={(event) => changeCheckIn(event.target.value)} />
-            </label>
+              <DatePicker value={checkIn} onChange={changeCheckIn} min={localToday()} clearable label={isStay ? t("booking.checkIn") : t("trip.date")} placeholder={t("datePicker.anyDate")} />
+            </div>
             {isStay && (
-              <label className="search-field">
+              <div className="search-field">
                 <span>{t("booking.checkOut")}</span>
-                <input type="date" min={checkIn ? dayAfter(checkIn) : localToday()} value={checkOut} onChange={(event) => setCheckOut(event.target.value)} />
-              </label>
+                <DatePicker value={checkOut} onChange={setCheckOut} min={checkIn ? addDays(checkIn, 1) : addDays(localToday(), 1)} clearable label={t("booking.checkOut")} placeholder={t("datePicker.anyDate")} />
+              </div>
             )}
             <label className="search-field search-field-small">
               <span>{t("trip.guests")}</span>

@@ -1,6 +1,23 @@
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 export default {
+  // Written out because browsers lack date formats for some languages (Azerbaijani showed "2026 M11 6")
+  dates: {
+    monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    monthsLong: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    monthsStandalone: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    weekdaysShort: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    weekdaysLong: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+  },
+  datePicker: {
+    choose: "Choose a date",
+    anyDate: "Any date",
+    previous: "Previous month",
+    next: "Next month",
+    today: "Today",
+    tomorrow: "Tomorrow",
+    clear: "Clear",
+  },
   common: {
     free: "Free",
     close: "Close",

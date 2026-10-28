@@ -1,4 +1,21 @@
 export default {
+  // Written out because browsers lack date formats for some languages (Azerbaijani showed "2026 M11 6")
+  dates: {
+    monthsShort: ["yan", "fev", "mar", "apr", "may", "iyn", "iyl", "avq", "sen", "okt", "noy", "dek"],
+    monthsLong: ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avqust", "sentyabr", "oktyabr", "noyabr", "dekabr"],
+    monthsStandalone: ["Yanvar", "Fevral", "Mart", "Aprel", "May", "İyun", "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"],
+    weekdaysShort: ["B.e.", "Ç.a.", "Ç.", "C.a.", "C.", "Ş.", "B."],
+    weekdaysLong: ["bazar ertəsi", "çərşənbə axşamı", "çərşənbə", "cümə axşamı", "cümə", "şənbə", "bazar"],
+  },
+  datePicker: {
+    choose: "Tarix seçin",
+    anyDate: "İstənilən tarix",
+    previous: "Əvvəlki ay",
+    next: "Növbəti ay",
+    today: "Bu gün",
+    tomorrow: "Sabah",
+    clear: "Təmizlə",
+  },
   common: {
     free: "Pulsuz",
     close: "Bağla",

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import * as api from "../api.js";
 import BookingModal from "../components/BookingModal.jsx";
+import DatePicker from "../components/DatePicker.jsx";
 import Header from "../components/Header.jsx";
+import TimePicker from "../components/TimePicker.jsx";
 import Price from "../components/Price.jsx";
 import { useI18n } from "../i18n/index.jsx";
 import { useMeta } from "../lib/meta.jsx";
@@ -25,14 +27,15 @@ function Stop({ item, onUpdate, onRemove, onBook }) {
           <Link href={`/district/${place.region}`}><strong>{place.name}</strong></Link>
           <span>{t(`regions.${place.region}.label`)} · {t(`categories.${place.category}`)} · <Price azn={place.cost} /></span>
           <div className="trip-stop-fields">
-            <label>
+            <div>
               <span>{t("itinerary.dateLabel")}</span>
-              <input type="date" min={localToday()} value={item.visit_date || ""} onChange={(event) => onUpdate({ date: event.target.value || null })} />
-            </label>
-            <label>
+              <DatePicker value={item.visit_date || ""} min={localToday()} clearable label={t("itinerary.dateLabel")} placeholder={t("itinerary.unscheduled")}
+                onChange={(day) => onUpdate({ date: day || null })} />
+            </div>
+            <div>
               <span>{t("itinerary.timeLabel")}</span>
-              <input type="time" step="900" value={item.start_time || ""} onChange={(event) => onUpdate({ time: event.target.value || null })} />
-            </label>
+              <TimePicker value={item.start_time || ""} label={t("itinerary.timeLabel")} onChange={(time) => onUpdate({ time: time || null })} />
+            </div>
           </div>
           <input
             className="itinerary-note"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as api from "../api.js";
+import DatePicker from "../components/DatePicker.jsx";
 import Field from "../components/Field.jsx";
 import Header from "../components/Header.jsx";
 import Price from "../components/Price.jsx";
@@ -152,10 +153,10 @@ function ClosedDates({ place }) {
         <p className="muted">{t("workspace.noClosedDates")}</p>
       )}
       <form onSubmit={add} className="closed-dates-form">
-        <input type="date" min={localToday()} value={form.start_date} aria-label={t("workspace.closedFrom")}
-          onChange={(event) => setForm((c) => ({ ...c, start_date: event.target.value }))} required />
-        <input type="date" min={form.start_date || localToday()} value={form.end_date} aria-label={t("workspace.closedTo")}
-          onChange={(event) => setForm((c) => ({ ...c, end_date: event.target.value }))} />
+        <DatePicker value={form.start_date} min={localToday()} required label={t("workspace.closedFrom")} placeholder={t("workspace.closedFrom")}
+          onChange={(day) => setForm((c) => ({ ...c, start_date: day, end_date: c.end_date >= day ? c.end_date : "" }))} />
+        <DatePicker value={form.end_date} min={form.start_date || localToday()} clearable label={t("workspace.closedTo")} placeholder={t("workspace.closedTo")}
+          onChange={(day) => setForm((c) => ({ ...c, end_date: day }))} />
         <input maxLength="200" placeholder={t("workspace.closedNote")} value={form.note}
           onChange={(event) => setForm((c) => ({ ...c, note: event.target.value }))} />
         <button type="submit" className="profile-explore-link">{t("workspace.closeDates")}</button>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as api from "../api.js";
 import BookingModal from "../components/BookingModal.jsx";
+import DatePicker from "../components/DatePicker.jsx";
 import Field from "../components/Field.jsx";
 import Header from "../components/Header.jsx";
 import Price from "../components/Price.jsx";
@@ -42,7 +43,8 @@ function PlanForm({ onPlan, busy }) {
       </div>
       <div className="form-row">
         <Field id="plan-start" label={t("planner.startDate")}>
-          <input id="plan-start" type="date" min={localToday()} value={form.start_date} onChange={set("start_date")} required />
+          <DatePicker id="plan-start" value={form.start_date} min={localToday()} required label={t("planner.startDate")}
+            onChange={(day) => setForm((current) => ({ ...current, start_date: day }))} />
         </Field>
         <Field id="plan-days" label={t("planner.days")}>
           <select id="plan-days" value={form.days} onChange={set("days")}>

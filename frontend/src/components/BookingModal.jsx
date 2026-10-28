@@ -3,10 +3,11 @@ import * as api from "../api.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useSession } from "../lib/session.js";
 import { readTripDraft } from "../lib/tripDraft.js";
+import DatePicker from "./DatePicker.jsx";
 import Field from "./Field.jsx";
 import Modal from "./Modal.jsx";
 import Price from "./Price.jsx";
-import { localToday } from "../lib/dates.js";
+import { addDays, localToday } from "../lib/dates.js";
 
 
 // Use a known check-out date only when it comes after the chosen check-in
@@ -79,11 +80,13 @@ export default function BookingModal({ place, initialDate, initialCheckOut, onCl
       <form className="auth-form-enhanced" onSubmit={submit}>
         <div className="form-row">
           <Field id="booking-start" label={isHotel ? t("booking.checkIn") : t("booking.date")}>
-            <input id="booking-start" type="date" min={localToday()} value={form.check_in} onChange={set("check_in")} required />
+            <DatePicker id="booking-start" value={form.check_in} min={localToday()} required label={isHotel ? t("booking.checkIn") : t("booking.date")}
+              onChange={(day) => setForm((current) => ({ ...current, check_in: day, check_out: current.check_out > day ? current.check_out : "" }))} />
           </Field>
           {isHotel && (
             <Field id="booking-end" label={t("booking.checkOut")}>
-              <input id="booking-end" type="date" min={form.check_in || localToday()} value={form.check_out} onChange={set("check_out")} required />
+              <DatePicker id="booking-end" value={form.check_out} min={form.check_in ? addDays(form.check_in, 1) : addDays(localToday(), 1)} required label={t("booking.checkOut")}
+                onChange={(day) => setForm((current) => ({ ...current, check_out: day }))} />
             </Field>
           )}
         </div>
