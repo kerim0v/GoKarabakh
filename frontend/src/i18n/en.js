@@ -465,6 +465,8 @@ export default {
     too_long: "One of the fields is too long.",
     invalid_email: "Enter a valid email address.",
     password_too_short: "Password must be at least 8 characters.",
+    password_too_common: "This password is too common and easy to guess. Choose something more personal.",
+    password_like_email: "Don't use your email address as your password.",
     email_taken: "This email is already registered. Try signing in.",
     invalid_credentials: "Wrong email or password.",
     invalid_password: "That password is wrong.",

@@ -26,7 +26,7 @@ def create_user():
         raise common.ApiError("about_me must be an object", 400, "invalid_field")
 
     email = common.email(data.get("email"))
-    password = common.password(data.get("password"))
+    password = common.password(data.get("password"), email)
     name = common.text(about_me, "name", 255, required=True, label="Name")
 
     if facade.get_user_by_email(email):
@@ -100,7 +100,7 @@ def change_password():
     data = common.json_body()
     if not user.check_pwd(data.get("current_password")):
         raise common.ApiError("Current password is wrong", 401, "invalid_password")
-    user.hash_pwd(common.password(data.get("new_password")))
+    user.hash_pwd(common.password(data.get("new_password"), user.email))
     facade.commit()
     return jsonify({"status": "Password updated"}), 200
 

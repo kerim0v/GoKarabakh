@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from flask import jsonify, request
 from flask_jwt_extended import get_jwt_identity
 
-from app.services import facade
+from app.services import facade, passwords
 from app.services.ratelimit import limiter
 
 
@@ -111,11 +111,14 @@ def email(value):
     return value.strip().lower()
 
 
-def password(value):
+def password(value, email=""):
     if not isinstance(value, str) or len(value) < 8:
         raise ApiError("Password must be at least 8 characters", 400, "password_too_short")
     if len(value) > 128:
         raise ApiError("Password is too long", 400, "too_long")
+    code = passwords.problem(value, email)
+    if code:
+        raise ApiError("This password is too easy to guess. Choose a less common one.", 400, code)
     return value
 
 

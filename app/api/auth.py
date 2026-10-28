@@ -45,6 +45,6 @@ def reset_password():
     user = user_from_reset_token(data.get("token") or "")
     if not user:
         raise common.ApiError("This reset link is invalid or has expired", 400, "invalid_token")
-    user.hash_pwd(common.password(data.get("password")))
+    user.hash_pwd(common.password(data.get("password"), user.email))
     facade.commit()
     return jsonify({"status": "Password updated"}), 200

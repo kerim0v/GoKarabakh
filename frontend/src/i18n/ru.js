@@ -472,6 +472,8 @@ export default {
     too_long: "Одно из полей слишком длинное.",
     invalid_email: "Введите правильный e-mail.",
     password_too_short: "Пароль должен быть не короче 8 символов.",
+    password_too_common: "Этот пароль слишком распространён и легко угадывается. Выберите что-то менее очевидное.",
+    password_like_email: "Не используйте свой e-mail в качестве пароля.",
     email_taken: "Этот e-mail уже зарегистрирован. Попробуйте войти.",
     invalid_credentials: "Неверный e-mail или пароль.",
     invalid_password: "Неверный пароль.",

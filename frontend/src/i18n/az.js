@@ -463,6 +463,8 @@ export default {
     too_long: "Xanalardan biri çox uzundur.",
     invalid_email: "Düzgün e-poçt ünvanı daxil edin.",
     password_too_short: "Şifrə ən azı 8 simvol olmalıdır.",
+    password_too_common: "Bu şifrə çox yayğındır və asan tapılır. Daha fərdi bir şifrə seçin.",
+    password_like_email: "E-poçt ünvanınızı şifrə kimi istifadə etməyin.",
     email_taken: "Bu e-poçt artıq qeydiyyatdan keçib. Daxil olmağa çalışın.",
     invalid_credentials: "E-poçt və ya şifrə yanlışdır.",
     invalid_password: "Şifrə yanlışdır.",

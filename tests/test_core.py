@@ -7,7 +7,7 @@ from tests.conftest import days_from_now
 
 def test_signup_normalises_email_and_grants_welcome_bonus(client):
     res = client.post("/api/v1/users/create", json={
-        "email": "  New@Example.COM ", "password": "password123", "about_me": {"name": "Leyla"},
+        "email": "  New@Example.COM ", "password": "mountain-route-7", "about_me": {"name": "Leyla"},
     })
     assert res.status_code == 200
     user = User.query.one()
@@ -15,12 +15,12 @@ def test_signup_normalises_email_and_grants_welcome_bonus(client):
     assert user.kx_count == 100
 
     dup = client.post("/api/v1/users/create", json={
-        "email": "new@example.com", "password": "password123", "about_me": {"name": "Leyla"},
+        "email": "new@example.com", "password": "mountain-route-7", "about_me": {"name": "Leyla"},
     })
     assert dup.status_code == 409
     assert dup.get_json()["code"] == "email_taken"
 
-    res = client.post("/api/v1/auth/login", json={"email": "NEW@example.com", "password": "password123"})
+    res = client.post("/api/v1/auth/login", json={"email": "NEW@example.com", "password": "mountain-route-7"})
     assert res.status_code == 200
 
 
@@ -31,6 +31,19 @@ def test_signup_validates_input(client):
                                                      "about_me": {"name": "A"}}).status_code == 400
     assert client.post("/api/v1/users/create", data="null",
                        content_type="application/json").status_code == 400
+
+
+def test_common_passwords_are_rejected(client, make_user, login):
+    for bad, code in (
+        ("password123", "password_too_common"), ("Karabakh1", "password_too_common"), ("aaaaaaaa", "password_too_common"),
+        ("23456789", "password_too_common"), ("leyla.m@example.com", "password_like_email"), ("leyla.m2024", "password_like_email"),
+    ):
+        res = client.post("/api/v1/users/create", json={"email": "leyla.m@example.com", "password": bad, "about_me": {"name": "L"}})
+        assert res.get_json()["code"] == code, bad
+    make_user()
+    res = client.post("/api/v1/users/change-password", headers=login("traveller@example.com"),
+                      json={"current_password": "password123", "new_password": "qwerty123"})
+    assert res.get_json()["code"] == "password_too_common"
 
 
 def test_login_is_rate_limited(client, make_user):
