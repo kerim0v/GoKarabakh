@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import * as api from "../api.js";
+import { useI18n } from "../i18n/index.jsx";
 
-const rewardText =
-  "Welcome! +100 KarabakhCoins have been added to your account.";
+const MODES = ["login", "signup"];
 
 export default function AuthModal({ open, onClose, onAuthenticated }) {
+  const { t, errorText } = useI18n();
   const [mode, setMode] = useState("login");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -17,29 +18,38 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
     if (!open) return undefined;
     setNotice("");
     setError("");
-    return undefined;
-  }, [open]);
+    const onKey = (event) => event.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  const switchMode = (next) => {
+    setMode(next);
+    setError("");
+    setNotice("");
+  };
 
   const submit = async (event) => {
     event.preventDefault();
     setError("");
-    const isNewAccount = mode === "signup";
-    const name = event.currentTarget.name?.value;
-    const email = event.currentTarget.email.value;
-    const password = event.currentTarget.password.value;
+    const form = event.currentTarget;
+    const email = form.email.value;
 
     setSubmitting(true);
     try {
-      if (isNewAccount) {
-        await api.signup({ name, email, password });
+      if (mode === "forgot") {
+        await api.forgotPassword(email);
+        setNotice(t("auth.resetSent"));
+        return;
       }
-      const user = await api.login({ email, password });
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("karabakhUser", JSON.stringify(user));
-      window.dispatchEvent(new CustomEvent("auth:changed"));
+      const password = form.password.value;
+      if (mode === "signup") {
+        await api.signup({ name: form.name.value, email, password });
+      }
+      await api.login({ email, password });
 
-      if (isNewAccount) {
-        setNotice(rewardText);
+      if (mode === "signup") {
+        setNotice(t("auth.welcomeReward"));
         setCoins(
           Array.from({ length: 30 }, (_, index) => ({
             id: `${Date.now()}-${index}`,
@@ -57,10 +67,38 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
         onAuthenticated?.();
       }
     } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
+      setError(errorText(err));
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const field = (name, type, label, placeholder, extra = {}) => (
+    <div className="form-group">
+      <label htmlFor={`${name}-input`} className="form-label">
+        <span>{label} •</span>
+        <span className="label-accent" />
+      </label>
+      <div className="input-wrapper">
+        <input
+          id={`${name}-input`}
+          name={name}
+          type={type}
+          placeholder={placeholder}
+          onFocus={() => setFocusedField(name)}
+          onBlur={() => setFocusedField(null)}
+          required
+          {...extra}
+        />
+        {focusedField === name && <div className="input-focus-glow" aria-hidden="true" />}
+      </div>
+    </div>
+  );
+
+  const titles = {
+    login: [t("auth.loginTitle"), t("auth.loginSubtitle")],
+    signup: [t("auth.signupTitle"), t("auth.signupSubtitle")],
+    forgot: [t("auth.forgotTitle"), t("auth.forgotSubtitle")],
   };
 
   return (
@@ -75,33 +113,22 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
           onClick={(event) => event.target === event.currentTarget && onClose()}
         >
           <motion.div
-            className="auth-card-enhanced glass"
+            className="auth-card-enhanced glass auth-card-origin"
             layout
-            style={{ transformOrigin: "center center" }}
             transformTemplate={(latest, generated) => `perspective(1000px) rotateX(2deg) ${generated}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-title"
-            initial={{
-              opacity: 0,
-              y: 40,
-              rotateX: 15,
-              rotateY: 8,
-              scale: 0.2,
-            }}
+            initial={{ opacity: 0, y: 40, rotateX: 15, rotateY: 8, scale: 0.2 }}
             animate={{ opacity: 1, y: 0, rotateX: 0, rotateY: 0, scale: 1 }}
             exit={{ opacity: 0, y: 25, scale: 0.2 }}
-            transition={{
-              duration: 0.65,
-              ease: [0.34, 1.56, 0.64, 1],
-              delay: 0.05,
-            }}
+            transition={{ duration: 0.65, ease: [0.34, 1.56, 0.64, 1], delay: 0.05 }}
           >
             <motion.button
               className="button-auth-close"
               onClick={onClose}
               type="button"
-              aria-label="Close authentication modal"
+              aria-label={t("common.close")}
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -112,185 +139,68 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
               <motion.img
                 className="modal-khari-bulbul"
                 src="/lacin/khari-bulbul1.png"
-                alt="Khari Bulbul"
+                alt=""
                 initial={{ scale: 0.8, rotateZ: -8 }}
                 animate={{ scale: 1, rotateZ: 0 }}
-                transition={{
-                  delay: 0.15,
-                  type: "spring",
-                  stiffness: 180,
-                  damping: 22,
-                }}
+                transition={{ delay: 0.15, type: "spring", stiffness: 180, damping: 22 }}
               />
             </div>
-            <motion.span
-              className="eyebrow mono auth-eyebrow"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              KARABAKH PASSPORT •
-            </motion.span>
+            <span className="eyebrow mono auth-eyebrow">{t("auth.eyebrow")} •</span>
             <div className="auth-content-enhanced">
-            <motion.h2
-              id="auth-title"
-              className="auth-title-enhanced"
-              key={`${mode}-title`}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              {mode === "login" ? "Welcome back." : "Claim Your Passport."}
-            </motion.h2>
-            <motion.p
-              className="auth-subtitle-enhanced"
-              key={`${mode}-subtitle`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {mode === "login"
-                ? "Keep your routes, rewards, and favorite places together."
-                : "Unlock custom routes, personal bookmarks, and local stories."}
-            </motion.p>
-            <motion.div
-              className="auth-switch-enhanced"
-              role="tablist"
-              aria-label="Authentication mode"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.35 }}
-            >
-              <button
-                className={`auth-switch-button ${mode === "login" ? "selected" : ""}`}
-                onClick={() => setMode("login")}
-                type="button"
-                role="tab"
-                aria-selected={mode === "login"}
-              >
-                <span>Sign In</span>
-                {mode === "login" && (
-                  <motion.div
-                    className="switch-indicator"
-                    layoutId="auth-indicator"
-                  />
-                )}
-              </button>
-              <button
-                className={`auth-switch-button ${mode === "signup" ? "selected" : ""}`}
-                onClick={() => setMode("signup")}
-                type="button"
-                role="tab"
-                aria-selected={mode === "signup"}
-              >
-                <span>Sign Up</span>
-                {mode === "signup" && (
-                  <motion.div
-                    className="switch-indicator"
-                    layoutId="auth-indicator"
-                  />
-                )}
-              </button>
-            </motion.div>
-            <motion.form
-              className="auth-form-enhanced"
-              key={mode}
-              onSubmit={submit}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              {mode === "signup" && (
-                <motion.div
-                  className="form-group"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              <motion.h2 id="auth-title" className="auth-title-enhanced" key={`${mode}-title`} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
+                {titles[mode][0]}
+              </motion.h2>
+              <p className="auth-subtitle-enhanced">{titles[mode][1]}</p>
+              {mode !== "forgot" && (
+                <div className="auth-switch-enhanced" role="tablist" aria-label={t("auth.modeLabel")}>
+                  {MODES.map((item) => (
+                    <button
+                      key={item}
+                      className={`auth-switch-button ${mode === item ? "selected" : ""}`}
+                      onClick={() => switchMode(item)}
+                      type="button"
+                      role="tab"
+                      aria-selected={mode === item}
+                    >
+                      <span>{item === "login" ? t("auth.signIn") : t("auth.signUp")}</span>
+                      {mode === item && <motion.div className="switch-indicator" layoutId="auth-indicator" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <form className="auth-form-enhanced" key={mode} onSubmit={submit}>
+                {mode === "signup" && field("name", "text", t("auth.name"), t("auth.namePlaceholder"), { maxLength: 255 })}
+                {field("email", "email", t("auth.email"), "you@example.com", { autoComplete: "email" })}
+                {mode !== "forgot" &&
+                  field("password", "password", t("auth.password"), mode === "login" ? "••••••••" : t("auth.passwordHint"), {
+                    minLength: 8,
+                    autoComplete: mode === "login" ? "current-password" : "new-password",
+                  })}
+                {error && <p role="alert" className="form-error">{error}</p>}
+                <motion.button
+                  className="button-auth-submit"
+                  type="submit"
+                  disabled={submitting}
+                  whileHover={{ scale: 1.02, boxShadow: "0 12px 40px rgba(56, 189, 248, 0.35)" }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <label htmlFor="name-input" className="form-label">
-                    <span>FULL NAME •</span>
-                    <span className="label-accent" />
-                  </label>
-                  <div className="input-wrapper">
-                    <input
-                      id="name-input"
-                      name="name"
-                      type="text"
-                      placeholder="e.g. Nizami Ganjavi"
-                      onFocus={() => setFocusedField("name")}
-                      onBlur={() => setFocusedField(null)}
-                      required={mode === "signup"}
-                    />
-                    {focusedField === "name" && (
-                      <div className="input-focus-glow" aria-hidden="true" />
-                    )}
-                  </div>
-                </motion.div>
-              )}
-              <div className="form-group">
-                <label htmlFor="email-input" className="form-label">
-                    <span>EMAIL •</span>
-                  <span className="label-accent" />
-                </label>
-                <div className="input-wrapper">
-                  <input
-                    id="email-input"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    onFocus={() => setFocusedField("email")}
-                    onBlur={() => setFocusedField(null)}
-                    required
-                  />
-                  {focusedField === "email" && (
-                    <div className="input-focus-glow" aria-hidden="true" />
-                  )}
-                </div>
-              </div>
-              <div className="form-group">
-                <label htmlFor="password-input" className="form-label">
-                    <span>PASSWORD •</span>
-                  <span className="label-accent" />
-                </label>
-                <div className="input-wrapper">
-                  <input
-                    id="password-input"
-                    name="password"
-                    type="password"
-                    placeholder={mode === "login" ? "••••••••" : "At least 8 characters"}
-                    minLength="8"
-                    onFocus={() => setFocusedField("password")}
-                    onBlur={() => setFocusedField(null)}
-                    required
-                  />
-                  {focusedField === "password" && (
-                    <div className="input-focus-glow" aria-hidden="true" />
-                  )}
-                </div>
-              </div>
-              {error && (
-                <p role="alert" style={{ color: "#ff9d8a", margin: "4px 0 0" }}>
-                  {error}
-                </p>
-              )}
-              <motion.button
-                className="button-auth-submit"
-                type="submit"
-                disabled={submitting}
-                whileHover={{
-                  scale: 1.02,
-                  boxShadow: "0 12px 40px rgba(56, 189, 248, 0.35)",
-                }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                <span>
-                  {submitting ? "Please wait…" : mode === "login" ? "Sign In" : "Create Passport"}
-                </span>
-                <span className="button-arrow">↗</span>
-              </motion.button>
-            </motion.form>
+                  <span>
+                    {submitting ? t("common.wait") : { login: t("auth.signIn"), signup: t("auth.createPassport"), forgot: t("auth.sendLink") }[mode]}
+                  </span>
+                  <span className="button-arrow">↗</span>
+                </motion.button>
+                {mode === "login" && (
+                  <button type="button" className="link-button" onClick={() => switchMode("forgot")}>
+                    {t("auth.forgotLink")}
+                  </button>
+                )}
+                {mode === "forgot" && (
+                  <button type="button" className="link-button" onClick={() => switchMode("login")}>
+                    ← {t("auth.backToSignIn")}
+                  </button>
+                )}
+              </form>
             </div>
             {notice && (
               <motion.div
@@ -298,7 +208,6 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                 role="status"
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 5, scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 <span className="notice-icon">✓</span>
@@ -310,13 +219,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                 <motion.span
                   key={coin.id}
                   className="floating-coin"
-                  initial={{
-                    opacity: 0,
-                    x: "50vw",
-                    y: "38vh",
-                    scale: 0.2,
-                    rotate: 0,
-                  }}
+                  initial={{ opacity: 0, x: "50vw", y: "38vh", scale: 0.2, rotate: 0 }}
                   animate={{
                     opacity: [1, 1, 0],
                     x: `calc(50vw + ${(coin.x - 50) * 100}px)`,
@@ -324,11 +227,7 @@ export default function AuthModal({ open, onClose, onAuthenticated }) {
                     scale: 1,
                     rotate: coin.rotate,
                   }}
-                  transition={{
-                    duration: 1.6,
-                    delay: coin.delay,
-                    ease: "easeOut",
-                  }}
+                  transition={{ duration: 1.6, delay: coin.delay, ease: "easeOut" }}
                 >
                   ◈
                 </motion.span>

@@ -42,7 +42,7 @@ KHANKENDI = [
 # name, setting, attractions[3], images[3]
 REGION_TRAVEL_DATA = {
     "kalbajar": ("Kalbajar", "Highland Pass", ["Istisu Springs", "Alpine Passes", "Ancient Stone Sanctuaries"], ["/kelbecer/kelbecer.jpg", "/kelbecer/kelbecer2.jpeg", "/kelbecer/kelbecer3.jpeg"]),
-    "lachin": ("Lachin", "Forest Valley", ["Lachin Valley Views", "Forest Valley Walk", "River Lookout"], ["/lacin/lacin.jpg", "/lacin/lacin2.jpeg", "/lacin/lacin3.jpg"]),
+    "lachin": ("Lachin", "Forest Valley", ["Lachin Corridor Views", "Forest Valley Walk", "River Lookout"], ["/lacin/lacin.jpg", "/lacin/lacin2.jpeg", "/lacin/lacin3.jpg"]),
     "aghdam": ("Aghdam", "Heritage Plain", ["Heritage Plains", "Historic Route", "Open Horizon View"], ["/agdam/agdam.jpg", "/agdam/agdam2.jpg", "/agdam/agdam3.jpg"]),
     "khojaly": ("Khojaly", "Highland Landscape", ["Ancient Landscape", "Upland Viewpoint", "Quiet Country Route"], ["/khocali/khocali.jpg", "/khocali/khocali3.jpg", "/khocali/khocali.jpg"]),
     "khojavend": ("Khojavend", "Woodland Ridge", ["Woodland Slopes", "Hidden Trail", "Ridge Viewpoint"], ["/xocavend/xocavend.jpeg", "/xocavend/xocavend2.jpeg", "/xocavend/xocavend.jpeg"]),
