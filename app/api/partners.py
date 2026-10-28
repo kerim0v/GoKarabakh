@@ -1,10 +1,11 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from app.api import common
 from app.models.partner_application import PartnerApplication
 from app.models.user import PARTNER_ROLES
 from app.services import facade
+from app.services.mailer import frontend_link, send_mail
 
 bp = Blueprint("partners", __name__, url_prefix="/api/v1/partner-applications")
 
@@ -67,13 +68,25 @@ def list_partner_applications():
     return jsonify([a.to_dict() for a in facade.get_partner_applications(user.id)]), 200
 
 
+def _decide(application, status, note, text):
+    facade.update_partner_application(application.id, {"status": status, "admin_note": note})
+    applicant = facade.get_user(application.user_id)
+    if applicant:
+        body = f"Hi {applicant.name},\n\n{text}"
+        if note:
+            body += f"\n\nNote from the team: {note}"
+        send_mail(applicant.email, f"Your GoKarabakh partner application was {status}",
+                  f"{body}\n\n{frontend_link('/profile')}")
+
+
 @bp.route("/<application_id>/approve", methods=["POST"])
 @jwt_required()
 def approve_partner_application(application_id):
     application = _pending_application(application_id)
-    facade.update_partner_application(application.id, {"status": "approved"})
+    note = common.text(request.get_json(silent=True) or {}, "note", 1000)
     facade.update_user(application.user_id, {"role": application.target_role})
     facade.set_owner_places_active(application.user_id, True)
+    _decide(application, "approved", note, "Welcome aboard! You can now publish listings from your workspace.")
     return jsonify({"status": "Approved"}), 200
 
 
@@ -81,5 +94,6 @@ def approve_partner_application(application_id):
 @jwt_required()
 def reject_partner_application(application_id):
     application = _pending_application(application_id)
-    facade.update_partner_application(application.id, {"status": "rejected"})
+    note = common.text(request.get_json(silent=True) or {}, "note", 1000)
+    _decide(application, "rejected", note, "We can't approve your application at the moment.")
     return jsonify({"status": "Rejected"}), 200

@@ -6,6 +6,8 @@ from app.models.partner_application import PartnerApplication
 from app.models.booking_request import BookingRequest
 from app.models.community_trace import CommunityTrace
 from app.models.kx_transaction import KxTransaction
+from app.models.review import Review
+from app.models.itinerary_item import ItineraryItem
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
 
@@ -16,6 +18,8 @@ partner_application_repository = SQLAlchemyRepository(PartnerApplication)
 booking_request_repository = SQLAlchemyRepository(BookingRequest)
 community_trace_repository = SQLAlchemyRepository(CommunityTrace)
 kx_transaction_repository = SQLAlchemyRepository(KxTransaction)
+review_repository = SQLAlchemyRepository(Review)
+itinerary_repository = SQLAlchemyRepository(ItineraryItem)
 
 def commit():
     db.session.commit()
@@ -45,18 +49,24 @@ PLACE_KINDS = {
 
 def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
                  include_inactive=False, sort=None, limit=None):
-    """Places with owner role and confirmed-booking count, as (place, owner_role, bookings) rows."""
+    """Places with owner role and stats, as (place, owner_role, bookings, avg_rating, review_count) rows."""
     bookings = (
         db.session.query(BookingRequest.place_id, func.count(BookingRequest.id).label("count"))
         .filter(BookingRequest.status == "confirmed")
         .group_by(BookingRequest.place_id)
         .subquery()
     )
+    reviews = (
+        db.session.query(Review.place_id, func.avg(Review.rating).label("avg"), func.count(Review.id).label("count"))
+        .group_by(Review.place_id)
+        .subquery()
+    )
     booking_count = func.coalesce(bookings.c.count, 0)
     query = (
-        db.session.query(Place, User.role, booking_count)
+        db.session.query(Place, User.role, booking_count, reviews.c.avg, func.coalesce(reviews.c.count, 0))
         .join(User, User.id == Place.owner_user_id)
         .outerjoin(bookings, bookings.c.place_id == Place.id)
+        .outerjoin(reviews, reviews.c.place_id == Place.id)
     )
     if not include_inactive:
         query = query.filter(Place.is_active.is_(True))
@@ -73,7 +83,9 @@ def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
         query = query.filter(func.lower(Place.name).like(pattern) | Place.region.like(pattern))
 
     if sort == "popular":
-        query = query.order_by(booking_count.desc(), Place.creation_date)
+        query = query.order_by(booking_count.desc(), func.coalesce(reviews.c.avg, 0).desc(), Place.creation_date)
+    elif sort == "rating":
+        query = query.order_by(func.coalesce(reviews.c.avg, 0).desc(), Place.name)
     elif sort == "price_asc":
         query = query.order_by(Place.cost, Place.name)
     elif sort == "price_desc":
@@ -195,3 +207,76 @@ def grant_kx(user, amount, reason):
         return
     user.kx_count = (user.kx_count or 0) + amount
     kx_transaction_repository.add(KxTransaction(user_id=user.id, amount=amount, reason=reason))
+
+# Reviews
+
+def create_review(review): review_repository.add(review)
+def get_review(id) -> Review: return review_repository.get(id)
+def delete_review(id): review_repository.delete(id)
+
+def reviews_for_place(place_id):
+    return (
+        db.session.query(Review, User.name)
+        .join(User, User.id == Review.user_id)
+        .filter(Review.place_id == place_id)
+        .order_by(Review.creation_date.desc())
+        .all()
+    )
+
+def get_user_review(place_id, user_id):
+    return Review.query.filter_by(place_id=place_id, user_id=user_id).first()
+
+def has_stayed(user_id, place_id, today):
+    """A confirmed booking whose date has arrived - the condition for leaving a review."""
+    return db.session.query(
+        BookingRequest.query.filter(
+            BookingRequest.user_id == user_id,
+            BookingRequest.place_id == place_id,
+            BookingRequest.status == "confirmed",
+            BookingRequest.check_in <= today,
+        ).exists()
+    ).scalar()
+
+# Itinerary
+
+def get_itinerary_item(id) -> ItineraryItem: return itinerary_repository.get(id)
+def update_itinerary_item(id, data): return itinerary_repository.update(id, data)
+def delete_itinerary_item(id): itinerary_repository.delete(id)
+
+def itinerary_for_user(user_id):
+    return (
+        db.session.query(ItineraryItem, Place)
+        .join(Place, Place.id == ItineraryItem.place_id)
+        .filter(ItineraryItem.user_id == user_id, Place.is_active.is_(True))
+        .order_by(func.coalesce(ItineraryItem.day, 999), ItineraryItem.creation_date)
+        .all()
+    )
+
+def add_to_itinerary(user_id, place_id, day=None):
+    item = ItineraryItem.query.filter_by(user_id=user_id, place_id=place_id).first()
+    if item:
+        return item
+    item = ItineraryItem(user_id=user_id, place_id=place_id, day=day)
+    itinerary_repository.add(item)
+    return item
+
+# Admin
+
+def search_users(q=None, limit=200):
+    query = User.query
+    if q:
+        pattern = f"%{q.lower()}%"
+        query = query.filter(func.lower(User.email).like(pattern) | func.lower(User.name).like(pattern))
+    return query.order_by(User.creation_date.desc()).limit(limit).all()
+
+def overview_counts():
+    return {
+        "users": User.query.count(),
+        "partners": User.query.filter(User.role.in_(("owner", "guide"))).count(),
+        "places": Place.query.count(),
+        "pending_applications": PartnerApplication.query.filter_by(status="pending").count(),
+        "pending_bookings": BookingRequest.query.filter_by(status="pending").count(),
+        "confirmed_bookings": BookingRequest.query.filter_by(status="confirmed").count(),
+        "traces": CommunityTrace.query.count(),
+        "reviews": Review.query.count(),
+    }

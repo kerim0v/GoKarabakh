@@ -9,14 +9,17 @@ from app.services import facade
 
 bp = Blueprint("places", __name__, url_prefix="/api/v1/places")
 
-SORTS = ("popular", "price_asc", "price_desc")
+SORTS = ("popular", "rating", "price_asc", "price_desc")
 
 
-def place_dict(place, owner_role=None, bookings=None):
+def place_dict(place, owner_role=None, bookings=None, avg_rating=None, review_count=None):
     d = place.to_dict()
     d["owner_role"] = owner_role
     if bookings is not None:
         d["bookings_count"] = bookings
+    if review_count is not None:
+        d["review_count"] = review_count
+        d["avg_rating"] = round(float(avg_rating), 1) if avg_rating is not None else None
     return d
 
 
@@ -84,7 +87,7 @@ def get_places():
         sort=args.get("sort") if args.get("sort") in SORTS else None,
         limit=limit,
     )
-    return jsonify([place_dict(p, role, count) for p, role, count in rows])
+    return jsonify([place_dict(*row) for row in rows])
 
 
 @bp.route("/get_id")
@@ -97,8 +100,8 @@ def get_place_by_id():
             place = None
     if not place:
         raise common.ApiError("No place with specified id.", 404, "not_found")
-    owner = facade.get_user(place.owner_user_id)
-    return jsonify(place_dict(place, owner.role if owner else None))
+    rows = facade.query_places(owner_id=place.owner_user_id, include_inactive=True)
+    return jsonify(next(place_dict(*row) for row in rows if row[0].id == place.id))
 
 
 @bp.route("/get_places_by_tags")
@@ -112,7 +115,7 @@ def get_places_by_tags():
 def my_places():
     user = common.current_user()
     rows = facade.query_places(owner_id=user.id, include_inactive=True)
-    return jsonify([place_dict(p, role, count) for p, role, count in rows])
+    return jsonify([place_dict(*row) for row in rows])
 
 
 @bp.route("/create", methods=["POST"])
@@ -123,7 +126,7 @@ def create_place():
         raise common.ApiError("Only business owners and guides can create listings", 403, "forbidden")
     place = Place(owner_user_id=owner.id, tags=[], **_listing_fields(common.json_body(), owner))
     facade.create_place(place)
-    return jsonify(place_dict(place, owner.role, 0)), 200
+    return jsonify(place_dict(place, owner.role, 0, None, 0)), 200
 
 
 @bp.route("/update", methods=["PUT"])

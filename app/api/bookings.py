@@ -8,6 +8,7 @@ import config
 from app.api import common
 from app.models.booking_request import BookingRequest
 from app.services import facade
+from app.services.mailer import frontend_link, send_mail
 
 bp = Blueprint("bookings", __name__, url_prefix="/api/v1/places")
 
@@ -33,6 +34,34 @@ def request_dict(booking, place):
     d["place_region"] = place.region
     d["place_category"] = place.category
     return d
+
+
+def describe(booking, place):
+    dates = booking.check_in.isoformat()
+    if booking.check_out:
+        dates += f" – {booking.check_out.isoformat()}"
+    return f"{place.name}, {dates}, {booking.guests} guest(s), {float(booking.total_cost):.2f} AZN"
+
+
+def notify_traveller(booking, place, subject, text):
+    traveller = facade.get_user(booking.user_id)
+    if traveller:
+        send_mail(traveller.email, subject,
+                  f"Hi {traveller.name},\n\n{text}\n\n{describe(booking, place)}\n\n"
+                  f"Your bookings: {frontend_link('/profile')}")
+
+
+def decline_and_refund(booking, place, reason="declined"):
+    """Close a request that won't go ahead and give back any coins it held or earned."""
+    facade.update_booking_request(booking.id, {"status": reason})
+    traveller = facade.get_user(booking.user_id)
+    if traveller:
+        facade.grant_kx(traveller, booking.coins_used, f"Refund for {place.name}")
+        # Coins earned on a confirmed booking are taken back, but never below zero
+        facade.grant_kx(traveller, -min(booking.coins_earned, traveller.kx_count), f"Cancelled {place.name}")
+    if reason == "declined":
+        notify_traveller(booking, place, f"Booking declined: {place.name}",
+                         "Unfortunately the partner can't take your booking request. Any coins you used are back in your account.")
 
 
 def _owned_request(request_id, owner):
@@ -92,6 +121,12 @@ def create_booking_request():
     facade.create_booking_request(booking)
     # Coins are held when the request is made and given back if it doesn't go ahead
     facade.grant_kx(user, -coins_used, f"Used on booking {place.name}")
+
+    owner = facade.get_user(place.owner_user_id)
+    if owner:
+        send_mail(owner.email, f"New booking request: {place.name}",
+                  f"{user.name} asked to book {describe(booking, place)}.\n\n"
+                  f"Confirm or decline it in your workspace: {frontend_link('/owner-dashboard' if owner.role == 'owner' else '/guide-dashboard')}")
     return jsonify(request_dict(booking, place)), 200
 
 
@@ -103,6 +138,7 @@ def list_owner_booking_requests():
     for booking, place, traveller in facade.booking_requests_for_owner(owner.id):
         d = request_dict(booking, place)
         d["traveller_name"] = traveller.name
+        d["traveller_email"] = traveller.email
         result.append(d)
     return jsonify(result), 200
 
@@ -111,7 +147,17 @@ def list_owner_booking_requests():
 @jwt_required()
 def list_my_booking_requests():
     user = common.current_user()
-    return jsonify([request_dict(b, p) for b, p, _ in facade.booking_requests_for_user(user.id)]), 200
+    result = []
+    for booking, place, owner in facade.booking_requests_for_user(user.id):
+        d = request_dict(booking, place)
+        # The partner's contact details are shared once they've accepted
+        if booking.status == "confirmed":
+            application = facade.get_approved_application_for_user(owner.id)
+            d["partner_name"] = (application and application.company_name) or owner.name
+            d["partner_email"] = owner.email
+            d["partner_phone"] = application.phone if application else None
+        result.append(d)
+    return jsonify(result), 200
 
 
 @bp.route("/book_requests/<request_id>/confirm", methods=["POST"])
@@ -123,6 +169,9 @@ def confirm_booking_request(request_id):
     traveller = facade.get_user(booking.user_id)
     if traveller:
         facade.grant_kx(traveller, coins, f"Booked {place.name}")
+    notify_traveller(booking, place, f"Booking confirmed: {place.name}",
+                     f"Good news - your booking is confirmed and you earned {coins} coins. "
+                     "The partner's contact details are on your profile.")
     return jsonify({"status": "Confirmed"}), 200
 
 
@@ -130,8 +179,26 @@ def confirm_booking_request(request_id):
 @jwt_required()
 def decline_booking_request(request_id):
     booking, place = _owned_request(request_id, common.current_user())
-    facade.update_booking_request(booking.id, {"status": "declined"})
-    traveller = facade.get_user(booking.user_id)
-    if traveller:
-        facade.grant_kx(traveller, booking.coins_used, f"Refund for {place.name}")
+    decline_and_refund(booking, place)
     return jsonify({"status": "Declined"}), 200
+
+
+@bp.route("/book_requests/<request_id>/cancel", methods=["POST"])
+@jwt_required()
+def cancel_booking_request(request_id):
+    user = common.current_user()
+    booking = facade.get_booking_request(request_id)
+    if not booking or booking.user_id != user.id:
+        raise common.ApiError("Booking request not found", 404, "not_found")
+    if booking.status not in ("pending", "confirmed"):
+        raise common.ApiError("This booking can't be cancelled", 400, "not_cancellable")
+    if booking.status == "confirmed" and booking.check_in <= datetime.date.today():
+        raise common.ApiError("Confirmed bookings can only be cancelled before the day", 400, "too_late")
+
+    place = facade.get_place(booking.place_id)
+    decline_and_refund(booking, place, reason="cancelled")
+    owner = facade.get_user(place.owner_user_id)
+    if owner:
+        send_mail(owner.email, f"Booking cancelled: {place.name}",
+                  f"{user.name} cancelled their booking: {describe(booking, place)}.")
+    return jsonify({"status": "Cancelled"}), 200

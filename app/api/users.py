@@ -3,7 +3,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required, verify_jwt_in_req
 
 import config
 from app.api import common
-from app.models.user import User
+from app.models.user import PARTNER_ROLES, User
 from app.services import facade
 
 bp = Blueprint("users", __name__, url_prefix="/api/v1/users")
@@ -91,6 +91,33 @@ def delete_user():
         raise common.ApiError("Invalid password", 401, "invalid_password")
     facade.delete_user(user.id)
     return "", 200
+
+
+@bp.route("/change-password", methods=["POST"])
+@jwt_required()
+def change_password():
+    user = common.current_user()
+    data = common.json_body()
+    if not user.check_pwd(data.get("current_password")):
+        raise common.ApiError("Current password is wrong", 401, "invalid_password")
+    user.hash_pwd(common.password(data.get("new_password")))
+    facade.commit()
+    return jsonify({"status": "Password updated"}), 200
+
+
+@bp.route("/leave-partnership", methods=["POST"])
+@jwt_required()
+def leave_partnership():
+    """A partner goes back to a normal account: listings are hidden and open requests declined."""
+    from app.api.bookings import decline_and_refund
+
+    user = common.current_user()
+    if user.role not in PARTNER_ROLES:
+        raise common.ApiError("This account is not a partner", 400, "not_partner")
+    for booking in facade.pending_requests_for_owner(user.id):
+        decline_and_refund(booking, facade.get_place(booking.place_id))
+    facade.set_owner_places_active(user.id, False)
+    return jsonify(facade.update_user(user.id, {"role": "user"}).to_dict()), 200
 
 
 @bp.route("/kx_transactions", methods=["GET"])
