@@ -149,6 +149,8 @@ export default {
     aiCta: "Haradan başlayacağınızı bilmirsiniz? Səfəri AI planlasın",
   },
   district: {
+    historyEyebrow: "Tarix və mədəniyyət",
+    historyTitle: "{name}: tarixçə",
     back: "Xəritəyə qayıt",
     crumb: "Səyahət / Qarabağ / {name}",
     planTitle: "2 günlük səfər planla",

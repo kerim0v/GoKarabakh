@@ -3,6 +3,7 @@ import * as api from "../api.js";
 import BookingModal from "../components/BookingModal.jsx";
 import PlaceCard from "../components/PlaceCard.jsx";
 import ReviewsModal from "../components/ReviewsModal.jsx";
+import { HISTORY } from "../data/history.js";
 import { findRegion } from "../data/regions.js";
 import { useI18n } from "../i18n/index.jsx";
 import { Link } from "../lib/router.jsx";
@@ -21,7 +22,7 @@ const TABS = [
 ];
 
 export default function District({ slug }) {
-  const { t, errorText } = useI18n();
+  const { t, lang, errorText } = useI18n();
   const { loggedIn } = useSession();
   const region = findRegion(slug);
   const [tab, setTab] = useState("hotel");
@@ -88,6 +89,15 @@ export default function District({ slug }) {
       </section>
 
       <main className="district-main">
+        {HISTORY[slug] && (
+          <section className="district-history" aria-labelledby="history-title">
+            <span className="eyebrow mono">{t("district.historyEyebrow")}</span>
+            <h2 id="history-title">{t("district.historyTitle", { name })}</h2>
+            <div className="district-history-text">
+              {(HISTORY[slug][lang] || HISTORY[slug].en).map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            </div>
+          </section>
+        )}
         <nav className="category-tabs" aria-label={t("district.categoriesLabel", { name })}>
           {TABS.map(([key, icon]) => (
             <button key={key} type="button" className={tab === key ? "is-active" : ""} aria-pressed={tab === key} onClick={() => setTab(key)}>

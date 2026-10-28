@@ -158,6 +158,8 @@ export default {
     aiCta: "Не знаете, с чего начать? Пусть AI спланирует поездку",
   },
   district: {
+    historyEyebrow: "История и культура",
+    historyTitle: "История: {name}",
     back: "Назад к карте",
     crumb: "Поездка / Карабах / {name}",
     planTitle: "План на 2 дня",

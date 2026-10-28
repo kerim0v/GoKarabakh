@@ -283,3 +283,10 @@ body.has-modal { overflow: hidden; }
 .result-card .badge-gold { border-color: #fcd34d; background: #fef3c7; color: #92400e; }
 .admin-checks { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; width: 100%; font-size: 13px; }
 .admin-checks label { display: inline-flex; gap: 6px; align-items: center; }
+
+/* District history */
+.district-history { margin: 28px 0 8px; padding: 22px 24px; border: 1px solid rgba(244,214,109,.3); border-radius: 18px; background: rgba(8,17,12,.72); }
+.district-history .eyebrow { color: #f4d66d; }
+.district-history h2 { margin: 8px 0 12px; color: #fff8df; font-size: clamp(22px, 3vw, 30px); letter-spacing: -.03em; }
+.district-history-text { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px 28px; }
+.district-history-text p { margin: 0; color: rgba(255,255,255,.82); font-size: 15px; line-height: 1.7; }

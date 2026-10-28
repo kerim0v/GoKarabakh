@@ -151,6 +151,8 @@ export default {
     aiCta: "Not sure where to start? Let AI plan your trip",
   },
   district: {
+    historyEyebrow: "History & culture",
+    historyTitle: "The story of {name}",
     back: "Back to the map",
     crumb: "Trip / Karabakh / {name}",
     planTitle: "Plan a 2-day stay",
