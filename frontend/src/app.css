@@ -174,9 +174,8 @@ body.has-modal { overflow: hidden; }
 .listing-list { max-height: 520px; overflow-y: auto; }
 .photo-picker { display: flex; align-items: center; gap: 12px; }
 .photo-picker img { width: 72px; height: 54px; border-radius: 8px; object-fit: cover; }
-.itinerary-day { margin-top: 18px; }
 .itinerary-note { width: 100%; max-width: 420px; margin-top: 6px; border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 7px 10px; background: rgba(0,0,0,.18); }
-.itinerary-item select, .admin-table select { border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 7px 9px; background: rgba(8,20,18,.8); color: #fff; }
+.admin-table select { border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 7px 9px; background: rgba(8,20,18,.8); color: #fff; }
 .admin-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 22px 0; }
 .admin-counts div { display: grid; gap: 4px; padding: 16px; border: 1px solid rgba(255,255,255,.22); border-radius: 16px; background: rgba(15,47,41,.72); }
 .admin-counts strong { font-size: 26px; }
@@ -241,4 +240,22 @@ body.has-modal { overflow: hidden; }
 @media (max-width: 520px) {
   .stage-copy h1 { font-size: clamp(40px, 13vw, 62px); }
   .memory-world-shell { overflow-x: hidden; }
+}
+
+/* Itinerary by date */
+.trip-day { margin-top: 18px; }
+.trip-stop { display: grid; grid-template-columns: 86px 1fr; gap: 14px; padding: 14px 0; border-top: 1px solid rgba(255,255,255,.12); }
+.trip-stop-time { padding-top: 6px; color: #f4d66d; font-size: 18px; }
+.trip-stop-time span { color: rgba(255,255,255,.55); font-size: 12px; }
+.trip-stop-card { display: flex; gap: 14px; align-items: flex-start; }
+.trip-stop-card > img { width: 96px; height: 72px; border-radius: 12px; object-fit: cover; }
+.trip-stop-body { display: grid; flex: 1; gap: 6px; }
+.trip-stop-body > span { color: rgba(255,255,255,.7); font-size: 12px; }
+.trip-stop-fields { display: flex; flex-wrap: wrap; gap: 10px; }
+.trip-stop-fields label { display: grid; gap: 3px; color: rgba(255,255,255,.6); font: 10px var(--mono); text-transform: uppercase; }
+.trip-stop-fields input { border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 7px 9px; background: rgba(8,20,18,.8); color: #fff; color-scheme: dark; }
+.trip-stop .pill-button { margin-left: 0; }
+@media (max-width: 600px) {
+  .trip-stop { grid-template-columns: 1fr; gap: 6px; }
+  .trip-stop-card > img { display: none; }
 }

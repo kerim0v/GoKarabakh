@@ -98,6 +98,13 @@ def date(value, key):
         raise ApiError(f"{key} must be a date like 2026-05-31", 400, "invalid_date")
 
 
+def time_of_day(value, key):
+    try:
+        return datetime.time.fromisoformat(value)
+    except (TypeError, ValueError):
+        raise ApiError(f"{key} must be a time like 14:30", 400, "invalid_time")
+
+
 def email(value):
     if not isinstance(value, str) or not EMAIL_RE.match(value.strip()) or len(value) > 255:
         raise ApiError("Enter a valid email address", 400, "invalid_email")

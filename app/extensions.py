@@ -6,4 +6,4 @@ from flask_migrate import Migrate
 bcrypt = Bcrypt()
 jwt = JWTManager()
 cors = CORS()
-migrate = Migrate()
+migrate = Migrate(render_as_batch=True)  # SQLite needs batch mode to alter columns

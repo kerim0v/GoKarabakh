@@ -1,3 +1,5 @@
+import datetime
+
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required
 
@@ -7,7 +9,7 @@ from app.services import facade
 
 bp = Blueprint("itinerary", __name__, url_prefix="/api/v1/itinerary")
 
-MAX_DAYS = 14
+MAX_DAYS_AHEAD = 730
 
 
 def item_dict(item, place):
@@ -16,10 +18,21 @@ def item_dict(item, place):
     return d
 
 
-def _day(data):
-    if data.get("day") in (None, ""):
-        return None
-    return common.integer(data.get("day"), "day", 1, MAX_DAYS)
+def schedule_fields(data):
+    """`date` (YYYY-MM-DD) and approximate `time` (HH:MM); empty values clear them."""
+    fields = {}
+    if "date" in data:
+        if data["date"] in (None, ""):
+            fields["visit_date"] = None
+        else:
+            visit_date = common.date(data["date"], "date")
+            today = datetime.date.today()
+            if not today <= visit_date <= today + datetime.timedelta(days=MAX_DAYS_AHEAD):
+                raise common.ApiError("Pick a date from today up to two years ahead", 400, "date_in_past")
+            fields["visit_date"] = visit_date
+    if "time" in data:
+        fields["start_time"] = None if data["time"] in (None, "") else common.time_of_day(data["time"], "time")
+    return fields
 
 
 def _own_item(item_id, user):
@@ -44,7 +57,7 @@ def add_item():
     place = facade.get_place(data.get("place_id"))
     if not place or not place.is_active:
         raise common.ApiError("Place not found", 404, "not_found")
-    item = facade.add_to_itinerary(user.id, place.id, _day(data))
+    item = facade.add_to_itinerary(user.id, place.id, **schedule_fields(data))
     return jsonify(item_dict(item, place)), 200
 
 
@@ -53,9 +66,7 @@ def add_item():
 def update_item(item_id):
     item = _own_item(item_id, common.current_user())
     data = common.json_body()
-    updates = {}
-    if "day" in data:
-        updates["day"] = _day(data)
+    updates = schedule_fields(data)
     if "note" in data:
         updates["note"] = common.text(data, "note", 500)
     item = facade.update_itinerary_item(item.id, updates)

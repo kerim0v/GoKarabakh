@@ -66,8 +66,11 @@ export function I18nProvider({ children }) {
       const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value);
       return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(date);
     };
+    // "Tuesday, 3 November" - headings for itinerary days
+    const formatDay = (value) =>
+      new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" }).format(new Date(`${value}T00:00:00`));
     const formatNumber = (value, options) => new Intl.NumberFormat(locale, options).format(value);
-    return { lang, setLang, t, errorText, formatDate, formatNumber, locale };
+    return { lang, setLang, t, errorText, formatDate, formatDay, formatNumber, locale };
   }, [lang, setLang]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;

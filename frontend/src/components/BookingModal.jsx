@@ -14,14 +14,14 @@ function nightsBetween(start, end) {
   return Math.round((new Date(end) - new Date(start)) / 86400000);
 }
 
-export default function BookingModal({ place, onClose, onBooked }) {
+export default function BookingModal({ place, initialDate, onClose, onBooked }) {
   const { t, errorText } = useI18n();
   const { user } = useSession();
   const draft = readTripDraft();
   const isHotel = place?.category === "hotel";
   const [form, setForm] = useState(() => ({
     guests: draft.guests || 2,
-    check_in: draft.checkIn && draft.checkIn >= today() ? draft.checkIn : "",
+    check_in: [initialDate, draft.checkIn].find((d) => d && d >= today()) || "",
     check_out: "",
     contact_phone: "",
     message: "",

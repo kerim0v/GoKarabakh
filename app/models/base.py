@@ -13,6 +13,8 @@ def serialize(value):
         return value.isoformat() + "Z"
     if isinstance(value, datetime.date):
         return value.isoformat()
+    if isinstance(value, datetime.time):
+        return value.strftime("%H:%M")
     if isinstance(value, Decimal):
         return float(value)
     return value

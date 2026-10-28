@@ -248,15 +248,19 @@ def itinerary_for_user(user_id):
         db.session.query(ItineraryItem, Place)
         .join(Place, Place.id == ItineraryItem.place_id)
         .filter(ItineraryItem.user_id == user_id, Place.is_active.is_(True))
-        .order_by(func.coalesce(ItineraryItem.day, 999), ItineraryItem.creation_date)
+        .order_by(ItineraryItem.visit_date.is_(None), ItineraryItem.visit_date,
+                  ItineraryItem.start_time.is_(None), ItineraryItem.start_time, ItineraryItem.creation_date)
         .all()
     )
 
-def add_to_itinerary(user_id, place_id, day=None):
+def add_to_itinerary(user_id, place_id, **schedule):
+    """Save a place once per user; saving it again only updates the date/time if given."""
     item = ItineraryItem.query.filter_by(user_id=user_id, place_id=place_id).first()
     if item:
+        if schedule:
+            item.update(schedule)
         return item
-    item = ItineraryItem(user_id=user_id, place_id=place_id, day=day)
+    item = ItineraryItem(user_id=user_id, place_id=place_id, **schedule)
     itinerary_repository.add(item)
     return item
 

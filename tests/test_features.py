@@ -130,22 +130,30 @@ def test_reviews_need_a_confirmed_visit(client, make_user, make_place, login):
 
 # Itinerary
 
-def test_itinerary_is_saved_per_user(client, make_user, make_place, login):
+def test_itinerary_is_saved_per_user_with_date_and_time(client, make_user, make_place, login):
     owner = make_user(email="owner@example.com", role="owner")
     make_user()
     make_user(email="other@example.com")
-    place = make_place(owner)
+    hotel = make_place(owner)
+    tour = make_place(owner, category="tour", name="Walk")
     headers = login("traveller@example.com")
-    item = client.post("/api/v1/itinerary", headers=headers, json={"place_id": place.id}).get_json()
-    again = client.post("/api/v1/itinerary", headers=headers, json={"place_id": place.id}).get_json()
-    assert item["id"] == again["id"]
-    res = client.put(f"/api/v1/itinerary/{item['id']}", headers=headers, json={"day": 2, "note": "Sunset"})
-    assert res.get_json()["day"] == 2
-    assert client.put(f"/api/v1/itinerary/{item['id']}", headers=headers, json={"day": 99}).status_code == 400
+    item = client.post("/api/v1/itinerary", headers=headers, json={"place_id": hotel.id}).get_json()
+    again = client.post("/api/v1/itinerary", headers=headers, json={"place_id": hotel.id}).get_json()
+    assert item["id"] == again["id"] and item["visit_date"] is None
+    res = client.put(f"/api/v1/itinerary/{item['id']}", headers=headers,
+                     json={"date": days_from_now(5), "time": "15:30", "note": "Check in"})
+    assert res.get_json()["visit_date"] == days_from_now(5) and res.get_json()["start_time"] == "15:30"
+    client.post("/api/v1/itinerary", headers=headers, json={"place_id": tour.id, "date": days_from_now(5), "time": "09:00"})
+    assert [i["place"]["name"] for i in client.get("/api/v1/itinerary", headers=headers).get_json()] == ["Walk", "Test Stay"]
+
+    for bad in ({"date": days_from_now(-1)}, {"date": "soon"}, {"time": "25:00"}):
+        assert client.put(f"/api/v1/itinerary/{item['id']}", headers=headers, json=bad).status_code == 400
+    cleared = client.put(f"/api/v1/itinerary/{item['id']}", headers=headers, json={"date": None, "time": ""}).get_json()
+    assert cleared["visit_date"] is None and cleared["start_time"] is None
+
     assert client.get("/api/v1/itinerary", headers=login("other@example.com")).get_json() == []
     assert client.delete(f"/api/v1/itinerary/{item['id']}", headers=login("other@example.com")).status_code == 404
     assert client.delete(f"/api/v1/itinerary/{item['id']}", headers=headers).status_code == 200
-    assert client.get("/api/v1/itinerary", headers=headers).get_json() == []
 
 
 # Passwords

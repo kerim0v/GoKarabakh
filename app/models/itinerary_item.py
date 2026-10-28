@@ -8,5 +8,6 @@ class ItineraryItem(ModelBase):
 
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     place_id = db.Column(db.String(36), db.ForeignKey("places.id", ondelete="CASCADE"), nullable=False)
-    day = db.Column(db.Integer)  # trip day, None = not planned yet
+    visit_date = db.Column(db.Date)     # None = not scheduled yet
+    start_time = db.Column(db.Time)     # approximate, None = any time that day
     note = db.Column(db.String(500))
