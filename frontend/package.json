@@ -9,16 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "d3-geo": "^3.1.1",
-    "framer-motion": "^13.1.1",
-    "globe.gl": "latest",
-    "gsap": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "react-simple-maps": "^3.0.0",
-    "three": "latest",
-    "vanilla-tilt": "latest",
-    "vite": "latest"
+    "framer-motion": "13.1.1",
+    "globe.gl": "2.46.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "6.1.0",
+    "vite": "8.3.5"
+  },
+  "overrides": {
+    "d3-color": "3.1.0"
   }
 }

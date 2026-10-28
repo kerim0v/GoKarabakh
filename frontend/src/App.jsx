@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Globe from "globe.gl";
 import * as THREE from "three";
-import VanillaTilt from "vanilla-tilt";
 import AuthModal from "./components/AuthModal.jsx";
 import * as api from "./api.js";
 
@@ -544,10 +543,10 @@ function Landing() {
     const instance = Globe()(mount.current)
       .backgroundColor("rgba(0,0,0,0)")
       .globeImageUrl(
-        "https://unpkg.com/three-globe/example/img/earth-night.jpg",
+        "/globe/earth-night.jpg",
       )
       .bumpImageUrl(
-        "https://unpkg.com/three-globe/example/img/earth-topology.png",
+        "/globe/earth-topology.png",
       )
       .showAtmosphere(true)
       .atmosphereColor("#38bdf8")
@@ -1886,175 +1885,6 @@ function CommunityArchive() {
           </span>
         ))}
       </div>
-    </div>
-  );
-}
-
-function Community() {
-  const [shared, setShared] = useState(false);
-  const [caption, setCaption] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [traceOpen, setTraceOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    () => localStorage.getItem("isLoggedIn") === "true",
-  );
-
-  useEffect(() => {
-    const syncAuth = () =>
-      setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
-    window.addEventListener("auth:changed", syncAuth);
-    return () => window.removeEventListener("auth:changed", syncAuth);
-  }, []);
-
-  const openAuthIfGuest = (event) => {
-    if (!isLoggedIn) {
-      if (event && typeof event.preventDefault === "function")
-        event.preventDefault();
-      window.dispatchEvent(new CustomEvent("auth:open"));
-    }
-  };
-
-  const share = (event) => {
-    event.preventDefault();
-    if (!isLoggedIn) {
-      window.dispatchEvent(new CustomEvent("auth:open"));
-      return;
-    }
-    if (!selectedFile) return;
-    setUploadedImage({
-      src: URL.createObjectURL(selectedFile),
-      caption: caption.trim() || "A new Karabakh memory",
-    });
-    setShared(true);
-    setTraceOpen(false);
-    setCaption("");
-    setSelectedFile(null);
-  };
-
-  const cards = [
-    ...photos.map(([src, alt, author, place], index) => ({
-      src,
-      alt,
-      author,
-      place,
-      className: `community-memory-card card-${index + 1}`,
-    })),
-    ...(uploadedImage
-      ? [
-          {
-            ...uploadedImage,
-            alt: uploadedImage.caption,
-            author: "You",
-            place: "New memory",
-            className: "community-memory-card card-uploaded",
-          },
-        ]
-      : []),
-  ];
-
-  return (
-    <div className="page-shell community-scrapbook-page">
-      <Header active="community" />
-      <main className="community-scrapbook-main">
-        <section className="community-scrapbook-intro">
-          <span className="eyebrow mono" style={{ color: "#38bdf8" }}>
-            Inter Karabakh / travel diary
-          </span>
-          <h1>
-            Karabakh
-            <br />
-            <em>memory book.</em>
-          </h1>
-          <p>
-            Turn the pages and collect small moments from the road. Every
-            photograph is a note left by a traveller.
-          </p>
-        </section>
-        <section
-          className="community-scrapbook"
-          aria-label="Community memories"
-        >
-          {cards.map((card) => (
-            <article
-              className={`scrapbook-memory ${card.className}`}
-              key={`${card.src}-${card.author}`}
-            >
-              <span className="photo-tape" aria-hidden="true" />
-              <div className="scrapbook-photo">
-                <img src={card.src} alt={card.alt} loading="lazy" />
-              </div>
-              <div className="scrapbook-card-meta">
-                <span>{card.author}</span>
-                <span className="mono">{card.place}</span>
-              </div>
-              <p className="scrapbook-comment">
-                “{card.caption || card.alt}”
-              </p>
-            </article>
-          ))}
-        </section>
-        {isLoggedIn && <button className="community-share-trigger" type="button" onClick={() => setTraceOpen((open) => !open)} aria-label="Open photo upload" title="Upload a photo">
-          <span>{traceOpen ? "×" : "+"}</span>
-        </button>}
-        {isLoggedIn && traceOpen && <aside className="community-trace-panel community-share-sheet" role="dialog" aria-modal="true">
-          <h2>Paste in a new memory.</h2>
-          <p>
-            {isLoggedIn
-              ? "Your field note will join the memory wall."
-              : "Sign in to add your own field note."}
-          </p>
-          <form onSubmit={share}>
-            <label
-              className="community-upload"
-              htmlFor="community-photo-input"
-              onClick={openAuthIfGuest}
-            >
-              <span className="community-upload-icon">+</span>
-              <span>{selectedFile ? selectedFile.name : "Add a photo"}</span>
-            </label>
-            <input
-              id="community-photo-input"
-              type="file"
-              accept="image/*"
-              onChange={(event) =>
-                setSelectedFile(event.target.files?.[0] || null)
-              }
-              onClick={openAuthIfGuest}
-              disabled={!isLoggedIn}
-            />
-            <label className="community-upload community-camera-upload" htmlFor="community-camera-input">
-              <span className="community-upload-icon">◉</span>
-              <span>Take a photo</span>
-            </label>
-            <input
-              id="community-camera-input"
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={(event) =>
-                setSelectedFile(event.target.files?.[0] || null)
-              }
-              disabled={!isLoggedIn}
-            />
-            <input
-              value={caption}
-              onChange={(event) => setCaption(event.target.value)}
-              placeholder="Write your comment..."
-              aria-label="Comment for your photo"
-              onClick={openAuthIfGuest}
-              disabled={!isLoggedIn}
-            />
-            <button type="submit" onClick={openAuthIfGuest} disabled={!selectedFile}>
-              {shared
-                ? "Added to the archive"
-                : isLoggedIn
-                  ? "Leave a trace ↗"
-                  : "Sign in to contribute ↗"}
-            </button>
-          </form>
-        </aside>}
-      </main>
     </div>
   );
 }
