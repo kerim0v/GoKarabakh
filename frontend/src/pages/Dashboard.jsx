@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api from "../api.js";
 import AtlasMap from "../components/AtlasMap.jsx";
+import BookingModal from "../components/BookingModal.jsx";
 import Badges from "../components/Badges.jsx";
 import Header from "../components/Header.jsx";
 import Price from "../components/Price.jsx";
@@ -9,6 +10,7 @@ import { REGIONS } from "../data/regions.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useMeta } from "../lib/meta.jsx";
 import { Link, navigate } from "../lib/router.jsx";
+import { requireLogin, useSession } from "../lib/session.js";
 import { readTripDraft, saveTripDraft } from "../lib/tripDraft.js";
 import { useAsync } from "../lib/useAsync.js";
 import { localToday } from "../lib/dates.js";
@@ -20,32 +22,60 @@ const TABS = [
   ["guides", "🚩"],
 ];
 
-function ResultCard({ place }) {
+function nightsBetween(checkIn, checkOut) {
+  return checkIn && checkOut ? Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000) : 0;
+}
+
+function dayAfter(date) {
+  const next = new Date(`${date}T00:00:00`);
+  next.setDate(next.getDate() + 1);
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
+}
+
+// `trip` is the search that produced the result: with dates and guests it shows the total for the whole stay.
+function ResultCard({ place, trip, onBook }) {
   const { t } = useI18n();
+  let total = null;
+  if (trip?.nights && place.category === "hotel") total = [place.cost * trip.nights, t("trip.forNights", { count: trip.nights })];
+  else if (trip?.guests && place.category !== "hotel" && Number(place.cost)) total = [place.cost * trip.guests, t("trip.forGuests", { count: trip.guests })];
   return (
-    <Link className="result-card" href={`/district/${place.region}`}>
-      <div className="result-card-image" style={{ backgroundImage: `url("${api.mediaUrl(place.main_photo_url)}")` }} />
+    <article className="result-card">
+      <Link href={`/district/${place.region}`} className="result-card-link">
+        <div className="result-card-image" style={{ backgroundImage: `url("${api.mediaUrl(place.main_photo_url)}")` }} />
+      </Link>
       <div className="result-card-body">
-        <strong>{place.name}</strong>
+        <Link href={`/district/${place.region}`}><strong>{place.name}</strong></Link>
         <span>{t(`regions.${place.region}.label`)} · {t(`categories.${place.category}`)}</span>
         <Badges place={place} />
         <div className="result-card-facts">
-          <Price azn={place.cost} />
+          {total ? (
+            <span className="result-total"><Price azn={total[0]} /> <small>{total[1]}</small></span>
+          ) : (
+            <Price azn={place.cost} />
+          )}
           <Stars rating={place.avg_rating} count={place.review_count} />
         </div>
+        {onBook && place.is_bookable && (
+          <button type="button" className="pill-button result-book" onClick={() => onBook(place)}>{t("place.book")} →</button>
+        )}
       </div>
-    </Link>
+    </article>
   );
 }
 
 export default function Dashboard() {
-  const { t, errorText } = useI18n();
+  const { t, errorText, formatDate } = useI18n();
+  const { loggedIn } = useSession();
   const draft = readTripDraft();
   const [tab, setTab] = useState("stays");
   const [query, setQuery] = useState("");
-  const [checkIn, setCheckIn] = useState(draft.checkIn || "");
+  const [checkIn, setCheckIn] = useState(draft.checkIn && draft.checkIn >= localToday() ? draft.checkIn : "");
+  const [checkOut, setCheckOut] = useState(draft.checkOut && draft.checkOut > (draft.checkIn || "") ? draft.checkOut : "");
   const [guests, setGuests] = useState(draft.guests || 2);
   const [results, setResults] = useState(null);
+  const [searchedTrip, setSearchedTrip] = useState(null);
+  const [booking, setBooking] = useState(null);
+  const [notice, setNotice] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
   const [bgIndex, setBgIndex] = useState(0);
@@ -65,16 +95,33 @@ export default function Dashboard() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const isStay = tab === "stays";
+
+  const changeCheckIn = (value) => {
+    setCheckIn(value);
+    // Keep check-out after check-in: default to one night
+    if (value && (!checkOut || checkOut <= value)) setCheckOut(dayAfter(value));
+  };
+
   const search = async (event) => {
     event.preventDefault();
-    saveTripDraft({ checkIn, guests: Number(guests) || 1 });
-    setSearching(true);
     setSearchError("");
+    setNotice("");
+    const groupSize = Number(guests) || 1;
+    const stayEnd = isStay && checkIn ? checkOut : "";
+    if (stayEnd && stayEnd <= checkIn) {
+      setSearchError(t("errors.checkout_before_checkin"));
+      return;
+    }
+    saveTripDraft({ checkIn, checkOut, guests: groupSize });
+    setSearching(true);
     try {
       // Region names are matched in every language, so "Şuşa" or "Шуша" find Shusha
       const typed = query.trim().toLowerCase();
       const region = typed && REGIONS.find((r) => t(`regions.${r.slug}.label`).toLowerCase().startsWith(typed));
-      setResults(await api.getPlaces(region ? { kind: tab, region: region.slug } : { kind: tab, q: typed }));
+      const dates = checkIn ? { check_in: checkIn, check_out: stayEnd || undefined } : {};
+      setResults(await api.getPlaces({ kind: tab, ...(region ? { region: region.slug } : { q: typed }), ...dates }));
+      setSearchedTrip({ checkIn, checkOut: stayEnd, nights: nightsBetween(checkIn, stayEnd), guests: groupSize });
     } catch (err) {
       setSearchError(errorText(err));
       setResults([]);
@@ -113,15 +160,21 @@ export default function Dashboard() {
               </button>
             ))}
           </div>
-          <div className="search-fields">
+          <div className={`search-fields${isStay ? " has-checkout" : ""}`}>
             <label className="search-field">
               <span>{t("trip.destination")}</span>
               <input type="text" placeholder={t("trip.destinationPlaceholder")} value={query} onChange={(event) => setQuery(event.target.value)} />
             </label>
             <label className="search-field">
-              <span>{t("trip.date")}</span>
-              <input type="date" min={localToday()} value={checkIn} onChange={(event) => setCheckIn(event.target.value)} />
+              <span>{isStay ? t("booking.checkIn") : t("trip.date")}</span>
+              <input type="date" min={localToday()} value={checkIn} onChange={(event) => changeCheckIn(event.target.value)} />
             </label>
+            {isStay && (
+              <label className="search-field">
+                <span>{t("booking.checkOut")}</span>
+                <input type="date" min={checkIn ? dayAfter(checkIn) : localToday()} value={checkOut} onChange={(event) => setCheckOut(event.target.value)} />
+              </label>
+            )}
             <label className="search-field search-field-small">
               <span>{t("trip.guests")}</span>
               <input type="number" min="1" max="50" value={guests} onChange={(event) => setGuests(event.target.value)} />
@@ -133,10 +186,21 @@ export default function Dashboard() {
           {searchError && <p role="alert" className="form-error">{searchError}</p>}
           {results && (
             <div className="search-results">
-              <p className="search-count">{t("trip.results", { count: results.length })}</p>
+              <p className="search-count">
+                {t("trip.results", { count: results.length })}
+                {searchedTrip?.checkIn && ` · ${t("trip.openOn", { dates: searchedTrip.checkOut ? `${formatDate(searchedTrip.checkIn)} – ${formatDate(searchedTrip.checkOut)}` : formatDate(searchedTrip.checkIn) })}`}
+              </p>
+              {notice && <p role="status" className="notice notice-light">{notice}</p>}
               {results.length ? (
                 <div className="result-grid">
-                  {results.map((place) => <ResultCard key={place.id} place={place} />)}
+                  {results.map((place) => (
+                    <ResultCard
+                      key={place.id}
+                      place={place}
+                      trip={searchedTrip}
+                      onBook={(p) => (loggedIn ? setBooking(p) : requireLogin(() => setBooking(p)))}
+                    />
+                  ))}
                 </div>
               ) : (
                 <p className="muted-dark">{t("trip.noResults")}</p>
@@ -199,6 +263,18 @@ export default function Dashboard() {
           )}
         </section>
       </main>
+      {booking && (
+        <BookingModal
+          place={booking}
+          initialDate={searchedTrip?.checkIn}
+          initialCheckOut={searchedTrip?.checkOut}
+          onClose={() => setBooking(null)}
+          onBooked={() => {
+            setBooking(null);
+            setNotice(t("booking.sent"));
+          }}
+        />
+      )}
     </div>
   );
 }

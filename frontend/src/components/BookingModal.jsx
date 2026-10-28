@@ -9,12 +9,18 @@ import Price from "./Price.jsx";
 import { localToday } from "../lib/dates.js";
 
 
+// Use a known check-out date only when it comes after the chosen check-in
+function pickCheckOut(checkIn, candidates) {
+  const checkOut = checkIn && candidates.find((d) => d && d > checkIn);
+  return checkOut ? { check_out: checkOut } : {};
+}
+
 function nightsBetween(start, end) {
   if (!start || !end) return 0;
   return Math.round((new Date(end) - new Date(start)) / 86400000);
 }
 
-export default function BookingModal({ place, initialDate, onClose, onBooked }) {
+export default function BookingModal({ place, initialDate, initialCheckOut, onClose, onBooked }) {
   const { t, errorText } = useI18n();
   const { user } = useSession();
   const draft = readTripDraft();
@@ -23,6 +29,7 @@ export default function BookingModal({ place, initialDate, onClose, onBooked }) 
     guests: draft.guests || 2,
     check_in: [initialDate, draft.checkIn].find((d) => d && d >= localToday()) || "",
     check_out: "",
+    ...pickCheckOut([initialDate, draft.checkIn].find((d) => d && d >= localToday()), [initialCheckOut, draft.checkOut]),
     contact_phone: "",
     message: "",
     use_kx: false,

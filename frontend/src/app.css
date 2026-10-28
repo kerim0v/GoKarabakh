@@ -73,6 +73,7 @@ body.has-modal { overflow: hidden; }
 .search-tabs button { margin-bottom: -1px; border: 0; border-bottom: 3px solid transparent; padding: 0 0 12px; background: none; color: #64748b; font-size: 15px; font-weight: 500; white-space: nowrap; }
 .search-tabs button.is-active { border-bottom-color: var(--sky-deep); color: var(--sky-deep); font-weight: 700; }
 .search-fields { display: grid; grid-template-columns: 1.4fr 1fr .6fr auto; gap: 12px; align-items: stretch; }
+.search-fields.has-checkout { grid-template-columns: 1.3fr 1fr 1fr .55fr auto; }
 .search-field { display: grid; gap: 2px; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f4f5f7; }
 .search-field span { color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; }
 .search-field input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #1e293b; font-size: 14px; font-weight: 600; }
@@ -291,3 +292,22 @@ body.has-modal { overflow: hidden; }
 .district-history-text { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px 28px; }
 .district-history-text p { margin: 0; color: rgba(255,255,255,.82); font-size: 15px; line-height: 1.7; }
 .planner-mode { margin: 0 0 14px; padding: 10px 12px; border: 1px dashed rgba(244,200,121,.55); border-radius: 10px; color: #ffe7a8; font-size: 13px; }
+
+/* Search totals and booking from results */
+.result-card { display: flex; flex-direction: column; }
+.result-card-link { display: block; }
+.result-card-body { flex: 1; }
+.result-card-body a strong:hover { text-decoration: underline; }
+.result-total { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px; }
+.result-total small { color: #64748b; font-size: 11px; }
+.popular .result-total small { color: rgba(255,255,255,.6); }
+.result-book { justify-self: start; margin: 8px 0 0 !important; }
+.notice-light { margin: 0 0 12px; border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+
+/* Partner closed dates */
+.closed-dates { display: grid; gap: 8px; margin-top: 8px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; background: rgba(0,0,0,.15); }
+.closed-dates ul { margin: 0; padding-left: 16px; font-size: 13px; }
+.closed-dates li { margin: 4px 0; }
+.closed-dates li .link-button { margin-left: 8px; }
+.closed-dates-form { display: flex; flex-wrap: wrap; gap: 8px; }
+.closed-dates-form input { flex: 1 1 130px; min-width: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 7px 9px; background: rgba(8,20,18,.8); color: #fff; color-scheme: dark; }

@@ -123,6 +123,9 @@ export default {
     enter: "Enter Karabakh",
   },
   trip: {
+    openOn: "open on {dates}",
+    forNights: ({ count }) => plural(count, "night", "nights"),
+    forGuests: ({ count }) => `for ${plural(count, "guest", "guests")}`,
     eyebrow: "Plan your trip",
     title: "Your next take-off awaits.",
     text: "Mountain stays, ancient routes, and local guides for an unhurried journey through Karabakh.",
@@ -259,6 +262,13 @@ export default {
     cancelled: "Cancelled booking at {name}",
   },
   workspace: {
+    closedDates: "Closed dates",
+    noClosedDates: "Open every day. Add dates when you are closed or full.",
+    closedFrom: "Closed from",
+    closedTo: "Closed until",
+    closedNote: "Reason (optional)",
+    closeDates: "Close these dates",
+    reopen: "Reopen",
     eyebrow: "Partner workspace",
     titleOwner: "My listings",
     titleGuide: "My tours",
@@ -456,6 +466,7 @@ export default {
     },
   },
   errors: {
+    place_closed: "This place is closed on those dates. Try other dates.",
     ai_busy: "The AI planner is busy. Please try again in a minute.",
     ai_unavailable: "The AI planner can't be reached right now. Please try again later.",
     ai_refused: "The AI planner couldn't help with that request. Try describing your trip differently.",

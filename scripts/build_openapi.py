@@ -24,6 +24,7 @@ schemas = {
     "BookingRequest": {"type": "object", "properties": {**base, "place_id": STR, "user_id": STR, "check_in": DATE, "check_out": DATE, "guests": INT, "message": STR, "contact_phone": STR, "total_cost": NUM, "coins_used": INT, "coins_earned": INT, "status": S("string", enum=["pending", "confirmed", "declined", "cancelled"]), "place_name": STR, "place_photo_url": STR, "place_region": STR, "place_category": STR, "traveller_name": S("string", description="Owner inbox only"), "traveller_email": S("string", description="Owner inbox only"), "partner_name": S("string", description="Traveller list, once confirmed"), "partner_email": S("string", description="Traveller list, once confirmed"), "partner_phone": S("string", description="Traveller list, once confirmed")}},
     "PartnerApplication": {"type": "object", "properties": {**base, "user_id": STR, "target_role": S("string", enum=["owner", "guide"]), "company_name": STR, "tax_id": STR, "phone": STR, "bio": STR, "languages": STR, "status": S("string", enum=["pending", "approved", "rejected"]), "admin_note": STR, "user_name": STR, "user_email": STR}},
     "CommunityTrace": {"type": "object", "properties": {**base, "user_id": STR, "region_slug": S("string", enum=REGIONS), "caption": STR, "photo_url": STR, "author_name": STR}},
+    "ClosedPeriod": {"type": "object", "properties": {**base, "place_id": STR, "start_date": DATE, "end_date": DATE, "note": STR}},
     "KxTransaction": {"type": "object", "properties": {**base, "user_id": STR, "amount": INT, "reason": STR}},
     "Review": {"type": "object", "properties": {**base, "place_id": STR, "user_id": STR, "rating": S("integer", minimum=1, maximum=5), "comment": STR, "author_name": STR}},
     "ItineraryItem": {"type": "object", "properties": {**base, "user_id": STR, "place_id": STR, "visit_date": S("string", format="date", nullable=True), "start_time": S("string", example="14:30", nullable=True), "note": STR, "place": REF("Place")}},
@@ -69,6 +70,8 @@ LIST_PARAMS = (
     ("q", "query", False, STR),
     ("sort", "query", False, S("string", enum=["popular", "rating", "price_asc", "price_desc"])),
     ("limit", "query", False, INT),
+    ("check_in", "query", False, S("string", format="date", description="Hide places closed on this date (or from this night)")),
+    ("check_out", "query", False, S("string", format="date", description="With check_in: hide places closed on any night of the stay")),
 )
 
 paths = {
@@ -91,6 +94,11 @@ paths = {
     "/api/v1/places/create": {"post": op("Places", "Create a listing (owner/guide)", auth=True, req={"required": True, "content": {"application/json": {"schema": REF("PlaceInput")}}}, resp=REF("Place"))},
     "/api/v1/places/update": {"put": op("Places", "Edit a listing (owner or admin)", auth=True, req=body({"id": STR, **schemas["PlaceInput"]["properties"]}, ["id"]), resp=REF("Place"), errors=(400, 404))},
     "/api/v1/places/delete": {"post": op("Places", "Delete a listing (owner or admin)", auth=True, req=body({"id": STR}, ["id"]), errors=(400, 404))},
+    "/api/v1/places/{place_id}/closed": {
+        "get": op("Places", "Upcoming closed dates of a listing (owner or admin)", auth=True, params=(ID("place_id"),), resp=ARR(REF("ClosedPeriod")), errors=(404,)),
+        "post": op("Places", "Close a listing for some dates (owner or admin)", auth=True, params=(ID("place_id"),), req=body({"start_date": DATE, "end_date": DATE, "note": STR}, ["start_date"]), resp=REF("ClosedPeriod"), desc="Closed listings disappear from searches for those dates and can't be booked on them.", errors=(400, 404)),
+    },
+    "/api/v1/places/closed/{period_id}": {"delete": op("Places", "Reopen dates (owner or admin)", auth=True, params=(ID("period_id"),), errors=(404,))},
     "/api/v1/places/stats": {"get": op("Places", "Booking stats for own listings", auth=True, resp={"type": "object", "properties": {"places": ARR({"type": "object", "properties": {"place_id": STR, "name": STR, "bookings": INT, "pending": INT, "revenue": NUM}}), "total_bookings": INT, "total_pending": INT, "total_revenue": NUM}}, errors=())},
     "/api/v1/places/book_request": {"post": op("Bookings", "Request a booking", auth=True, req=body({"place_id": STR, "check_in": DATE, "check_out": S("string", format="date", description="Hotels only"), "guests": INT, "message": STR, "contact_phone": STR, "use_kx": S("boolean", description="Spend coins, 1 coin = 1 AZN")}, ["place_id", "check_in"]), resp=REF("BookingRequest"), desc="Emails the owner. Hotels are priced per night, restaurants and tours per guest. Coins used are held until the request is declined or cancelled.", errors=(400, 404))},
     "/api/v1/places/book_requests": {"get": op("Bookings", "Requests on own listings", auth=True, resp=ARR(REF("BookingRequest")), errors=())},

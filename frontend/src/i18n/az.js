@@ -121,6 +121,9 @@ export default {
     enter: "Qarabağa daxil ol",
   },
   trip: {
+    openOn: "{dates} tarixlərində açıq",
+    forNights: ({ count }) => `${count} gecə`,
+    forGuests: ({ count }) => `${count} qonaq üçün`,
     eyebrow: "Səyahətinizi planlayın",
     title: "Növbəti səfəriniz sizi gözləyir.",
     text: "Tələsmədən Qarabağ səyahəti üçün dağ evləri, qədim marşrutlar və yerli bələdçilər.",
@@ -257,6 +260,13 @@ export default {
     cancelled: "{name} rezervasiyası ləğv edildi",
   },
   workspace: {
+    closedDates: "Bağlı tarixlər",
+    noClosedDates: "Hər gün açıqdır. Bağlı və ya dolu olduğunuz tarixləri əlavə edin.",
+    closedFrom: "Bağlıdır: başlanğıc",
+    closedTo: "Bağlıdır: son",
+    closedNote: "Səbəb (istəyə görə)",
+    closeDates: "Bu tarixləri bağla",
+    reopen: "Yenidən aç",
     eyebrow: "Tərəfdaş paneli",
     titleOwner: "Elanlarım",
     titleGuide: "Turlarım",
@@ -454,6 +464,7 @@ export default {
     },
   },
   errors: {
+    place_closed: "Bu məkan həmin tarixlərdə bağlıdır. Başqa tarix seçin.",
     ai_busy: "AI planlayıcı məşğuldur. Bir dəqiqədən sonra yenidən cəhd edin.",
     ai_unavailable: "AI planlayıcıya hazırda qoşulmaq mümkün deyil. Bir az sonra yenidən cəhd edin.",
     ai_refused: "AI planlayıcı bu sorğuya kömək edə bilmədi. Səfərinizi başqa cür təsvir edin.",

@@ -97,6 +97,9 @@ export const getMyPlaces = () => request("/api/v1/places/mine");
 export const createPlace = (payload) => post("/api/v1/places/create", payload);
 export const updatePlace = (payload) => put("/api/v1/places/update", payload);
 export const deletePlace = (id) => post("/api/v1/places/delete", { id });
+export const getClosedPeriods = (placeId) => request(`/api/v1/places/${placeId}/closed`);
+export const addClosedPeriod = (placeId, period) => post(`/api/v1/places/${placeId}/closed`, period);
+export const deleteClosedPeriod = (id) => del(`/api/v1/places/closed/${id}`);
 export const getOwnerStats = () => request("/api/v1/places/stats");
 
 // Bookings

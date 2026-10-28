@@ -11,6 +11,7 @@ from app.models.kx_transaction import KxTransaction
 from app.models.review import Review
 from app.models.itinerary_item import ItineraryItem
 from app.models.ai_plan_log import AiPlanLog
+from app.models.closed_period import ClosedPeriod
 from app.models.ai_plan_log import AiPlanLog
 from app.repository.sqlalchemy_repo import SQLAlchemyRepository
 from app.database import db
@@ -52,7 +53,7 @@ PLACE_KINDS = {
 }
 
 def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
-                 include_inactive=False, sort=None, limit=None):
+                 include_inactive=False, sort=None, limit=None, open_from=None, open_to=None):
     """Places with their owner and stats, as (place, owner, bookings, avg_rating, review_count) rows."""
     bookings = (
         db.session.query(BookingRequest.place_id, func.count(BookingRequest.id).label("count"))
@@ -82,6 +83,8 @@ def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
         query = PLACE_KINDS[kind](query)
     if owner_id:
         query = query.filter(Place.owner_user_id == owner_id)
+    if open_from:
+        query = query.filter(~closed_between(open_from, open_to or open_from))
     if q:
         pattern = f"%{q.lower()}%"
         query = query.filter(func.lower(Place.name).like(pattern) | Place.region.like(pattern))
@@ -99,6 +102,38 @@ def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
     if limit:
         query = query.limit(limit)
     return query.all()
+
+def closed_between(first_day, last_day):
+    """SQL condition: the place has a closed period touching any day from first_day to last_day."""
+    return (
+        db.session.query(ClosedPeriod.id)
+        .filter(ClosedPeriod.place_id == Place.id,
+                ClosedPeriod.start_date <= last_day, ClosedPeriod.end_date >= first_day)
+        .exists()
+    )
+
+def is_closed(place_id, first_day, last_day):
+    return db.session.query(
+        ClosedPeriod.query.filter(ClosedPeriod.place_id == place_id,
+                                  ClosedPeriod.start_date <= last_day, ClosedPeriod.end_date >= first_day).exists()
+    ).scalar()
+
+def closed_periods_for_place(place_id):
+    return (
+        ClosedPeriod.query.filter(ClosedPeriod.place_id == place_id, ClosedPeriod.end_date >= datetime.date.today())
+        .order_by(ClosedPeriod.start_date)
+        .all()
+    )
+
+def get_closed_period(id) -> ClosedPeriod: return db.session.get(ClosedPeriod, id)
+
+def add_closed_period(period):
+    db.session.add(period)
+    commit()
+
+def delete_closed_period(period):
+    db.session.delete(period)
+    commit()
 
 def places_by_tag(tags):
     return [p for p in get_places() if p.is_active and all(t in (p.tags or []) for t in tags)]

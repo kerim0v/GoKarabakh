@@ -102,6 +102,9 @@ def create_booking_request():
         if nights > MAX_NIGHTS:
             raise common.ApiError(f"Stays are limited to {MAX_NIGHTS} nights", 400, "stay_too_long")
     guests = common.integer(data.get("guests"), "guests", 1, 50, default=1)
+    last_day = check_out - datetime.timedelta(days=1) if check_out else check_in
+    if facade.is_closed(place.id, check_in, last_day):
+        raise common.ApiError("This place is closed on those dates", 400, "place_closed")
 
     total = booking_total(place, check_in, check_out, guests)
     coins_used = min(user.kx_count, math.floor(total)) if data.get("use_kx") else 0

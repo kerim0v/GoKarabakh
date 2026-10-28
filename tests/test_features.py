@@ -246,3 +246,37 @@ def test_verification_badges(client, make_user, make_place, login):
     assert res.get_json()["licensed"] is False and res.get_json()["id_verified"] is True
     assert client.put(f"/api/v1/admin/users/{guide.id}/verification", headers=login("guide@example.com"),
                       json={"licensed": True}).status_code == 403
+
+
+def test_closed_dates_hide_places_from_search_and_block_bookings(client, make_user, make_place, login):
+    owner = make_user(email="owner@example.com", role="owner")
+    make_user()
+    make_user(email="other@example.com", role="owner")
+    hotel = make_place(owner, name="Inn")
+    make_place(owner, name="Lodge")
+    o_headers = login("owner@example.com")
+
+    res = client.post(f"/api/v1/places/{hotel.id}/closed", headers=o_headers,
+                      json={"start_date": days_from_now(10), "end_date": days_from_now(12), "note": "Full"})
+    assert res.status_code == 200, res.get_json()
+    assert client.post(f"/api/v1/places/{hotel.id}/closed", headers=login("other@example.com"),
+                       json={"start_date": days_from_now(1)}).status_code == 403
+
+    def found(check_in, check_out=None):
+        params = f"check_in={check_in}" + (f"&check_out={check_out}" if check_out else "")
+        return sorted(p["name"] for p in client.get(f"/api/v1/places/get?{params}").get_json())
+
+    assert found(days_from_now(11)) == ["Lodge"]
+    assert found(days_from_now(8), days_from_now(10)) == ["Inn", "Lodge"]  # leaving on the first closed day is fine
+    assert found(days_from_now(12), days_from_now(14)) == ["Lodge"]
+    assert found(days_from_now(13)) == ["Inn", "Lodge"]
+    assert client.get(f"/api/v1/places/get?check_in={days_from_now(5)}&check_out={days_from_now(4)}").status_code == 400
+
+    booking = client.post("/api/v1/places/book_request", headers=login("traveller@example.com"),
+                          json={"place_id": hotel.id, "check_in": days_from_now(9), "check_out": days_from_now(11)})
+    assert booking.get_json()["code"] == "place_closed"
+
+    periods = client.get(f"/api/v1/places/{hotel.id}/closed", headers=o_headers).get_json()
+    assert periods[0]["note"] == "Full"
+    assert client.delete(f"/api/v1/places/closed/{periods[0]['id']}", headers=o_headers).status_code == 200
+    assert found(days_from_now(11)) == ["Inn", "Lodge"]

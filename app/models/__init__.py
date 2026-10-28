@@ -7,3 +7,4 @@ from app.models.kx_transaction import KxTransaction
 from app.models.review import Review
 from app.models.itinerary_item import ItineraryItem
 from app.models.ai_plan_log import AiPlanLog
+from app.models.closed_period import ClosedPeriod

@@ -1,7 +1,10 @@
+import datetime
+
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required, verify_jwt_in_request
 
 from app.api import common
+from app.models.closed_period import ClosedPeriod
 from app.models.place import CATEGORIES, Place
 from app.models.regions import REGIONS
 from app.models.user import PARTNER_ROLES
@@ -60,6 +63,19 @@ def _listing_fields(data, owner, partial=False):
     return fields
 
 
+def _search_days(args):
+    """First and last day a search covers: the nights of a stay, or the single date."""
+    if not args.get("check_in"):
+        return None, None
+    check_in = common.date(args.get("check_in"), "check_in")
+    if not args.get("check_out"):
+        return check_in, check_in
+    check_out = common.date(args.get("check_out"), "check_out")
+    if check_out <= check_in:
+        raise common.ApiError("Check-out must be after check-in", 400, "checkout_before_checkin")
+    return check_in, check_out - datetime.timedelta(days=1)
+
+
 def _owned_place(place_id, user):
     if not place_id:
         raise common.ApiError("Place id was not provided", 400, "missing_field")
@@ -81,6 +97,7 @@ def get_places():
     if category and category not in CATEGORIES:
         raise common.ApiError("Unknown category", 400, "invalid_category")
     limit = common.integer(args.get("limit"), "limit", 1, 500, default=500)
+    open_from, open_to = _search_days(args)
     rows = facade.query_places(
         region=region,
         category=category,
@@ -88,6 +105,8 @@ def get_places():
         q=(args.get("q") or "").strip()[:100] or None,
         sort=args.get("sort") if args.get("sort") in SORTS else None,
         limit=limit,
+        open_from=open_from,
+        open_to=open_to,
     )
     return jsonify([place_dict(*row) for row in rows])
 
@@ -176,3 +195,41 @@ def get_owner_stats():
         "total_pending": sum(p["pending"] for p in place_stats),
         "total_revenue": sum(p["revenue"] for p in place_stats),
     }), 200
+
+
+# Closed dates -------------------------------------
+
+@bp.route("/<place_id>/closed", methods=["GET"])
+@jwt_required()
+def list_closed_periods(place_id):
+    place = _owned_place(place_id, common.current_user())
+    return jsonify([p.to_dict() for p in facade.closed_periods_for_place(place.id)]), 200
+
+
+@bp.route("/<place_id>/closed", methods=["POST"])
+@jwt_required()
+def add_closed_period(place_id):
+    place = _owned_place(place_id, common.current_user())
+    data = common.json_body()
+    start = common.date(data.get("start_date"), "start_date")
+    end = common.date(data.get("end_date") or data.get("start_date"), "end_date")
+    if end < start:
+        raise common.ApiError("The end date is before the start date", 400, "checkout_before_checkin")
+    if end < datetime.date.today():
+        raise common.ApiError("The dates are in the past", 400, "date_in_past")
+    if (end - start).days > 366:
+        raise common.ApiError("Close at most one year at a time", 400, "stay_too_long")
+    period = ClosedPeriod(place_id=place.id, start_date=start, end_date=end, note=common.text(data, "note", 200))
+    facade.add_closed_period(period)
+    return jsonify(period.to_dict()), 200
+
+
+@bp.route("/closed/<period_id>", methods=["DELETE"])
+@jwt_required()
+def delete_closed_period(period_id):
+    period = facade.get_closed_period(period_id)
+    if not period:
+        raise common.ApiError("Closed period not found", 404, "not_found")
+    _owned_place(period.place_id, common.current_user())
+    facade.delete_closed_period(period)
+    return "", 200

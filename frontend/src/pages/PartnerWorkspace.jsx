@@ -9,6 +9,7 @@ import { compressImageFile } from "../lib/images.js";
 import { Link, navigate } from "../lib/router.jsx";
 import { requireLogin, useSession } from "../lib/session.js";
 import { useAsync } from "../lib/useAsync.js";
+import { localToday } from "../lib/dates.js";
 
 const EMPTY = { name: "", region: "shusha", category: "hotel", cost: "", subtitle: "", badge: "", description: "", main_photo_url: "" };
 
@@ -107,6 +108,63 @@ function ListingForm({ role, editing, onSaved, onCancel }) {
   );
 }
 
+// Dates a listing can't take guests; it's hidden from searches for those dates and can't be booked.
+function ClosedDates({ place }) {
+  const { t, errorText, formatDate } = useI18n();
+  const periods = useAsync(() => api.getClosedPeriods(place.id), [place.id]);
+  const [form, setForm] = useState({ start_date: "", end_date: "", note: "" });
+  const [error, setError] = useState("");
+
+  const add = async (event) => {
+    event.preventDefault();
+    setError("");
+    try {
+      await api.addClosedPeriod(place.id, { ...form, end_date: form.end_date || form.start_date });
+      setForm({ start_date: "", end_date: "", note: "" });
+      periods.reload();
+    } catch (err) {
+      setError(errorText(err));
+    }
+  };
+
+  const remove = async (id) => {
+    try {
+      await api.deleteClosedPeriod(id);
+      periods.reload();
+    } catch (err) {
+      setError(errorText(err));
+    }
+  };
+
+  return (
+    <div className="closed-dates">
+      {periods.data?.length ? (
+        <ul>
+          {periods.data.map((period) => (
+            <li key={period.id}>
+              {formatDate(period.start_date)}{period.end_date !== period.start_date && ` – ${formatDate(period.end_date)}`}
+              {period.note && <em> · {period.note}</em>}
+              <button type="button" className="link-button danger" onClick={() => remove(period.id)}>{t("workspace.reopen")}</button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted">{t("workspace.noClosedDates")}</p>
+      )}
+      <form onSubmit={add} className="closed-dates-form">
+        <input type="date" min={localToday()} value={form.start_date} aria-label={t("workspace.closedFrom")}
+          onChange={(event) => setForm((c) => ({ ...c, start_date: event.target.value }))} required />
+        <input type="date" min={form.start_date || localToday()} value={form.end_date} aria-label={t("workspace.closedTo")}
+          onChange={(event) => setForm((c) => ({ ...c, end_date: event.target.value }))} />
+        <input maxLength="200" placeholder={t("workspace.closedNote")} value={form.note}
+          onChange={(event) => setForm((c) => ({ ...c, note: event.target.value }))} />
+        <button type="submit" className="profile-explore-link">{t("workspace.closeDates")}</button>
+      </form>
+      {error && <p role="alert" className="form-error">{error}</p>}
+    </div>
+  );
+}
+
 export default function PartnerWorkspace({ role }) {
   const { t, errorText, formatDate, formatNumber } = useI18n();
   const { user, loggedIn } = useSession();
@@ -115,6 +173,7 @@ export default function PartnerWorkspace({ role }) {
   const requests = useAsync(() => (allowed ? api.getOwnerBookingRequests() : Promise.resolve([])), [allowed]);
   const stats = useAsync(() => (allowed ? api.getOwnerStats() : Promise.resolve(null)), [allowed]);
   const [editing, setEditing] = useState(null);
+  const [closedFor, setClosedFor] = useState(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
@@ -273,8 +332,11 @@ export default function PartnerWorkspace({ role }) {
                       <small>{t(`regions.${place.region}.label`)} · {t(`categories.${place.category}`)} · <Price azn={place.cost} /> · {t("workspace.bookingsCount", { count: place.bookings_count || 0 })}</small>
                       <div className="row-actions">
                         <button type="button" className="link-button" onClick={() => setEditing(place)}>{t("common.edit")}</button>
+                        <button type="button" className="link-button" aria-expanded={closedFor === place.id}
+                          onClick={() => setClosedFor((id) => (id === place.id ? null : place.id))}>{t("workspace.closedDates")}</button>
                         <button type="button" className="link-button danger" onClick={() => remove(place)}>{t("common.delete")}</button>
                       </div>
+                      {closedFor === place.id && <ClosedDates place={place} />}
                     </div>
                   </div>
                 ))}
