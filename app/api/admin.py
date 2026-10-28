@@ -47,6 +47,20 @@ def set_role(user_id):
     return jsonify(user.to_dict()), 200
 
 
+@bp.route("/users/<user_id>/verification", methods=["PUT"])
+@jwt_required()
+def set_verification(user_id):
+    _admin()
+    data = common.json_body()
+    user = facade.get_user(user_id)
+    if not user:
+        raise common.ApiError("User not found", 404, "not_found")
+    updates = {key: bool(data[key]) for key in ("id_verified", "licensed") if key in data}
+    if not updates:
+        raise common.ApiError("Send id_verified and/or licensed", 400, "nothing_to_update")
+    return jsonify(facade.update_user(user.id, updates).to_dict()), 200
+
+
 @bp.route("/places", methods=["GET"])
 @jwt_required()
 def list_places():

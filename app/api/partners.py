@@ -83,8 +83,14 @@ def _decide(application, status, note, text):
 @jwt_required()
 def approve_partner_application(application_id):
     application = _pending_application(application_id)
-    note = common.text(request.get_json(silent=True) or {}, "note", 1000)
-    facade.update_user(application.user_id, {"role": application.target_role})
+    data = request.get_json(silent=True) or {}
+    note = common.text(data, "note", 1000)
+    # The admin can tick the checks they did while reviewing the documents
+    facade.update_user(application.user_id, {
+        "role": application.target_role,
+        "id_verified": bool(data.get("id_verified")),
+        "licensed": bool(data.get("licensed")) and application.target_role == "guide",
+    })
     facade.set_owner_places_active(application.user_id, True)
     _decide(application, "approved", note, "Welcome aboard! You can now publish listings from your workspace.")
     return jsonify({"status": "Approved"}), 200

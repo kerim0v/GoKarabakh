@@ -69,6 +69,12 @@ export default {
   categories: { hotel: "Отель", restaurant: "Ресторан", attraction: "Достопримечательность", tour: "Тур" },
   price: { perNight: "/ ночь", perPerson: "/ чел." },
   place: { save: "В маршрут", saved: "В вашем маршруте", book: "Забронировать" },
+  badges: {
+    verified: "Личность проверена",
+    verifiedHint: "GoKarabakh проверил документы этого партнёра.",
+    licensed: "Лицензированный гид",
+    licensedHint: "GoKarabakh проверил лицензию этого гида.",
+  },
   reviews: {
     eyebrow: "ОТЗЫВЫ",
     none: "Отзывов пока нет",

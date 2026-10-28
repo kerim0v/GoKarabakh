@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api from "../api.js";
 import AtlasMap from "../components/AtlasMap.jsx";
+import Badges from "../components/Badges.jsx";
 import Header from "../components/Header.jsx";
 import Price from "../components/Price.jsx";
 import Stars from "../components/Stars.jsx";
@@ -27,6 +28,7 @@ function ResultCard({ place }) {
       <div className="result-card-body">
         <strong>{place.name}</strong>
         <span>{t(`regions.${place.region}.label`)} · {t(`categories.${place.category}`)}</span>
+        <Badges place={place} />
         <div className="result-card-facts">
           <Price azn={place.cost} />
           <Stars rating={place.avg_rating} count={place.review_count} />

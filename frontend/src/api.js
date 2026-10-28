@@ -129,11 +129,12 @@ export const planTrip = (payload) => post("/api/v1/ai/plan", payload);
 
 export const submitPartnerApplication = (payload) => post("/api/v1/partner-applications", payload);
 export const getPartnerApplications = () => request("/api/v1/partner-applications");
-export const approvePartnerApplication = (id, note) => post(`/api/v1/partner-applications/${id}/approve`, { note });
+export const approvePartnerApplication = (id, note, checks = {}) => post(`/api/v1/partner-applications/${id}/approve`, { note, ...checks });
 export const rejectPartnerApplication = (id, note) => post(`/api/v1/partner-applications/${id}/reject`, { note });
 export const getAdminOverview = () => request("/api/v1/admin/overview");
 export const getAdminUsers = (q) => request(`/api/v1/admin/users${query({ q })}`);
 export const setUserRole = (id, role) => put(`/api/v1/admin/users/${id}/role`, { role });
+export const setVerification = (id, checks) => put(`/api/v1/admin/users/${id}/verification`, checks);
 export const getAdminPlaces = (q) => request(`/api/v1/admin/places${query({ q })}`);
 
 // Community & uploads

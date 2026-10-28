@@ -12,9 +12,11 @@ bp = Blueprint("places", __name__, url_prefix="/api/v1/places")
 SORTS = ("popular", "rating", "price_asc", "price_desc")
 
 
-def place_dict(place, owner_role=None, bookings=None, avg_rating=None, review_count=None):
+def place_dict(place, owner=None, bookings=None, avg_rating=None, review_count=None):
     d = place.to_dict()
-    d["owner_role"] = owner_role
+    d["owner_role"] = owner.role if owner else None
+    d["owner_verified"] = bool(owner and owner.id_verified)
+    d["owner_licensed"] = bool(owner and owner.licensed)
     if bookings is not None:
         d["bookings_count"] = bookings
     if review_count is not None:
@@ -126,7 +128,7 @@ def create_place():
         raise common.ApiError("Only business owners and guides can create listings", 403, "forbidden")
     place = Place(owner_user_id=owner.id, tags=[], **_listing_fields(common.json_body(), owner))
     facade.create_place(place)
-    return jsonify(place_dict(place, owner.role, 0, None, 0)), 200
+    return jsonify(place_dict(place, owner, 0, None, 0)), 200
 
 
 @bp.route("/update", methods=["PUT"])
@@ -140,7 +142,7 @@ def update_place():
     if not updates:
         raise common.ApiError("No valid fields to update", 400, "nothing_to_update")
     updated = facade.update_place(place.id, updates)
-    return jsonify(place_dict(updated, owner.role)), 200
+    return jsonify(place_dict(updated, owner)), 200
 
 
 @bp.route("/delete", methods=["POST"])

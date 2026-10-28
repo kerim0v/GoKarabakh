@@ -14,10 +14,12 @@ function Applications({ onError, onChanged }) {
   const { t, formatDate } = useI18n();
   const applications = useAsync(() => api.getPartnerApplications(), []);
   const [notes, setNotes] = useState({});
+  const [checks, setChecks] = useState({});
+  const toggle = (id, key) => setChecks((current) => ({ ...current, [id]: { ...current[id], [key]: !current[id]?.[key] } }));
 
   const decide = async (id, approve) => {
     try {
-      if (approve) await api.approvePartnerApplication(id, notes[id]);
+      if (approve) await api.approvePartnerApplication(id, notes[id], checks[id]);
       else await api.rejectPartnerApplication(id, notes[id]);
       applications.reload();
       onChanged();
@@ -48,6 +50,12 @@ function Applications({ onError, onChanged }) {
           </dl>
           {application.status === "pending" && (
             <div className="admin-decision">
+              <div className="admin-checks">
+                <label><input type="checkbox" checked={Boolean(checks[application.id]?.id_verified)} onChange={() => toggle(application.id, "id_verified")} /> {t("badges.verified")}</label>
+                {application.target_role === "guide" && (
+                  <label><input type="checkbox" checked={Boolean(checks[application.id]?.licensed)} onChange={() => toggle(application.id, "licensed")} /> {t("badges.licensed")}</label>
+                )}
+              </div>
               <input placeholder={t("admin.notePlaceholder")} maxLength="1000" value={notes[application.id] || ""}
                 onChange={(event) => setNotes((current) => ({ ...current, [application.id]: event.target.value }))} />
               <button type="button" className="profile-explore-link" onClick={() => decide(application.id, true)}>{t("admin.approve")}</button>
@@ -66,6 +74,15 @@ function Users({ me, onError }) {
   const [search, setSearch] = useState("");
   const users = useAsync(() => api.getAdminUsers(search), [search]);
 
+  const verify = async (user, key) => {
+    try {
+      await api.setVerification(user.id, { [key]: !user[key] });
+      users.reload();
+    } catch (err) {
+      onError(err);
+    }
+  };
+
   const changeRole = async (user, role) => {
     try {
       await api.setUserRole(user.id, role);
@@ -82,7 +99,7 @@ function Users({ me, onError }) {
         <button type="submit" className="profile-explore-link">{t("trip.search")}</button>
       </form>
       <table className="admin-table">
-        <thead><tr><th>{t("auth.name")}</th><th>{t("auth.email")}</th><th>{t("header.coins")}</th><th>{t("admin.joined")}</th><th>{t("profile.role")}</th></tr></thead>
+        <thead><tr><th>{t("auth.name")}</th><th>{t("auth.email")}</th><th>{t("header.coins")}</th><th>{t("admin.joined")}</th><th>{t("profile.role")}</th><th>{t("badges.verified")}</th><th>{t("badges.licensed")}</th></tr></thead>
         <tbody>
           {(users.data || []).map((user) => (
             <tr key={user.id}>
@@ -95,6 +112,8 @@ function Users({ me, onError }) {
                   {ROLES.map((role) => <option key={role} value={role}>{t(`roles.${role}`)}</option>)}
                 </select>
               </td>
+              <td><input type="checkbox" checked={user.id_verified} onChange={() => verify(user, "id_verified")} aria-label={t("badges.verified")} /></td>
+              <td><input type="checkbox" checked={user.licensed} onChange={() => verify(user, "licensed")} aria-label={t("badges.licensed")} /></td>
             </tr>
           ))}
         </tbody>

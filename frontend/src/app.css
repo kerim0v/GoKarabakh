@@ -274,3 +274,12 @@ body.has-modal { overflow: hidden; }
 .planner-tips { margin: 0 0 12px; padding-left: 18px; color: rgba(255,255,255,.8); line-height: 1.6; }
 .planner-reason { margin: 2px 0 0; color: rgba(255,255,255,.82); font-size: 13px; line-height: 1.5; }
 .planner-result .profile-panel { min-height: 0; }
+
+/* Verification badges */
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 8px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(125,211,252,.5); border-radius: 999px; padding: 3px 8px; background: rgba(56,189,248,.12); color: #bae6fd; font-size: 11px; font-weight: 700; }
+.badge-gold { border-color: rgba(244,200,121,.6); background: rgba(244,200,121,.14); color: #ffe7a8; }
+.result-card .badge { border-color: #bae6fd; background: #e0f2fe; color: #0369a1; }
+.result-card .badge-gold { border-color: #fcd34d; background: #fef3c7; color: #92400e; }
+.admin-checks { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; width: 100%; font-size: 13px; }
+.admin-checks label { display: inline-flex; gap: 6px; align-items: center; }

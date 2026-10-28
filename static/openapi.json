@@ -71,6 +71,12 @@
               "guide",
               "admin"
             ]
+          },
+          "id_verified": {
+            "type": "boolean"
+          },
+          "licensed": {
+            "type": "boolean"
           }
         }
       },
@@ -164,6 +170,14 @@
           },
           "owner_role": {
             "type": "string"
+          },
+          "owner_verified": {
+            "type": "boolean",
+            "description": "Owner's ID checked by an admin"
+          },
+          "owner_licensed": {
+            "type": "boolean",
+            "description": "Licensed guide, checked by an admin"
           },
           "bookings_count": {
             "type": "integer"
@@ -3028,6 +3042,13 @@
                 "properties": {
                   "note": {
                     "type": "string"
+                  },
+                  "id_verified": {
+                    "type": "boolean"
+                  },
+                  "licensed": {
+                    "type": "boolean",
+                    "description": "Guides only"
                   }
                 }
               }
@@ -3642,6 +3663,100 @@
                       "guide",
                       "admin"
                     ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{user_id}/verification": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Set verification badges",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [],
+                "properties": {
+                  "id_verified": {
+                    "type": "boolean"
+                  },
+                  "licensed": {
+                    "type": "boolean"
                   }
                 }
               }

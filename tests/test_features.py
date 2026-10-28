@@ -227,3 +227,22 @@ def test_meta(client):
     data = client.get("/api/v1/meta").get_json()
     assert "shusha" in data["regions"]
     assert data["currency"]["rates"]["AZN"] == 1
+
+
+def test_verification_badges(client, make_user, make_place, login):
+    make_user(email="admin@example.com", role="admin", name="Admin")
+    guide = make_user(email="guide@example.com", name="Guide")
+    admin = login("admin@example.com")
+    app_id = client.post("/api/v1/partner-applications", headers=login("guide@example.com"), json={
+        "target_role": "guide", "phone": "1", "bio": "Guide", "languages": "AZ",
+    }).get_json()["id"]
+    client.post(f"/api/v1/partner-applications/{app_id}/approve", headers=admin,
+                json={"id_verified": True, "licensed": True})
+    make_place(guide, category="tour", name="Hike")
+    listed = client.get("/api/v1/places/get").get_json()[0]
+    assert listed["owner_verified"] is True and listed["owner_licensed"] is True
+
+    res = client.put(f"/api/v1/admin/users/{guide.id}/verification", headers=admin, json={"licensed": False})
+    assert res.get_json()["licensed"] is False and res.get_json()["id_verified"] is True
+    assert client.put(f"/api/v1/admin/users/{guide.id}/verification", headers=login("guide@example.com"),
+                      json={"licensed": True}).status_code == 403

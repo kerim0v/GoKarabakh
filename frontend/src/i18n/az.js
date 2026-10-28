@@ -60,6 +60,12 @@ export default {
   categories: { hotel: "Otel", restaurant: "Restoran", attraction: "Görməli yer", tour: "Tur" },
   price: { perNight: "/ gecə", perPerson: "/ nəfər" },
   place: { save: "Marşruta əlavə et", saved: "Marşrutunuzdadır", book: "Rezerv et" },
+  badges: {
+    verified: "Şəxsiyyət yoxlanılıb",
+    verifiedHint: "GoKarabakh bu tərəfdaşın şəxsiyyət sənədlərini yoxlayıb.",
+    licensed: "Lisenziyalı bələdçi",
+    licensedHint: "GoKarabakh bu bələdçinin lisenziyasını yoxlayıb.",
+  },
   reviews: {
     eyebrow: "RƏYLƏR",
     none: "Hələ rəy yoxdur",

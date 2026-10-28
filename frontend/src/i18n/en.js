@@ -62,6 +62,12 @@ export default {
   categories: { hotel: "Hotel", restaurant: "Restaurant", attraction: "Attraction", tour: "Tour" },
   price: { perNight: "/ night", perPerson: "/ person" },
   place: { save: "Add to itinerary", saved: "In your itinerary", book: "Book now" },
+  badges: {
+    verified: "ID checked",
+    verifiedHint: "GoKarabakh checked this partner's identity documents.",
+    licensed: "Licensed guide",
+    licensedHint: "GoKarabakh checked this guide's licence.",
+  },
   reviews: {
     eyebrow: "REVIEWS",
     none: "No reviews yet",

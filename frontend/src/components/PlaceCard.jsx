@@ -1,5 +1,6 @@
 import { mediaUrl } from "../api.js";
 import { useI18n } from "../i18n/index.jsx";
+import Badges from "./Badges.jsx";
 import Price from "./Price.jsx";
 import Stars from "./Stars.jsx";
 
@@ -15,6 +16,7 @@ export default function PlaceCard({ place, saved, onToggleSave, onBook, onShowRe
       <div className="district-card-content">
         {place.subtitle && <p className="district-card-meta">{place.subtitle}</p>}
         <h3>{place.name}</h3>
+        <Badges place={place} />
         <p>{place.description}</p>
         <div className="place-card-facts">
           <Price azn={place.cost} suffix={PRICE_UNIT[place.category] && t(`price.${PRICE_UNIT[place.category]}`)} />

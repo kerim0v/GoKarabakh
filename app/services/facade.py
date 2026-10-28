@@ -53,7 +53,7 @@ PLACE_KINDS = {
 
 def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
                  include_inactive=False, sort=None, limit=None):
-    """Places with owner role and stats, as (place, owner_role, bookings, avg_rating, review_count) rows."""
+    """Places with their owner and stats, as (place, owner, bookings, avg_rating, review_count) rows."""
     bookings = (
         db.session.query(BookingRequest.place_id, func.count(BookingRequest.id).label("count"))
         .filter(BookingRequest.status == "confirmed")
@@ -67,7 +67,7 @@ def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
     )
     booking_count = func.coalesce(bookings.c.count, 0)
     query = (
-        db.session.query(Place, User.role, booking_count, reviews.c.avg, func.coalesce(reviews.c.count, 0))
+        db.session.query(Place, User, booking_count, reviews.c.avg, func.coalesce(reviews.c.count, 0))
         .join(User, User.id == Place.owner_user_id)
         .outerjoin(bookings, bookings.c.place_id == Place.id)
         .outerjoin(reviews, reviews.c.place_id == Place.id)

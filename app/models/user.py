@@ -17,6 +17,9 @@ class User(ModelBase):
     email = db.Column(db.String(255), unique=True, nullable=False)
     pwd_hash = db.Column(db.String(255))
     role = db.Column(db.String(20), nullable=False, default="user")
+    # Set by an admin after checking documents; shown as badges on the partner's listings
+    id_verified = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
+    licensed = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
 
     def hash_pwd(self, pwd):
         from app.extensions import bcrypt
