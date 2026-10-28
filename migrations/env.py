@@ -16,12 +16,7 @@ logger = logging.getLogger('alembic.env')
 
 
 def get_engine():
-    try:
-        # this works with Flask-SQLAlchemy<3 and Alchemical
-        return current_app.extensions['migrate'].db.get_engine()
-    except (TypeError, AttributeError):
-        # this works with Flask-SQLAlchemy>=3
-        return current_app.extensions['migrate'].db.engine
+    return current_app.extensions['migrate'].db.engine
 
 
 def get_engine_url():
@@ -97,6 +92,11 @@ def run_migrations_online():
     connectable = get_engine()
 
     with connectable.connect() as connection:
+        if connection.dialect.name == "sqlite":
+            # Batch migrations rebuild SQLite tables (copy, drop, rename). With foreign keys on,
+            # dropping the old table would cascade-delete every row that references it.
+            connection.exec_driver_sql("PRAGMA foreign_keys=OFF")
+            connection.commit()
         context.configure(
             connection=connection,
             target_metadata=get_metadata(),
