@@ -116,7 +116,6 @@ export default function Planner() {
     }
   };
 
-  const disabled = meta && !meta.ai?.enabled;
 
   return (
     <div className="page-shell profile-page">
@@ -131,13 +130,10 @@ export default function Planner() {
           </div>
         </section>
 
-        {disabled ? (
-          <section className="profile-panel glass"><p>{t("errors.ai_disabled")}</p></section>
-        ) : (
-          <section className="profile-panel glass">
-            <PlanForm onPlan={makePlan} busy={busy} />
-          </section>
-        )}
+        <section className="profile-panel glass">
+          {meta?.ai?.mode === "demo" && <p className="planner-mode">{t("planner.demoMode")}</p>}
+          <PlanForm onPlan={makePlan} busy={busy} />
+        </section>
         {error && <p role="alert" className="form-error">{error}</p>}
         {notice && <p role="status" className="notice">{notice} <Link href="/itinerary">{t("planner.openItinerary")} →</Link></p>}
 
@@ -146,7 +142,7 @@ export default function Planner() {
             <article className="profile-panel glass">
               <div className="profile-panel-heading">
                 <div>
-                  <span className="eyebrow mono">{t("planner.resultEyebrow")}</span>
+                  <span className="eyebrow mono">{plan.mode === "demo" ? t("planner.demoEyebrow") : t("planner.resultEyebrow")}</span>
                   <h2>{t("planner.resultTitle")}</h2>
                 </div>
                 <button type="button" className="profile-explore-link" onClick={saveAll} disabled={saving}>
@@ -157,7 +153,11 @@ export default function Planner() {
               {plan.tips?.length > 0 && (
                 <ul className="planner-tips">{plan.tips.map((tip) => <li key={tip}>{tip}</li>)}</ul>
               )}
-              <small className="muted">{t("planner.disclaimer", { count: plan.remaining_today })}</small>
+              <small className="muted">
+                {plan.mode === "demo"
+                  ? t(plan.fallback ? "planner.fallbackNote" : "planner.demoNote")
+                  : t("planner.disclaimer", { count: plan.remaining_today })}
+              </small>
             </article>
             {plan.days.map((day) => (
               <article className="profile-panel glass trip-day" key={day.date}>

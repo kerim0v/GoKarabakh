@@ -334,6 +334,10 @@ export default {
     bookings: "Rezervasiyalar",
   },
   planner: {
+    demoEyebrow: "Demo plan",
+    demoMode: "Demo rejimi: planları süni intellekt yox, GoKarabakh-ın sadə səfər qurucusu tərtib edir.",
+    demoNote: "Real elanlardan sadə səfər qurucumuz tərəfindən tərtib olunub. Rezerv edərkən iş saatlarını yoxlayın.",
+    fallbackNote: "AI planlayıcıya qoşulmaq alınmadı, ona görə bu planı sadə səfər qurucumuz hazırladı.",
     eyebrow: "AI səyahət planlayıcısı",
     title: "Səfərinizi AI ilə planlayın",
     text: "Nəyi sevdiyinizi yazın - planlayıcı rezerv edə biləcəyiniz real GoKarabakh məkanlarından gün-gün marşrut qurur.",
@@ -450,7 +454,6 @@ export default {
     },
   },
   errors: {
-    ai_disabled: "AI planlayıcı hazırda əlçatan deyil.",
     ai_busy: "AI planlayıcı məşğuldur. Bir dəqiqədən sonra yenidən cəhd edin.",
     ai_unavailable: "AI planlayıcıya hazırda qoşulmaq mümkün deyil. Bir az sonra yenidən cəhd edin.",
     ai_refused: "AI planlayıcı bu sorğuya kömək edə bilmədi. Səfərinizi başqa cür təsvir edin.",

@@ -336,6 +336,10 @@ export default {
     bookings: "Bookings",
   },
   planner: {
+    demoEyebrow: "Demo plan",
+    demoMode: "Demo mode: plans are put together by GoKarabakh's simple trip builder, not by AI.",
+    demoNote: "Made by our simple trip builder from real listings. Check opening times when you book.",
+    fallbackNote: "The AI planner couldn't be reached, so our simple trip builder made this plan.",
     eyebrow: "AI trip planner",
     title: "Plan your trip with AI",
     text: "Tell us what you like, and the planner builds a day-by-day route from real GoKarabakh places you can book.",
@@ -452,7 +456,6 @@ export default {
     },
   },
   errors: {
-    ai_disabled: "The AI planner isn't available right now.",
     ai_busy: "The AI planner is busy. Please try again in a minute.",
     ai_unavailable: "The AI planner can't be reached right now. Please try again later.",
     ai_refused: "The AI planner couldn't help with that request. Try describing your trip differently.",

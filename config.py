@@ -42,9 +42,9 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_USE_TLS = _env_bool("SMTP_USE_TLS", "True")
 MAIL_FROM = os.getenv("MAIL_FROM", "GoKarabakh <no-reply@gokarabakh.local>")
 
-# AI trip planner (Claude). Without an API key the feature is switched off.
+# AI trip planner (Claude). Without an API key the free rule-based demo planner answers instead.
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-AI_MODEL = os.getenv("AI_MODEL", "claude-opus-5-5")
+AI_MODEL = os.getenv("AI_MODEL", "claude-haiku-5-5")    # claude-opus-5-5 plans better, ~40x the price
 AI_EFFORT = os.getenv("AI_EFFORT", "medium")            # low | medium | high
 AI_DAILY_LIMIT = int(os.getenv("AI_DAILY_LIMIT", "10"))  # plans per user per day
 

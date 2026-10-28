@@ -20,7 +20,8 @@ def meta():
             "first_trace_bonus": config.FIRST_TRACE_BONUS,
             "percentage_fee": config.PERCENTAGE_FEE,
         },
-        "ai": {"enabled": trip_planner.is_enabled(), "daily_limit": config.AI_DAILY_LIMIT},
+        # The planner always works: with Claude when a key is set, otherwise the free demo planner
+        "ai": {"enabled": True, "mode": "ai" if trip_planner.is_enabled() else "demo", "daily_limit": config.AI_DAILY_LIMIT},
         "currency": {
             "base": "AZN",
             # how many units of each currency one AZN buys

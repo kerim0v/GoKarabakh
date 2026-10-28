@@ -51,12 +51,30 @@ def plan_body(**extra):
             "language": "az", "wishes": "History and sunsets", **extra}
 
 
-def test_disabled_without_api_key(client, make_user, login, monkeypatch):
+def test_demo_planner_without_api_key(client, make_user, make_place, login, monkeypatch):
     monkeypatch.setattr(config, "ANTHROPIC_API_KEY", None)
     make_user()
-    assert client.get("/api/v1/meta").get_json()["ai"]["enabled"] is False
-    res = client.post("/api/v1/ai/plan", headers=login("traveller@example.com"), json=plan_body())
-    assert res.status_code == 503 and res.get_json()["code"] == "ai_disabled"
+    owner = make_user(email="owner@example.com", role="owner")
+    cheap = make_place(owner, name="Cheap Inn", cost=40, region="lachin")
+    make_place(owner, name="Grand Lodge", cost=300, region="lachin")
+    make_place(owner, category="attraction", cost=0, name="River Lookout", region="lachin")
+    make_place(owner, category="tour", cost=20, name="Forest Hike", region="lachin")
+    make_place(owner, category="restaurant", cost=25, name="Valley Table", region="lachin")
+    make_place(owner, name="Shusha Stay", region="shusha")
+    assert client.get("/api/v1/meta").get_json()["ai"]["mode"] == "demo"
+
+    res = client.post("/api/v1/ai/plan", headers=login("traveller@example.com"),
+                      json=plan_body(wishes="Лачин, природа и поход", budget="economy", language="ru"))
+    assert res.status_code == 200, res.get_json()
+    plan = res.get_json()
+    assert plan["mode"] == "demo" and "Лачин" in plan["summary"]
+    stops = [stop for day in plan["days"] for stop in day["stops"]]
+    assert {stop["place"]["region"] for stop in stops} == {"lachin"}
+    assert len({stop["place_id"] for stop in stops}) == len(stops)  # no place twice
+    hotels = [stop["place"]["name"] for stop in stops if stop["place"]["category"] == "hotel"]
+    assert hotels == ["Cheap Inn"]  # one night on a 2-day trip, cheapest on an economy budget
+    assert [d["date"] for d in plan["days"]] == [days_from_now(3), days_from_now(4)][: len(plan["days"])]
+    assert AiPlanLog.query.count() == 0
 
 
 def test_plan_uses_only_real_places_and_requested_dates(client, make_user, login, ai, places):
@@ -89,7 +107,7 @@ def test_plan_uses_only_real_places_and_requested_dates(client, make_user, login
     assert places["hotel"].id in sent["system"][0]["text"]
     assert "Azerbaijani" in sent["messages"][0]["content"]
     assert sent["output_config"]["format"]["type"] == "json_schema"
-    assert sent["fallbacks"] == "default"
+    assert "fallbacks" not in sent  # Haiku has no server-side refusal fallback
 
     entry = AiPlanLog.query.one()
     assert entry.succeeded and entry.cache_read_tokens == 1000
@@ -105,7 +123,8 @@ def test_refusal_and_api_errors_are_reported(client, make_user, login, ai, place
     request = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
     ai.state["error"] = anthropic.APIConnectionError(request=request)
     res = client.post("/api/v1/ai/plan", headers=headers, json=plan_body())
-    assert res.status_code == 503 and res.get_json()["code"] == "ai_unavailable"
+    assert res.status_code == 200  # Claude unreachable: the demo planner steps in
+    assert res.get_json()["mode"] == "demo" and res.get_json()["fallback"] is True
     assert AiPlanLog.query.count() == 2  # failed attempts count towards the limit
 
 
@@ -129,3 +148,13 @@ def test_plan_input_validation(client, make_user, login, ai, places):
     assert client.post("/api/v1/ai/plan", headers=headers, json=plan_body(wishes="x" * 2000)).status_code == 400
     assert client.post("/api/v1/ai/plan", json=plan_body()).status_code == 401
     assert ai.calls == []
+
+
+def test_opus_requests_use_the_refusal_fallback(client, make_user, login, ai, places, monkeypatch):
+    monkeypatch.setattr(config, "AI_MODEL", "claude-opus-5-5")
+    make_user()
+    ai.state["response"] = fake_response({"summary": "", "tips": [], "days": [
+        {"date": days_from_now(3), "title": "", "stops": [{"place_id": places["sight"].id, "time": "10:00", "reason": ""}]}]})
+    assert client.post("/api/v1/ai/plan", headers=login("traveller@example.com"), json=plan_body()).status_code == 200
+    assert ai.calls[0]["fallbacks"] == "default"
+    assert ai.calls[0]["betas"] == ["server-side-fallback-2026-07-01"]
