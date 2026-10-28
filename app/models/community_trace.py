@@ -1,11 +1,6 @@
 from app.database import db
 from app.models.base import ModelBase
-
-
-DISTRICT_SLUGS = (
-    "shusha", "kalbajar", "lachin", "khankendi", "aghdam",
-    "khojaly", "khojavend", "qubadli", "zangilan",
-)
+from app.models.regions import REGIONS as DISTRICT_SLUGS
 
 
 class CommunityTrace(ModelBase):
@@ -14,4 +9,4 @@ class CommunityTrace(ModelBase):
     user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     region_slug = db.Column(db.String(50), nullable=False)
     caption = db.Column(db.Text, nullable=False)
-    photo_url = db.Column(db.Text)
+    photo_url = db.Column(db.String(500))

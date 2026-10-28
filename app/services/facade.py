@@ -1,5 +1,7 @@
+from sqlalchemy import func
+
 from app.models.place import Place
-from app.models.user import User, bookings as bookings_table
+from app.models.user import User
 from app.models.partner_application import PartnerApplication
 from app.models.booking_request import BookingRequest
 from app.models.community_trace import CommunityTrace
@@ -35,72 +37,161 @@ def get_places() -> list[Place]: return place_repository.get_all()
 def update_place(place_id, data): return place_repository.update(place_id, data)
 def delete_place(place_id): place_repository.delete(place_id)
 
-def places_by_tag(tag):
-    places = []
-    for place in get_places():
-        if all(item in (place.tags or []) for item in tag):
-            places.append(place)
-    return places
+PLACE_KINDS = {
+    "stays": lambda q: q.filter(Place.category == "hotel"),
+    "routes": lambda q: q.filter(Place.category.in_(("tour", "attraction")), User.role != "guide"),
+    "guides": lambda q: q.filter(Place.category == "tour", User.role == "guide"),
+}
+
+def query_places(region=None, category=None, kind=None, q=None, owner_id=None,
+                 include_inactive=False, sort=None, limit=None):
+    """Places with owner role and confirmed-booking count, as (place, owner_role, bookings) rows."""
+    bookings = (
+        db.session.query(BookingRequest.place_id, func.count(BookingRequest.id).label("count"))
+        .filter(BookingRequest.status == "confirmed")
+        .group_by(BookingRequest.place_id)
+        .subquery()
+    )
+    booking_count = func.coalesce(bookings.c.count, 0)
+    query = (
+        db.session.query(Place, User.role, booking_count)
+        .join(User, User.id == Place.owner_user_id)
+        .outerjoin(bookings, bookings.c.place_id == Place.id)
+    )
+    if not include_inactive:
+        query = query.filter(Place.is_active.is_(True))
+    if region:
+        query = query.filter(Place.region == region)
+    if category:
+        query = query.filter(Place.category == category)
+    if kind in PLACE_KINDS:
+        query = PLACE_KINDS[kind](query)
+    if owner_id:
+        query = query.filter(Place.owner_user_id == owner_id)
+    if q:
+        pattern = f"%{q.lower()}%"
+        query = query.filter(func.lower(Place.name).like(pattern) | Place.region.like(pattern))
+
+    if sort == "popular":
+        query = query.order_by(booking_count.desc(), Place.creation_date)
+    elif sort == "price_asc":
+        query = query.order_by(Place.cost, Place.name)
+    elif sort == "price_desc":
+        query = query.order_by(Place.cost.desc(), Place.name)
+    else:
+        query = query.order_by(Place.creation_date, Place.name)
+    if limit:
+        query = query.limit(limit)
+    return query.all()
+
+def places_by_tag(tags):
+    return [p for p in get_places() if p.is_active and all(t in (p.tags or []) for t in tags)]
 
 def places_by_owner(owner_id):
-    return [p for p in get_places() if p.owner_user_id == owner_id]
+    return Place.query.filter_by(owner_user_id=owner_id).order_by(Place.creation_date).all()
 
-def user_bookings(user_id):
-    return (
-        db.session.query(Place, bookings_table.c.booked_at)
-        .join(bookings_table, Place.id == bookings_table.c.place_id)
-        .filter(bookings_table.c.user_id == user_id)
-        .order_by(bookings_table.c.booked_at.desc())
+def set_owner_places_active(owner_id, active):
+    Place.query.filter_by(owner_user_id=owner_id).update({"is_active": active})
+    commit()
+
+def owner_stats(owner_id):
+    rows = (
+        db.session.query(
+            Place,
+            func.count(BookingRequest.id).filter(BookingRequest.status == "confirmed"),
+            func.coalesce(func.sum(BookingRequest.total_cost).filter(BookingRequest.status == "confirmed"), 0),
+            func.count(BookingRequest.id).filter(BookingRequest.status == "pending"),
+        )
+        .outerjoin(BookingRequest, BookingRequest.place_id == Place.id)
+        .filter(Place.owner_user_id == owner_id)
+        .group_by(Place.id)
+        .order_by(Place.creation_date)
         .all()
     )
+    return rows
 
 # Partner applications
 
 def create_partner_application(application): partner_application_repository.add(application)
 def get_partner_application(id) -> PartnerApplication: return partner_application_repository.get(id)
-def get_partner_applications() -> list[PartnerApplication]: return partner_application_repository.get_all()
 def update_partner_application(id, data): return partner_application_repository.update(id, data)
 
+def get_partner_applications(user_id=None):
+    query = PartnerApplication.query
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    return query.order_by(PartnerApplication.creation_date.desc()).all()
+
 def get_pending_application_for_user(user_id):
-    for application in get_partner_applications():
-        if application.user_id == user_id and application.status == "pending":
-            return application
-    return None
+    return PartnerApplication.query.filter_by(user_id=user_id, status="pending").first()
+
+def get_approved_application_for_user(user_id):
+    return (
+        PartnerApplication.query.filter_by(user_id=user_id, status="approved")
+        .order_by(PartnerApplication.creation_date.desc())
+        .first()
+    )
 
 # Booking requests
 
 def create_booking_request(booking_request): booking_request_repository.add(booking_request)
 def get_booking_request(id) -> BookingRequest: return booking_request_repository.get(id)
-def get_booking_requests() -> list[BookingRequest]: return booking_request_repository.get_all()
 def update_booking_request(id, data): return booking_request_repository.update(id, data)
 
 def booking_requests_for_owner(owner_id):
-    owned_place_ids = {p.id for p in places_by_owner(owner_id)}
-    return [b for b in get_booking_requests() if b.place_id in owned_place_ids]
+    """(request, place, traveller) rows for every request on the owner's places, newest first."""
+    return (
+        db.session.query(BookingRequest, Place, User)
+        .join(Place, Place.id == BookingRequest.place_id)
+        .join(User, User.id == BookingRequest.user_id)
+        .filter(Place.owner_user_id == owner_id)
+        .order_by(BookingRequest.creation_date.desc())
+        .all()
+    )
 
 def booking_requests_for_user(user_id):
-    return [b for b in get_booking_requests() if b.user_id == user_id]
+    """(request, place, owner) rows for the traveller's requests, newest first."""
+    return (
+        db.session.query(BookingRequest, Place, User)
+        .join(Place, Place.id == BookingRequest.place_id)
+        .join(User, User.id == Place.owner_user_id)
+        .filter(BookingRequest.user_id == user_id)
+        .order_by(BookingRequest.creation_date.desc())
+        .all()
+    )
+
+def pending_requests_for_owner(owner_id):
+    return [r for r, _, _ in booking_requests_for_owner(owner_id) if r.status == "pending"]
 
 # Community traces
 
 def create_community_trace(trace): community_trace_repository.add(trace)
 def get_community_trace(id) -> CommunityTrace: return community_trace_repository.get(id)
-def get_community_traces() -> list[CommunityTrace]: return community_trace_repository.get_all()
 def delete_community_trace(id): community_trace_repository.delete(id)
+
+def get_community_traces(region=None, limit=200):
+    query = db.session.query(CommunityTrace, User.name).join(User, User.id == CommunityTrace.user_id)
+    if region:
+        query = query.filter(CommunityTrace.region_slug == region)
+    return query.order_by(CommunityTrace.creation_date.desc()).limit(limit).all()
 
 # Kx transactions
 
-def get_kx_transactions() -> list[KxTransaction]: return kx_transaction_repository.get_all()
-
 def kx_transactions_for_user(user_id):
-    txs = [t for t in get_kx_transactions() if t.user_id == user_id]
-    txs.sort(key=lambda t: t.creation_date, reverse=True)
-    return txs
+    return (
+        KxTransaction.query.filter_by(user_id=user_id)
+        .order_by(KxTransaction.creation_date.desc())
+        .all()
+    )
 
 def has_kx_transaction_reason(user_id, reason):
-    return any(t.user_id == user_id and t.reason == reason for t in get_kx_transactions())
+    return db.session.query(
+        KxTransaction.query.filter_by(user_id=user_id, reason=reason).exists()
+    ).scalar()
 
 def grant_kx(user, amount, reason):
-    user.kx_count += amount
+    """Change a user's coin balance and record why. Negative amounts spend coins."""
+    if not amount:
+        return
+    user.kx_count = (user.kx_count or 0) + amount
     kx_transaction_repository.add(KxTransaction(user_id=user.id, amount=amount, reason=reason))
-    commit()
