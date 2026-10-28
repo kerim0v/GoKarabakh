@@ -99,19 +99,28 @@ body.has-modal { overflow: hidden; }
 .atlas-tabs { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 18px; padding-bottom: 4px; }
 .atlas-tabs button { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 9px 14px; background: rgba(255,255,255,.08); color: #fff; font-size: 13px; transition: background .2s ease, border-color .2s ease; }
 .atlas-tabs button.is-active { border-color: var(--sky); background: var(--sky-deep); font-weight: 700; }
-.atlas-map { position: relative; aspect-ratio: 2.1 / 1; min-height: 420px; overflow: hidden; border: 1px solid rgba(56,189,248,.3); border-radius: 24px; background-color: rgba(2,132,199,.15); background-image: linear-gradient(rgba(125,211,252,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(125,211,252,.05) 1px, transparent 1px); background-size: 42px 42px; box-shadow: 0 24px 60px rgba(0,0,0,.3); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-.atlas-region { position: absolute; z-index: 1; aspect-ratio: 1 / 1; border: 0; padding: 0; background: transparent; filter: drop-shadow(0 7px 10px rgba(0,0,0,.42)) saturate(.95); transition: opacity .3s ease, filter .3s ease, transform .3s ease; }
-.atlas-region img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-.atlas-region.is-dimmed { opacity: .3; }
-.atlas-region.is-selected { z-index: 3; transform: scale(1.03); }
-.atlas-region.is-hovered { z-index: 3; filter: drop-shadow(0 0 18px rgba(125,211,252,.9)) saturate(1.25); transform: scale(1.06); }
-.atlas-info { position: absolute; right: 20px; bottom: 20px; left: 20px; z-index: 4; display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 110px; padding: 18px 20px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; background: rgba(5,12,20,.66); color: #fff; opacity: .86; pointer-events: none; transition: background-color .3s ease, opacity .3s ease; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-.atlas-info.is-active { background: rgba(5,12,20,.85); opacity: 1; pointer-events: auto; }
-.atlas-info > p { margin: 0; color: rgba(255,255,255,.72); font-size: 14px; }
-.atlas-info h3 { margin: 5px 0 7px; font-size: 25px; }
-.atlas-info div p { max-width: 580px; margin: 0; color: rgba(255,255,255,.8); font-size: 13px; line-height: 1.5; }
-.atlas-fact { color: var(--sky-soft); font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
-.atlas-link { flex: 0 0 auto; border: 1px solid rgba(125,211,252,.68); border-radius: 9px; padding: 10px 14px; background: rgba(2,132,199,.28); color: #fff; font-size: 13px; font-weight: 700; }
+.atlas-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 20px; align-items: start; }
+.atlas-svg-wrap { position: relative; overflow: hidden; border: 1px solid rgba(56,189,248,.3); border-radius: 24px; background: radial-gradient(ellipse at 50% 40%, rgba(14,60,90,.55), rgba(5,14,24,.9)); box-shadow: 0 24px 60px rgba(0,0,0,.3); }
+.atlas-svg { display: block; width: 100%; height: auto; }
+.atlas-context { fill: rgba(148,163,184,.1); stroke: rgba(148,163,184,.28); stroke-width: 1.2; stroke-linejoin: round; }
+.atlas-shape { fill: rgba(56,189,248,.28); stroke: #7dd3fc; stroke-width: 2; stroke-linejoin: round; cursor: pointer; outline: none; transition: fill .2s ease, opacity .2s ease, filter .2s ease; }
+.atlas-shape.is-selected { fill: rgba(244,200,121,.45); stroke: #f4c879; }
+.atlas-shape.is-hovered, .atlas-shape:focus-visible { fill: rgba(244,200,121,.7); stroke: #fff3cf; filter: drop-shadow(0 0 10px rgba(244,200,121,.6)); }
+.atlas-shape.is-dimmed:not(.is-hovered) { opacity: .35; }
+.atlas-label { pointer-events: none; }
+.atlas-label text { fill: #fff; font: 700 22px var(--sans); text-anchor: middle; dominant-baseline: middle; paint-order: stroke; stroke: rgba(3,10,18,.85); stroke-width: 5px; }
+.atlas-label circle { fill: #f4c879; stroke: #04202b; stroke-width: 2; }
+.atlas-label.is-dimmed { opacity: .4; }
+.atlas-inset { position: absolute; bottom: 14px; left: 14px; width: min(150px, 24%); padding: 6px; border: 1px solid rgba(255,255,255,.18); border-radius: 10px; background: rgba(3,10,18,.75); }
+.atlas-inset path { fill: rgba(148,163,184,.3); stroke: rgba(255,255,255,.35); stroke-width: .4; }
+.atlas-inset rect { fill: rgba(244,200,121,.25); stroke: #f4c879; stroke-width: 1.5; }
+.atlas-credit { position: absolute; right: 12px; bottom: 8px; color: rgba(255,255,255,.45); font-size: 10px; }
+.atlas-info { display: grid; gap: 8px; min-height: 220px; padding: 18px; border: 1px solid rgba(255,255,255,.18); border-radius: 20px; background: rgba(5,12,20,.72); color: #fff; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.atlas-info img { width: 100%; height: 180px; border-radius: 12px; object-fit: cover; }
+.atlas-info h3 { margin: 0; font-size: 26px; }
+.atlas-info p { margin: 0; color: rgba(255,255,255,.8); font-size: 14px; line-height: 1.55; }
+.atlas-fact { color: var(--sky-soft); font-size: 12px; font-weight: 700; letter-spacing: .05em; word-spacing: .25em; text-transform: uppercase; }
+.atlas-link { justify-self: start; margin-top: 4px; border: 1px solid rgba(125,211,252,.68); border-radius: 9px; padding: 10px 14px; background: rgba(2,132,199,.28); color: #fff; font-size: 13px; font-weight: 700; }
 
 /* District */
 .district-page { min-height: 100vh; color: #fff; background: #08110d url('/design.jpg') center / cover fixed; }
@@ -196,9 +205,9 @@ body.has-modal { overflow: hidden; }
   .search-fields { grid-template-columns: 1fr 1fr; }
   .search-fields .search-field:first-child, .search-button { grid-column: 1 / -1; }
   .atlas-heading { flex-wrap: wrap; }
-  .atlas-map { min-height: 0; aspect-ratio: 1 / 1.15; }
-  .atlas-info { right: 10px; bottom: 10px; left: 10px; flex-direction: column; align-items: flex-start; gap: 8px; min-height: 0; padding: 12px; }
-  .atlas-info h3 { font-size: 20px; }
+  .atlas-layout { grid-template-columns: 1fr; }
+  .atlas-info { min-height: 0; }
+  .atlas-info img { height: 140px; }
   .category-tabs { justify-content: flex-start; gap: 18px; }
   .hero-actions { justify-items: start; }
   .admin-card dl { grid-template-columns: 1fr; }

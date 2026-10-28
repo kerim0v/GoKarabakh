@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import * as api from "../api.js";
+import AtlasMap from "../components/AtlasMap.jsx";
 import Header from "../components/Header.jsx";
 import Price from "../components/Price.jsx";
 import Stars from "../components/Stars.jsx";
@@ -77,7 +78,8 @@ export default function Dashboard() {
     }
   };
 
-  const active = REGIONS.find((r) => r.slug === hovered);
+  // The info panel follows the pointer, or the region picked in the tabs
+  const active = REGIONS.find((r) => r.slug === (hovered || (focusRegion !== "all" ? focusRegion : null)));
 
   return (
     <div className="trip-page">
@@ -152,41 +154,26 @@ export default function Dashboard() {
               </button>
             ))}
           </nav>
-          <div className="atlas-map">
-            {REGIONS.map((region) => {
-              const isHovered = hovered === region.slug;
-              const isFocused = focusRegion === "all" || focusRegion === region.slug;
-              return (
-                <button
-                  key={region.slug}
-                  type="button"
-                  className={`atlas-region ${isHovered ? "is-hovered" : ""} ${isFocused ? "" : "is-dimmed"} ${focusRegion === region.slug ? "is-selected" : ""}`}
-                  style={region.mapPosition}
-                  aria-label={t("trip.exploreRegion", { name: t(`regions.${region.slug}.label`) })}
-                  onMouseEnter={() => setHovered(region.slug)}
-                  onMouseLeave={() => setHovered(null)}
-                  onFocus={() => setHovered(region.slug)}
-                  onBlur={() => setHovered(null)}
-                  onClick={() => navigate(`/district/${region.slug}`)}
-                >
-                  <img src={region.map} alt="" aria-hidden="true" />
-                </button>
-              );
-            })}
-            <div className={`atlas-info ${active ? "is-active" : ""}`}>
+          <div className="atlas-layout">
+            <AtlasMap
+              focus={focusRegion}
+              hovered={hovered}
+              onHover={setHovered}
+              onSelect={(slug) => navigate(`/district/${slug}`)}
+            />
+            <aside className={`atlas-info ${active ? "is-active" : ""}`} aria-live="polite">
               {active ? (
                 <>
-                  <div>
-                    <span className="atlas-fact">{t(`regions.${active.slug}.fact`)}</span>
-                    <h3>{t(`regions.${active.slug}.label`)}</h3>
-                    <p>{t(`regions.${active.slug}.narrative`)}</p>
-                  </div>
+                  <img src={encodeURI(active.hero)} alt="" />
+                  <span className="atlas-fact">{t(`regions.${active.slug}.fact`)}</span>
+                  <h3>{t(`regions.${active.slug}.label`)}</h3>
+                  <p>{t(`regions.${active.slug}.narrative`)}</p>
                   <Link className="atlas-link" href={`/district/${active.slug}`}>{t("trip.exploreButton")} ↗</Link>
                 </>
               ) : (
                 <p>{t("trip.mapHint")}</p>
               )}
-            </div>
+            </aside>
           </div>
         </section>
 

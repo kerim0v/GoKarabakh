@@ -146,6 +146,7 @@ export default {
     exploreRegion: "Открыть район {name}",
     exploreButton: "Открыть район",
     mapHint: "Наведите на район, чтобы узнать его историю и спланировать маршрут.",
+    mapCredit: "Границы: geoBoundaries, CC BY 4.0",
     popularEyebrow: "Выбор путешественников",
     popularTitle: "Популярно сейчас",
   },

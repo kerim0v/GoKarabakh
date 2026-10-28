@@ -137,6 +137,7 @@ export default {
     exploreRegion: "{name} rayonunu kəşf et",
     exploreButton: "Rayonu kəşf et",
     mapHint: "Rayonun hekayəsini görmək və marşrut qurmaq üçün üzərinə gəlin.",
+    mapCredit: "Sərhədlər: geoBoundaries, CC BY 4.0",
     popularEyebrow: "Səyyahların seçimi",
     popularTitle: "İndi populyar",
   },

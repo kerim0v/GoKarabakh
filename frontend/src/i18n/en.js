@@ -139,6 +139,7 @@ export default {
     exploreRegion: "Explore {name}",
     exploreButton: "Explore region",
     mapHint: "Hover a district to reveal its story and plan your route.",
+    mapCredit: "Boundaries: geoBoundaries, CC BY 4.0",
     popularEyebrow: "Travellers' favourites",
     popularTitle: "Popular right now",
   },
