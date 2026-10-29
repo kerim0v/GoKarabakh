@@ -1,8 +1,11 @@
-from dotenv import load_dotenv
-load_dotenv()
-
 import os
 import datetime
+
+from dotenv import load_dotenv
+
+# The .env next to this file. A bare load_dotenv() searches from the working directory when there's
+# no main script (uWSGI on PythonAnywhere), and misses the file.
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 
 def _env_bool(name, default="False"):
