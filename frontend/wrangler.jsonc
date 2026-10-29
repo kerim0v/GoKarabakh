@@ -1,0 +1,11 @@
+// Cloudflare Worker that serves the built website (npm run build -> dist).
+// "name" must match the Worker's name in the Cloudflare dashboard.
+{
+  "name": "gokarabakh",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Unknown paths like /district/shusha get index.html, so the app's own router handles them
+    "not_found_handling": "single-page-application"
+  }
+}
