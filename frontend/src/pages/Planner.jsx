@@ -120,7 +120,8 @@ export default function Planner() {
 
 
   return (
-    <div className="page-shell profile-page">
+    <div className="page-shell profile-page planner-page">
+      <div className="planner-backdrop" aria-hidden="true" />
       <Header active="plan" />
       <main className="profile-main">
         <section className="profile-hero glass">
