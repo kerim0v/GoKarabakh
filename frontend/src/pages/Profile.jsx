@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as api from "../api.js";
 import Field from "../components/Field.jsx";
 import Header from "../components/Header.jsx";
+import PageBackdrop from "../components/PageBackdrop.jsx";
 import PartnerApplicationModal from "../components/PartnerApplicationModal.jsx";
 import Price from "../components/Price.jsx";
 import ReviewsModal from "../components/ReviewsModal.jsx";
@@ -139,7 +140,8 @@ export default function Profile() {
 
   if (!loggedIn || !user) {
     return (
-      <div className="page-shell profile-page">
+      <div className="page-shell profile-page has-backdrop">
+        <PageBackdrop tone="light" />
         <Header />
         <main className="profile-main"><p>{t("profile.signInPrompt")}</p></main>
       </div>
@@ -173,7 +175,8 @@ export default function Profile() {
   else partnerAction = <button className="profile-explore-link" type="button" onClick={() => setPartnerOpen(true)}>{t("profile.becomePartner")} →</button>;
 
   return (
-    <div className="page-shell profile-page">
+    <div className="page-shell profile-page has-backdrop">
+      <PageBackdrop tone="light" />
       <Header active="profile" />
       <main className="profile-main">
         <section className="profile-hero glass">
