@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import * as api from "../api.js";
 import Header from "../components/Header.jsx";
+import PageBackdrop from "../components/PageBackdrop.jsx";
 import Price from "../components/Price.jsx";
 import { useI18n } from "../i18n/index.jsx";
 import { Link } from "../lib/router.jsx";
@@ -167,7 +168,8 @@ export default function Admin() {
 
   if (!isAdmin) {
     return (
-      <div className="page-shell profile-page">
+      <div className="page-shell profile-page has-backdrop">
+        <PageBackdrop tone="light" />
         <Header />
         <main className="profile-main"><section className="profile-panel glass"><h1>{t("admin.accessTitle")}</h1><p>{t("admin.accessText")}</p></section></main>
       </div>
@@ -176,7 +178,8 @@ export default function Admin() {
 
   const counts = overview.data || {};
   return (
-    <div className="page-shell profile-page">
+    <div className="page-shell profile-page has-backdrop">
+      <PageBackdrop tone="light" />
       <Header active="admin" />
       <main className="profile-main">
         <section className="profile-hero glass">

@@ -3,6 +3,7 @@ import * as api from "../api.js";
 import DatePicker from "../components/DatePicker.jsx";
 import Field from "../components/Field.jsx";
 import Header from "../components/Header.jsx";
+import PageBackdrop from "../components/PageBackdrop.jsx";
 import Price from "../components/Price.jsx";
 import { CATEGORIES, REGIONS } from "../data/regions.js";
 import { useI18n } from "../i18n/index.jsx";
@@ -185,7 +186,8 @@ export default function PartnerWorkspace({ role }) {
 
   if (!allowed) {
     return (
-      <div className="page-shell profile-page">
+      <div className="page-shell profile-page has-backdrop">
+        <PageBackdrop tone="light" />
         <Header active="profile" />
         <main className="profile-main">
           <section className="profile-panel glass">
@@ -231,7 +233,8 @@ export default function PartnerWorkspace({ role }) {
   const decided = (requests.data || []).filter((r) => r.status !== "pending");
 
   return (
-    <div className="page-shell profile-page">
+    <div className="page-shell profile-page has-backdrop">
+      <PageBackdrop tone="light" />
       <Header active="profile" />
       <main className="profile-main">
         <section className="profile-hero glass">
