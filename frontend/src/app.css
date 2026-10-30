@@ -348,7 +348,8 @@ body.has-modal { overflow: hidden; }
 .search-tabs, .atlas-tabs, .category-tabs { overflow-y: hidden; scrollbar-width: none; }
 .search-tabs::-webkit-scrollbar, .atlas-tabs::-webkit-scrollbar, .category-tabs::-webkit-scrollbar { display: none; }
 
-/* AI planner: full-page landscape behind the form, like the Trip page */
-.planner-page { position: relative; isolation: isolate; }
-.planner-backdrop { position: fixed; inset: 0; z-index: -1; background: url('/zengilan/zengilan.jpeg') center / cover no-repeat; }
-.planner-backdrop::after { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,14,12,.7) 0%, rgba(5,14,12,.6) 18%, rgba(5,14,12,.7) 50%, rgba(5,14,12,.86) 100%); content: ''; }
+/* Full-page landscape photo behind a page (PageBackdrop), like the Trip page */
+.has-backdrop { position: relative; isolation: isolate; }
+.page-backdrop { position: fixed; inset: 0; z-index: -1; background-position: center; background-size: cover; background-repeat: no-repeat; }
+.page-backdrop::after { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,14,12,.7) 0%, rgba(5,14,12,.6) 18%, rgba(5,14,12,.7) 50%, rgba(5,14,12,.86) 100%); content: ''; }
+.trip-stop-fields .date-picker-button, .trip-stop-fields .time-picker { font: 13px var(--sans); text-transform: none; letter-spacing: 0; }

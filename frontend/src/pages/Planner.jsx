@@ -4,6 +4,7 @@ import BookingModal from "../components/BookingModal.jsx";
 import DatePicker from "../components/DatePicker.jsx";
 import Field from "../components/Field.jsx";
 import Header from "../components/Header.jsx";
+import PageBackdrop from "../components/PageBackdrop.jsx";
 import Price from "../components/Price.jsx";
 import { useI18n } from "../i18n/index.jsx";
 import { useMeta } from "../lib/meta.jsx";
@@ -120,8 +121,8 @@ export default function Planner() {
 
 
   return (
-    <div className="page-shell profile-page planner-page">
-      <div className="planner-backdrop" aria-hidden="true" />
+    <div className="page-shell profile-page has-backdrop">
+      <PageBackdrop image="/zengilan/zengilan.jpeg" />
       <Header active="plan" />
       <main className="profile-main">
         <section className="profile-hero glass">

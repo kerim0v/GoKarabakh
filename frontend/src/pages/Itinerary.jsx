@@ -3,6 +3,7 @@ import * as api from "../api.js";
 import BookingModal from "../components/BookingModal.jsx";
 import DatePicker from "../components/DatePicker.jsx";
 import Header from "../components/Header.jsx";
+import PageBackdrop from "../components/PageBackdrop.jsx";
 import TimePicker from "../components/TimePicker.jsx";
 import Price from "../components/Price.jsx";
 import { useI18n } from "../i18n/index.jsx";
@@ -83,7 +84,8 @@ export default function Itinerary() {
   const total = list.reduce((sum, item) => sum + Number(item.place.cost || 0), 0);
 
   return (
-    <div className="page-shell profile-page">
+    <div className="page-shell profile-page has-backdrop">
+      <PageBackdrop image="/lacin/lacin2.jpeg" />
       <Header active="itinerary" />
       <main className="profile-main">
         <section className="profile-hero glass">
