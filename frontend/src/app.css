@@ -61,6 +61,8 @@ body.has-modal { overflow: hidden; }
 
 /* Trip dashboard */
 .trip-page { position: relative; min-height: 100vh; isolation: isolate; }
+.trip-backdrop { position: fixed; inset: 0; z-index: -2; background-position: center; background-size: cover; transition: background-image .8s ease-in-out; }
+.trip-backdrop::after { position: absolute; inset: 0; background: rgba(5,10,16,.82); content: ''; }
 .trip-main { width: min(1000px, calc(100% - 40px)); margin: 0 auto; padding-bottom: 100px; }
 .trip-title { max-width: 720px; margin: 36px auto 0; text-align: center; }
 .trip-title h1 { margin: 8px 0 0; color: #fff; font-size: clamp(30px, 5vw, 40px); line-height: 1.1; }

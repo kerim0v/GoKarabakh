@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as api from "../api.js";
 import AtlasMap from "../components/AtlasMap.jsx";
 import BookingModal from "../components/BookingModal.jsx";
 import Badges from "../components/Badges.jsx";
 import Header from "../components/Header.jsx";
-import PageBackdrop from "../components/PageBackdrop.jsx";
 import Price from "../components/Price.jsx";
 import Stars from "../components/Stars.jsx";
 import { REGIONS } from "../data/regions.js";
@@ -17,6 +16,7 @@ import { useAsync } from "../lib/useAsync.js";
 import { addDays, localToday } from "../lib/dates.js";
 import DatePicker from "../components/DatePicker.jsx";
 
+const BACKGROUNDS = ["/cidir-1.jpg", "/cidir-2.jpg", "/cidir-3.jpg"];
 const TABS = [
   ["stays", "🏠"],
   ["routes", "🏔️"],
@@ -73,10 +73,22 @@ export default function Dashboard() {
   const [notice, setNotice] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [bgIndex, setBgIndex] = useState(0);
   const [focusRegion, setFocusRegion] = useState("all");
   const [hovered, setHovered] = useState(null);
   const meta = useMeta();
   const popular = useAsync(() => api.getPlaces({ sort: "popular", limit: 6 }), []);
+
+  useEffect(() => {
+    // Swap the Jidir Plain background as the page scrolls
+    const onScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const fraction = max > 0 ? window.scrollY / max : 0;
+      setBgIndex(fraction < 0.33 ? 0 : fraction < 0.66 ? 1 : 2);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const isStay = tab === "stays";
 
@@ -117,8 +129,8 @@ export default function Dashboard() {
   const active = REGIONS.find((r) => r.slug === (hovered || (focusRegion !== "all" ? focusRegion : null)));
 
   return (
-    <div className="trip-page has-backdrop">
-      <PageBackdrop tone="light" />
+    <div className="trip-page">
+      <div className="trip-backdrop" style={{ backgroundImage: `url(${BACKGROUNDS[bgIndex]})` }} aria-hidden="true" />
       <div className="page-shell">
         <Header active="trip" />
       </div>
