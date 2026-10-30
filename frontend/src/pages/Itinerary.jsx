@@ -85,7 +85,7 @@ export default function Itinerary() {
 
   return (
     <div className="page-shell profile-page has-backdrop">
-      <PageBackdrop image="/lacin/lacin2.jpeg" />
+      <PageBackdrop />
       <Header active="itinerary" />
       <main className="profile-main">
         <section className="profile-hero glass">

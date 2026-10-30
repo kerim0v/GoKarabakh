@@ -122,7 +122,7 @@ export default function Planner() {
 
   return (
     <div className="page-shell profile-page has-backdrop">
-      <PageBackdrop image="/zengilan/zengilan.jpeg" />
+      <PageBackdrop />
       <Header active="plan" />
       <main className="profile-main">
         <section className="profile-hero glass">

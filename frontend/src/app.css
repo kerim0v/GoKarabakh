@@ -348,8 +348,9 @@ body.has-modal { overflow: hidden; }
 .search-tabs, .atlas-tabs, .category-tabs { overflow-y: hidden; scrollbar-width: none; }
 .search-tabs::-webkit-scrollbar, .atlas-tabs::-webkit-scrollbar, .category-tabs::-webkit-scrollbar { display: none; }
 
-/* Full-page landscape photo behind a page (PageBackdrop), like the Trip page */
+/* Full-page background behind a page (PageBackdrop): a calm gradient, or a darkened photo */
 .has-backdrop { position: relative; isolation: isolate; }
-.page-backdrop { position: fixed; inset: 0; z-index: -1; background-position: center; background-size: cover; background-repeat: no-repeat; }
-.page-backdrop::after { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,14,12,.7) 0%, rgba(5,14,12,.6) 18%, rgba(5,14,12,.7) 50%, rgba(5,14,12,.86) 100%); content: ''; }
+.page-backdrop { position: fixed; inset: 0; z-index: -1; background: radial-gradient(ellipse at 85% 0%, rgba(244,200,121,.10), transparent 45%), linear-gradient(170deg, #0f2f29 0%, #1a453c 45%, #0b221e 100%); }
+.page-backdrop.has-photo { background-position: center; background-size: cover; background-repeat: no-repeat; }
+.page-backdrop.has-photo::after { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,14,12,.7) 0%, rgba(5,14,12,.6) 18%, rgba(5,14,12,.7) 50%, rgba(5,14,12,.86) 100%); content: ''; }
 .trip-stop-fields .date-picker-button, .trip-stop-fields .time-picker { font: 13px var(--sans); text-transform: none; letter-spacing: 0; }
